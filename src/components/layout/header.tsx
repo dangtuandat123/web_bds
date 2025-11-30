@@ -20,9 +20,9 @@ export default function Header({ currentPage = 'home' }: HeaderProps) {
 
     const navItems = [
         { label: 'Trang chủ', value: 'home', href: '/' },
-        { label: 'Dự án', value: 'projects', href: '/projects' },
-        { label: 'Sàn giao dịch', value: 'exchange', href: '/listings' },
-        { label: 'Tin tức & Pháp lý', value: 'news', href: '/news' }
+        { label: 'Dự án', value: 'projects', href: '/du-an' },
+        { label: 'Sàn giao dịch', value: 'exchange', href: '/nha-dat' },
+        { label: 'Tin tức & Pháp lý', value: 'news', href: '/tin-tuc' }
     ]
 
     return (
