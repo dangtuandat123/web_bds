@@ -1,18 +1,36 @@
+'use client'
+
 import { Building } from 'lucide-react'
-import { redirect } from 'next/navigation'
+import { useState } from 'react'
 import { loginAction } from '@/app/actions/auth'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-    async function handleLogin(formData: FormData) {
-        'use server'
-        const result = await loginAction(formData)
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
 
-        if (result.success) {
-            redirect('/admin')
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        setError('')
+        setLoading(true)
+
+        const formData = new FormData(e.currentTarget)
+
+        try {
+            const result = await loginAction(formData)
+
+            if (result.success) {
+                router.push('/admin')
+                router.refresh()
+            } else if (result.error) {
+                setError(result.error)
+            }
+        } catch (err) {
+            setError('Đã xảy ra lỗi, vui lòng thử lại')
+        } finally {
+            setLoading(false)
         }
-
-        // Note: In production, you'd handle errors properly with useFormState
-        return result
     }
 
     return (
@@ -29,7 +47,13 @@ export default function LoginPage() {
 
                 {/* Login Form */}
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-                    <form action={handleLogin} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                                {error}
+                            </div>
+                        )}
+
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
                                 Email
@@ -61,9 +85,10 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Đăng nhập
+                            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                         </button>
                     </form>
 

@@ -21,7 +21,7 @@ async function main() {
     const admin = await prisma.user.create({
         data: {
             email: 'admin@happyland.net.vn',
-            password: '$2a$10$rOZ3kqHZ5yp9zYX.KqYZRO7Hd8L6N8rqxJ7W8VH5rNxQ6JwP9z1T.', // admin123 hashed
+            password: '$2b$10$XC4SJaUeGTGR6VWW5vOABeZoca0yXXPffF49kswAuNuymf60rOAQS', // admin123
             name: 'Admin Happy Land',
             role: 'ADMIN',
         },
