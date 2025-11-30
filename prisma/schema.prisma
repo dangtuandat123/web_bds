@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +8,173 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// ========== ENUMS ==========
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ProjectCategory {
+  APARTMENT  // Căn hộ chung cư
+  VILLA      // Nhà phố - Biệt thự  
+  LAND       // Đất nền dự án
+}
+
+enum ProjectStatus {
+  UPCOMING   // Sắp mở bán
+  SELLING    // Đang mở bán
+  SOLD_OUT   // Đã bán hết
+}
+
+enum ListingType {
+  APARTMENT  // Bán căn hộ
+  HOUSE      // Bán nhà phố
+  LAND       // Bán đất nền
+  RENT       // Cho thuê
+}
+
+enum LeadSource {
+  FORM       // Contact form
+  CHATBOT    // AI chatbot
+  PHONE      // Phone call
+}
+
+enum LeadStatus {
+  NEW        // Chưa xử lý
+  CONTACTED  // Đã liên hệ
+  QUALIFIED  // Đủ điều kiện
+  CONVERTED  // Đã chuyển đổi
+  LOST       // Không thành công
+}
+
+// ========== MODELS ==========
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id            Int              @id @default(autoincrement())
+  name          String
+  slug          String           @unique
+  category      ProjectCategory
+  location      String
+  fullLocation  String?
+  description   String           @db.Text
+  content       String?          @db.Text
+  priceRange    String
+  status        ProjectStatus    @default(SELLING)
+  images        Json             // Array of image URLs
+  thumbnailUrl  String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  listings      Listing[]
+  amenities     ProjectAmenity[]
+  
+  @@index([location])
+  @@index([status])
+  @@index([category])
+}
+
+model Listing {
+  id           Int              @id @default(autoincrement())
+  title        String
+  slug         String           @unique
+  description  String           @db.Text
+  content      String?          @db.Text
+  price        Float
+  area         Float
+  bedrooms     Int              @default(0)
+  bathrooms    Int              @default(0)
+  direction    String?          // e.g., "Đông Nam", "Tây Bắc"
+  location     String
+  fullLocation String?
+  images       Json             // Array of image URLs
+  thumbnailUrl String
+  type         ListingType
+  tags         Json?            // Array of tags
+  isFeatured   Boolean          @default(false)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  
+  projectId    Int?
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  amenities    ListingAmenity[]
+  
+  @@index([price])
+  @@index([area])
+  @@index([location])
+  @@index([type])
+  @@index([projectId])
+}
+
+model Amenity {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  icon      String           // Icon name or emoji
+  createdAt DateTime         @default(now())
+  
+  projects  ProjectAmenity[]
+  listings  ListingAmenity[]
+}
+
+model ProjectAmenity {
+  projectId Int
+  amenityId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, amenityId])
+  @@index([projectId])
+  @@index([amenityId])
+}
+
+model ListingAmenity {
+  listingId Int
+  amenityId Int
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  
+  @@id([listingId, amenityId])
+  @@index([listingId])
+  @@index([amenityId])
+}
+
+model Lead {
+  id        Int        @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String?
+  message   String?    @db.Text
+  source    LeadSource @default(FORM)
+  status    LeadStatus @default(NEW)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model ChatSession {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique
+  messages  Json     // Array of message objects
+  metadata  Json?    // Additional session data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([sessionId])
+  @@index([createdAt])
 }
