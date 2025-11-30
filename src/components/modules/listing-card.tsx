@@ -21,7 +21,7 @@ interface ListingCardProps {
 export default function ListingCard({
     id, title, price, area, bedrooms, bathrooms, direction, location, fullLocation, image, tags = [], slug
 }: ListingCardProps) {
-    const href = slug ? `/listings/${slug}` : `/listings/${id}`
+    const href = slug ? `/nha-dat/${slug}` : `/nha-dat/${id}`
 
     return (
         <Link href={href}>

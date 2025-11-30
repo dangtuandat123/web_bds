@@ -17,7 +17,7 @@ interface ProjectCardProps {
 export default function ProjectCard({
     id, title, category, categoryId, price, location, fullLocation, image, slug
 }: ProjectCardProps) {
-    const href = slug ? `/projects/${slug}` : `/projects/${id}`
+    const href = slug ? `/du-an/${slug}` : `/du-an/${id}`
 
     return (
         <Link href={href}>
