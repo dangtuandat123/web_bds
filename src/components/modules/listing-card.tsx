@@ -1,80 +1,92 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Listing } from '@prisma/client'
-import { Bed, Bath, Maximize, MapPin, Star } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Home, Compass, MapPin, Bed } from 'lucide-react'
 import { formatPrice, formatArea } from '@/lib/utils/format'
 
 interface ListingCardProps {
-    listing: Listing
+    id: number
+    title: string
+    price: number
+    area: number
+    bedrooms: number
+    bathrooms: number
+    direction?: string
+    location: string
+    fullLocation: string
+    image: string
+    tags?: string[]
+    slug?: string
 }
 
-const typeLabels = {
-    APARTMENT: 'Căn hộ',
-    HOUSE: 'Nhà riêng',
-    LAND: 'Đất nền',
-    RENT: 'Cho thuê',
-}
+export default function ListingCard({
+    id, title, price, area, bedrooms, bathrooms, direction, location, fullLocation, image, tags = [], slug
+}: ListingCardProps) {
+    const href = slug ? `/listings/${slug}` : `/listings/${id}`
 
-export default function ListingCard({ listing }: ListingCardProps) {
     return (
-        <Link
-            href={`/listing/${listing.slug}`}
-            className="group block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-        >
-            <div className="relative h-48 overflow-hidden">
-                <Image
-                    src={listing.thumbnailUrl}
-                    alt={listing.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge variant="secondary" className="bg-white/90 text-slate-900">
-                        {typeLabels[listing.type]}
-                    </Badge>
-                    {listing.isFeatured && (
-                        <Badge className="bg-amber-500 text-white border-0">
-                            <Star className="h-3 w-3 mr-1" />
-                            Nổi bật
-                        </Badge>
-                    )}
-                </div>
-            </div>
+        <Link href={href}>
+            <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden flex flex-col h-full group">
+                {/* Image Section - EXACT h-56 (smaller than project) */}
+                <div className="relative h-56 overflow-hidden">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
 
-            <div className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-amber-600 transition-colors line-clamp-2 flex-1">
-                        {listing.title}
-                    </h3>
-                </div>
-
-                <p className="text-2xl font-bold text-amber-600">
-                    {formatPrice(listing.price)}
-                </p>
-
-                <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <div className="flex items-center gap-1">
-                        <Maximize className="h-4 w-4" />
-                        <span>{formatArea(listing.area)}</span>
+                    {/* Area Badge - Bottom Left */}
+                    <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 text-xs font-bold rounded-lg flex items-center shadow-sm">
+                        <Home size={12} className="mr-1.5" /> {formatArea(area)}
                     </div>
-                    {listing.bedrooms > 0 && (
-                        <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{listing.bedrooms} PN</span>
-                        </div>
-                    )}
-                    {listing.bathrooms > 0 && (
-                        <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{listing.bathrooms} WC</span>
+
+                    {/* Direction Badge - Top Right */}
+                    {direction && (
+                        <div className="absolute top-3 right-3 bg-white/90 text-slate-800 px-2 py-1 text-[10px] font-bold rounded shadow-sm flex items-center border border-slate-100">
+                            <Compass size={12} className="mr-1 text-amber-500" /> {direction}
                         </div>
                     )}
                 </div>
 
-                <div className="flex items-center text-slate-500 text-sm pt-2 border-t border-slate-100">
-                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="line-clamp-1">{listing.location}</span>
+                {/* Content Section */}
+                <div className="p-5 flex flex-col flex-grow">
+                    {/* Title - EXACT min-h-[3rem] */}
+                    <h3 className="text-base font-bold text-slate-800 mb-3 line-clamp-2 hover:text-amber-600 transition-colors min-h-[3rem] leading-snug">
+                        {title}
+                    </h3>
+
+                    {/* Price & Specs */}
+                    <div className="flex justify-between items-center mb-4">
+                        <span className="text-red-600 font-black text-xl">{formatPrice(price)}</span>
+                        {bedrooms > 0 && (
+                            <div className="flex space-x-2 text-xs text-slate-500 font-medium">
+                                <span className="flex items-center bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                                    <Bed size={12} className="mr-1" /> {bedrooms}
+                                </span>
+                                <span className="flex items-center bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                                    <span className="font-bold mr-1">WC</span> {bathrooms}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Location */}
+                    <div className="text-slate-500 text-xs flex items-center mb-4 flex-grow border-b border-slate-50 pb-4 border-dashed">
+                        <MapPin size={14} className="mr-1.5 flex-shrink-0 text-slate-400" />
+                        <span className="truncate">{fullLocation}</span>
+                    </div>
+
+                    {/* Tags - EXACT amber colors */}
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                        {tags.slice(0, 2).map((tag, idx) => (
+                            <span
+                                key={idx}
+                                className="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2 py-1 rounded-md"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
         </Link>
