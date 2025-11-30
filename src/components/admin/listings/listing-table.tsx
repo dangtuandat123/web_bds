@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Listing, Project } from '@prisma/client'
+import type { Listing } from '@prisma/client'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -38,7 +38,10 @@ import { deleteListing } from '@/app/actions/listing'
 import { formatPrice, formatArea } from '@/lib/utils/format'
 
 type ListingWithProject = Listing & {
-    project: Project | null
+    project: {
+        id: number
+        name: string
+    } | null
 }
 
 interface ListingTableProps {
