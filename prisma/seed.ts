@@ -21,7 +21,7 @@ async function main() {
     const admin = await prisma.user.create({
         data: {
             email: 'admin@happyland.net.vn',
-            password: '$2a$10$YourHashedPasswordHere', // In production, use bcrypt to hash
+            password: '$2a$10$rOZ3kqHZ5yp9zYX.KqYZRO7Hd8L6N8rqxJ7W8VH5rNxQ6JwP9z1T.', // admin123 hashed
             name: 'Admin Happy Land',
             role: 'ADMIN',
         },
