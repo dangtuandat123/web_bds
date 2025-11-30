@@ -2,71 +2,149 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
+import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Search } from 'lucide-react'
 
 interface FilterSidebarProps {
     type: 'project' | 'listing'
 }
 
+const LOCATIONS = ['Tất cả khu vực', 'Quận 1', 'Quận 2', 'Quận 3', 'Quận 4', 'Quận 5', 'Quận 7', 'Quận 9', 'Thủ Đức', 'Bình Thạnh']
+const PRICE_RANGES = [
+    { label: 'Tất cả mức giá', min: null, max: null },
+    { label: 'Dưới 1 tỷ', min: null, max: 1000000000 },
+    { label: '1-3 tỷ', min: 1000000000, max: 3000000000 },
+    { label: '3-5 tỷ', min: 3000000000, max: 5000000000 },
+    { label: '5-10 tỷ', min: 5000000000, max: 10000000000 },
+    { label: 'Trên 10 tỷ', min: 10000000000, max: null },
+]
+const AREA_RANGES = [
+    { label: 'Tất cả diện tích', min: null, max: null },
+    { label: 'Dưới 50m²', min: null, max: 50 },
+    { label: '50-100m²', min: 50, max: 100 },
+    { label: '100-200m²', min: 100, max: 200 },
+    { label: 'Trên 200m²', min: 200, max: null },
+]
+const LISTING_TYPES = [
+    { id: 'all', name: 'Tất cả loại hình' },
+    { id: 'APARTMENT', name: 'Căn hộ' },
+    { id: 'HOUSE', name: 'Nhà riêng' },
+    { id: 'LAND', name: 'Đất nền' },
+]
+const PROJECT_CATEGORIES = [
+    { id: 'all', name: 'Tất cả loại hình' },
+    { id: 'APARTMENT', name: 'Căn hộ chung cư' },
+    { id: 'HOUSE', name: 'Nhà phố - Biệt thự' },
+    { id: 'LAND', name: 'Đất nền dự án' },
+]
+const BEDROOM_OPTIONS = [
+    { value: 'all', label: 'Tất cả' },
+    { value: '1', label: '1 PN' },
+    { value: '2', label: '2 PN' },
+    { value: '3', label: '3 PN' },
+    { value: '4+', label: '4+ PN' },
+]
+const DIRECTION_OPTIONS = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Đông', label: 'Đông' },
+    { value: 'Tây', label: 'Tây' },
+    { value: 'Nam', label: 'Nam' },
+    { value: 'Bắc', label: 'Bắc' },
+]
+
 export default function FilterSidebar({ type }: FilterSidebarProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const [filters, setFilters] = useState({
-        keyword: searchParams.get('keyword') || '',
-        type: searchParams.get('type') || '',
-        priceMin: searchParams.get('priceMin') || '',
-        priceMax: searchParams.get('priceMax') || '',
-        areaMin: searchParams.get('areaMin') || '',
-        areaMax: searchParams.get('areaMax') || '',
-        beds: searchParams.get('beds') || '',
-        baths: searchParams.get('baths') || '',
-        location: searchParams.get('location') || '',
-        status: searchParams.get('status') || '',
-    })
+    const [keyword, setKeyword] = useState(searchParams.get('keyword') || '')
+    const [location, setLocation] = useState(searchParams.get('location') || LOCATIONS[0])
+    const [priceIndex, setPriceIndex] = useState(0)
+    const [areaIndex, setAreaIndex] = useState(0)
+    const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || (type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id))
+    const [bedrooms, setBedrooms] = useState(searchParams.get('beds') || BEDROOM_OPTIONS[0].value)
+    const [direction, setDirection] = useState(searchParams.get('direction') || DIRECTION_OPTIONS[0].value)
+    const [status, setStatus] = useState(searchParams.get('status') || 'all')
 
-    const updateFilter = (key: string, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }))
-    }
+    const typeOptions = type === 'project' ? PROJECT_CATEGORIES : LISTING_TYPES
 
     const applyFilters = () => {
         const params = new URLSearchParams()
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value) params.set(key, value)
-        })
+        if (keyword) params.set('keyword', keyword)
+        if (location !== 'Tất cả khu vực') params.set('location', location)
+        if (typeFilter !== 'all') params.set('type', typeFilter)
+
+        const priceRange = PRICE_RANGES[priceIndex]
+        if (priceRange.min) params.set('priceMin', priceRange.min.toString())
+        if (priceRange.max) params.set('priceMax', priceRange.max.toString())
+
+        const areaRange = AREA_RANGES[areaIndex]
+        if (areaRange.min) params.set('areaMin', areaRange.min.toString())
+        if (areaRange.max) params.set('areaMax', areaRange.max.toString())
+
+        if (type === 'listing') {
+            if (bedrooms !== 'all') params.set('beds', bedrooms)
+            if (direction !== 'all') params.set('direction', direction)
+        }
+
+        if (type === 'project' && status !== 'all') {
+            params.set('status', status)
+        }
+
         router.push(`?${params.toString()}`)
     }
 
     const resetFilters = () => {
-        setFilters({
-            keyword: '',
-            type: '',
-            priceMin: '',
-            priceMax: '',
-            areaMin: '',
-            areaMax: '',
-            beds: '',
-            baths: '',
-            location: '',
-            status: '',
-        })
+        setKeyword('')
+        setLocation(LOCATIONS[0])
+        setPriceIndex(0)
+        setAreaIndex(0)
+        setTypeFilter(type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id)
+        setBedrooms(BEDROOM_OPTIONS[0].value)
+        setDirection(DIRECTION_OPTIONS[0].value)
+        setStatus('all')
         router.push(window.location.pathname)
     }
 
-    const hasActiveFilters = Object.values(filters).some(v => v !== '')
+    const hasActiveFilters = keyword || location !== LOCATIONS[0] || priceIndex !== 0 || areaIndex !== 0 ||
+        typeFilter !== (type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id) ||
+        bedrooms !== BEDROOM_OPTIONS[0].value || direction !== DIRECTION_OPTIONS[0].value || status !== 'all'
+
+    const SelectBox = ({ label, value, onChange, options, icon: Icon }: any) => (
+        <div className="group">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider group-focus-within:text-amber-500 transition-colors">
+                {label}
+            </label>
+            <div className="relative">
+                <select
+                    className="w-full h-11 pl-3 pr-8 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 appearance-none text-sm font-medium transition-all cursor-pointer text-slate-700"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                >
+                    {options.map((opt: any, idx: number) => (
+                        <option key={idx} value={opt.value !== undefined ? opt.value : (opt.id || opt)}>
+                            {opt.label || opt.name || opt}
+                        </option>
+                    ))}
+                </select>
+                {Icon ? (
+                    <Icon size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
+                ) : (
+                    <ChevronDown size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
+                )}
+            </div>
+        </div>
+    )
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-6">
-            {/* Header - EXACT STYLE from reference */}
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-bold text-slate-800 flex items-center">
-                    <Search className="mr-2 text-amber-500" size={20} />
-                    Bộ lọc tìm kiếm
+                <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
+                    <span className="bg-amber-100 text-amber-600 p-1.5 rounded mr-2">
+                        <Search size={16} />
+                    </span>
+                    Tìm kiếm {type === 'project' ? 'dự án' : 'bất động sản'}
                 </h3>
                 {hasActiveFilters && (
                     <Button
@@ -80,236 +158,91 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                 )}
             </div>
 
-            {/* Keyword Search - NO accordion, always visible */}
-            <div className="space-y-2">
-                <Label className="text-sm font-bold text-slate-700">Từ khóa</Label>
+            {/* Keyword */}
+            <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                    Từ khóa
+                </label>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <Input
-                        placeholder="Nhập từ khóa tìm kiếm..."
-                        value={filters.keyword}
-                        onChange={(e) => updateFilter('keyword', e.target.value)}
+                        placeholder={type === 'project' ? "Nhập tên dự án..." : "Nhập từ khóa..."}
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
                         className="pl-10 border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                     />
+                    <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
                 </div>
             </div>
 
-            <Accordion type="multiple" defaultValue={['price', 'area']} className="w-full">
-                {/* Price Range - REFERENCE STYLE */}
-                <AccordionItem value="price" className="border-slate-100">
-                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                        Mức giá
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <div className="space-y-3 pt-2">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                    type="number"
-                                    placeholder="Từ (tỷ)"
-                                    value={filters.priceMin}
-                                    onChange={(e) => updateFilter('priceMin', e.target.value)}
-                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
-                                />
-                                <Input
-                                    type="number"
-                                    placeholder="Đến (tỷ)"
-                                    value={filters.priceMax}
-                                    onChange={(e) => updateFilter('priceMax', e.target.value)}
-                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {['< 1', '1-3', '3-5', '5-10', '> 10'].map((range) => (
-                                    <Button
-                                        key={range}
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const [min, max] = range.includes('-')
-                                                ? range.split('-').map(v => v.trim())
-                                                : range.startsWith('<')
-                                                    ? ['', range.replace('< ', '')]
-                                                    : [range.replace('> ', ''), '']
-                                            updateFilter('priceMin', min ? (parseFloat(min) * 1000000000).toString() : '')
-                                            updateFilter('priceMax', max ? (parseFloat(max) * 1000000000).toString() : '')
-                                        }}
-                                        className="text-xs border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700"
-                                    >
-                                        {range} tỷ
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
+            {/* Type */}
+            <SelectBox
+                label="Loại hình"
+                value={typeFilter}
+                onChange={setTypeFilter}
+                options={typeOptions}
+                icon={Home}
+            />
 
-                {/* Area Range */}
-                <AccordionItem value="area" className="border-slate-100">
-                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                        Diện tích
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <div className="space-y-3 pt-2">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                    type="number"
-                                    placeholder="Từ (m²)"
-                                    value={filters.areaMin}
-                                    onChange={(e) => updateFilter('areaMin', e.target.value)}
-                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
-                                />
-                                <Input
-                                    type="number"
-                                    placeholder="Đến (m²)"
-                                    value={filters.areaMax}
-                                    onChange={(e) => updateFilter('areaMax', e.target.value)}
-                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {['< 50', '50-100', '100-200', '> 200'].map((range) => (
-                                    <Button
-                                        key={range}
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const [min, max] = range.includes('-')
-                                                ? range.split('-')
-                                                : range.startsWith('<')
-                                                    ? ['', range.replace('< ', '')]
-                                                    : [range.replace('> ', ''), '']
-                                            updateFilter('areaMin', min)
-                                            updateFilter('areaMax', max)
-                                        }}
-                                        className="text-xs border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700"
-                                    >
-                                        {range} m²
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
+            {/* Location */}
+            <SelectBox
+                label="Khu vực"
+                value={location}
+                onChange={setLocation}
+                options={LOCATIONS}
+                icon={MapPin}
+            />
 
-                {/* Type (Listing only) */}
-                {type === 'listing' && (
-                    <AccordionItem value="type" className="border-slate-100">
-                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                            Loại hình
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <RadioGroup value={filters.type} onValueChange={(v) => updateFilter('type', v)} className="space-y-3 pt-2">
-                                {[
-                                    { value: '', label: 'Tất cả' },
-                                    { value: 'APARTMENT', label: 'Căn hộ' },
-                                    { value: 'HOUSE', label: 'Nhà riêng' },
-                                    { value: 'LAND', label: 'Đất nền' },
-                                ].map((opt) => (
-                                    <div key={opt.value} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={opt.value} id={`type-${opt.value}`} className="text-amber-500 border-slate-300" />
-                                        <Label htmlFor={`type-${opt.value}`} className="text-sm text-slate-700 cursor-pointer">
-                                            {opt.label}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </RadioGroup>
-                        </AccordionContent>
-                    </AccordionItem>
-                )}
+            {/* Price */}
+            <SelectBox
+                label="Mức giá"
+                value={priceIndex}
+                onChange={(v: string) => setPriceIndex(Number(v))}
+                options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
+            />
 
-                {/* Beds/Baths (Listing only) */}
-                {type === 'listing' && (
-                    <AccordionItem value="rooms" className="border-slate-100">
-                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                            Phòng ngủ & WC
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="space-y-4 pt-2">
-                                <div>
-                                    <Label className="text-xs font-bold text-slate-600 mb-2 block uppercase tracking-wide">Phòng ngủ</Label>
-                                    <div className="flex gap-2">
-                                        {['1', '2', '3', '4+'].map((num) => (
-                                            <Button
-                                                key={num}
-                                                variant={filters.beds === num ? 'default' : 'outline'}
-                                                size="sm"
-                                                onClick={() => updateFilter('beds', num === filters.beds ? '' : num)}
-                                                className={`flex-1 ${filters.beds === num
-                                                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500'
-                                                        : 'border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700'
-                                                    }`}
-                                            >
-                                                {num}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs font-bold text-slate-600 mb-2 block uppercase tracking-wide">WC</Label>
-                                    <div className="flex gap-2">
-                                        {['1', '2', '3+'].map((num) => (
-                                            <Button
-                                                key={num}
-                                                variant={filters.baths === num ? 'default' : 'outline'}
-                                                size="sm"
-                                                onClick={() => updateFilter('baths', num === filters.baths ? '' : num)}
-                                                className={`flex-1 ${filters.baths === num
-                                                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500'
-                                                        : 'border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700'
-                                                    }`}
-                                            >
-                                                {num}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                )}
+            {/* Area */}
+            <SelectBox
+                label="Diện tích"
+                value={areaIndex}
+                onChange={(v: string) => setAreaIndex(Number(v))}
+                options={AREA_RANGES.map((r, i) => ({ value: i, label: r.label }))}
+            />
 
-                {/* Status (Project only) */}
-                {type === 'project' && (
-                    <AccordionItem value="status" className="border-slate-100">
-                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                            Trạng thái
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <RadioGroup value={filters.status} onValueChange={(v) => updateFilter('status', v)} className="space-y-3 pt-2">
-                                {[
-                                    { value: '', label: 'Tất cả' },
-                                    { value: 'SELLING', label: 'Đang mở bán' },
-                                    { value: 'UPCOMING', label: 'Sắp mở bán' },
-                                ].map((opt) => (
-                                    <div key={opt.value} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={opt.value} id={`status-${opt.value}`} className="text-amber-500 border-slate-300" />
-                                        <Label htmlFor={`status-${opt.value}`} className="text-sm text-slate-700 cursor-pointer">
-                                            {opt.label}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </RadioGroup>
-                        </AccordionContent>
-                    </AccordionItem>
-                )}
+            {/* Beds & Direction for Listings */}
+            {type === 'listing' && (
+                <>
+                    <SelectBox
+                        label="Phòng ngủ"
+                        value={bedrooms}
+                        onChange={setBedrooms}
+                        options={BEDROOM_OPTIONS}
+                        icon={Bed}
+                    />
+                    <SelectBox
+                        label="Hướng"
+                        value={direction}
+                        onChange={setDirection}
+                        options={DIRECTION_OPTIONS}
+                        icon={Compass}
+                    />
+                </>
+            )}
 
-                {/* Location */}
-                <AccordionItem value="location" className="border-slate-100">
-                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
-                        Khu vực
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <Input
-                            placeholder="Nhập khu vực..."
-                            value={filters.location}
-                            onChange={(e) => updateFilter('location', e.target.value)}
-                            className="border-slate-200 focus:border-amber-500 focus:ring-amber-500 mt-2"
-                        />
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+            {/* Status for Projects */}
+            {type === 'project' && (
+                <SelectBox
+                    label="Trạng thái"
+                    value={status}
+                    onChange={setStatus}
+                    options={[
+                        { value: 'all', label: 'Tất cả' },
+                        { value: 'SELLING', label: 'Đang mở bán' },
+                        { value: 'UPCOMING', label: 'Sắp mở bán' },
+                    ]}
+                />
+            )}
 
-            {/* Apply Button - EXACT GRADIENT from reference */}
+            {/* Apply Button */}
             <Button
                 onClick={applyFilters}
                 className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
