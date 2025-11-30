@@ -79,8 +79,8 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                                 key={idx}
                                 onClick={() => setSelectedIndex(idx)}
                                 className={`relative h-20 md:h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${selectedIndex === idx
-                                        ? 'border-amber-500 opacity-100 scale-105'
-                                        : 'border-transparent opacity-70 hover:opacity-100 hover:border-slate-300'
+                                    ? 'border-amber-500 opacity-100 scale-105'
+                                    : 'border-transparent opacity-70 hover:opacity-100 hover:border-slate-300'
                                     }`}
                             >
                                 <Image
@@ -90,56 +90,26 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                                     className="object-cover"
                                 />
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Lightbox */}
-            {isLightboxOpen && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fade-in">
-                    {/* Close Button */}
-                    <button
-                        onClick={() => setIsLightboxOpen(false)}
-                        className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all backdrop-blur-md border border-white/20"
-                    >
-                        <X size={28} />
-                    </button>
-
-                    {/* Navigation */}
-                    <div className="relative w-full h-full flex items-center justify-center p-4">
-                        {/* Prev Button */}
-                        <button
-                            onClick={prevImage}
-                            className="absolute left-4 md:left-8 z-40 p-3 md:p-4 bg-black/40 hover:bg-black/60 text-white rounded-full transition-all backdrop-blur-sm border border-white/10"
-                        >
-                            <ChevronLeft size={24} className="md:w-8 md:h-8" />
-                        </button>
-
-                        {/* Main Image */}
-                        <div className="relative w-full h-full flex justify-center items-center">
-                            <img
-                                src={images[lightboxIndex]}
-                                alt={`Gallery ${lightboxIndex + 1}`}
-                                className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
+                                className = "max-w-full max-h-full object-contain shadow-2xl rounded-sm"
                             />
                         </div>
 
                         {/* Next Button */}
-                        <button
-                            onClick={nextImage}
-                            className="absolute right-4 md:right-8 z-40 p-3 md:p-4 bg-black/40 hover:bg-black/60 text-white rounded-full transition-all backdrop-blur-sm border border-white/10"
-                        >
-                            <ChevronRight size={24} className="md:w-8 md:h-8" />
-                        </button>
+                <button
+                    onClick={nextImage}
+                    className="absolute right-4 md:right-8 z-40 p-3 md:p-4 bg-black/40 hover:bg-black/60 text-white rounded-full transition-all backdrop-blur-sm border border-white/10"
+                >
+                    <ChevronRight size={24} className="md:w-8 md:h-8" />
+                </button>
 
-                        {/* Counter */}
-                        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-md border border-white/10">
-                            {lightboxIndex + 1} / {images.length}
-                        </div>
-                    </div>
+                {/* Counter */}
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-md border border-white/10">
+                    {lightboxIndex + 1} / {images.length}
                 </div>
-            )}
+            </div>
+        </div >
+            )
+}
         </>
     )
 }
