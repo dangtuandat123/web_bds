@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
-import { Project } from '@prisma/client'
+import type { Project } from '@prisma/client'
 import {
     Table,
     TableBody,
@@ -37,13 +37,13 @@ interface ProjectTableProps {
     projects: Project[]
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string }> = {
     UPCOMING: { label: 'Sắp mở bán', color: 'bg-blue-100 text-blue-700' },
     SELLING: { label: 'Đang bán', color: 'bg-green-100 text-green-700' },
     SOLD_OUT: { label: 'Đã bán hết', color: 'bg-red-100 text-red-700' },
 }
 
-const categoryConfig = {
+const categoryConfig: Record<string, string> = {
     APARTMENT: 'Căn hộ',
     VILLA: 'Biệt thự',
     LAND: 'Đất nền',
@@ -95,6 +95,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
                                             src={project.thumbnailUrl}
                                             alt={project.name}
                                             fill
+                                            sizes="64px"
                                             className="object-cover"
                                         />
                                     </div>
