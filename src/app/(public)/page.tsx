@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import Hero from '@/components/modules/home/hero'
+import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ProjectCard from '@/components/modules/project-card'
 import ListingCard from '@/components/modules/listing-card'
 import Link from 'next/link'
@@ -73,6 +74,11 @@ export default async function HomePage() {
         <div className="animate-fade-in">
             {/* Hero Section */}
             <Hero />
+
+            {/* Advanced Search Box */}
+            <div className="container mx-auto px-4 relative z-20">
+                <AdvancedSearch />
+            </div>
 
             {/* Featured Projects Section */}
             <section className="py-20 bg-slate-50/50">
