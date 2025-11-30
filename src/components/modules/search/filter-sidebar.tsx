@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
+import { X, Search } from 'lucide-react'
 
 interface FilterSidebarProps {
     type: 'project' | 'listing'
@@ -61,45 +61,61 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
     const hasActiveFilters = Object.values(filters).some(v => v !== '')
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-800">Bộ lọc</h3>
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-6">
+            {/* Header - EXACT STYLE from reference */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 className="text-lg font-bold text-slate-800 flex items-center">
+                    <Search className="mr-2 text-amber-500" size={20} />
+                    Bộ lọc tìm kiếm
+                </h3>
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={resetFilters}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                    >
                         <X size={16} className="mr-1" /> Xóa
                     </Button>
                 )}
             </div>
 
-            <Accordion type="multiple" defaultValue={['price', 'area', 'type']} className="w-full">
-                {/* Keyword Search */}
-                <div className="mb-4">
+            {/* Keyword Search - NO accordion, always visible */}
+            <div className="space-y-2">
+                <Label className="text-sm font-bold text-slate-700">Từ khóa</Label>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <Input
-                        placeholder="Tìm kiếm..."
+                        placeholder="Nhập từ khóa tìm kiếm..."
                         value={filters.keyword}
                         onChange={(e) => updateFilter('keyword', e.target.value)}
-                        className="w-full"
+                        className="pl-10 border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                     />
                 </div>
+            </div>
 
-                {/* Price Range */}
-                <AccordionItem value="price">
-                    <AccordionTrigger className="text-sm font-semibold">Mức giá</AccordionTrigger>
+            <Accordion type="multiple" defaultValue={['price', 'area']} className="w-full">
+                {/* Price Range - REFERENCE STYLE */}
+                <AccordionItem value="price" className="border-slate-100">
+                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                        Mức giá
+                    </AccordionTrigger>
                     <AccordionContent>
-                        <div className="space-y-3">
+                        <div className="space-y-3 pt-2">
                             <div className="grid grid-cols-2 gap-3">
                                 <Input
                                     type="number"
                                     placeholder="Từ (tỷ)"
                                     value={filters.priceMin}
                                     onChange={(e) => updateFilter('priceMin', e.target.value)}
+                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                                 />
                                 <Input
                                     type="number"
                                     placeholder="Đến (tỷ)"
                                     value={filters.priceMax}
                                     onChange={(e) => updateFilter('priceMax', e.target.value)}
+                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                                 />
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -117,7 +133,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                                             updateFilter('priceMin', min ? (parseFloat(min) * 1000000000).toString() : '')
                                             updateFilter('priceMax', max ? (parseFloat(max) * 1000000000).toString() : '')
                                         }}
-                                        className="text-xs"
+                                        className="text-xs border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700"
                                     >
                                         {range} tỷ
                                     </Button>
@@ -128,22 +144,26 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                 </AccordionItem>
 
                 {/* Area Range */}
-                <AccordionItem value="area">
-                    <AccordionTrigger className="text-sm font-semibold">Diện tích</AccordionTrigger>
+                <AccordionItem value="area" className="border-slate-100">
+                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                        Diện tích
+                    </AccordionTrigger>
                     <AccordionContent>
-                        <div className="space-y-3">
+                        <div className="space-y-3 pt-2">
                             <div className="grid grid-cols-2 gap-3">
                                 <Input
                                     type="number"
                                     placeholder="Từ (m²)"
                                     value={filters.areaMin}
                                     onChange={(e) => updateFilter('areaMin', e.target.value)}
+                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                                 />
                                 <Input
                                     type="number"
                                     placeholder="Đến (m²)"
                                     value={filters.areaMax}
                                     onChange={(e) => updateFilter('areaMax', e.target.value)}
+                                    className="border-slate-200 focus:border-amber-500 focus:ring-amber-500"
                                 />
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -161,7 +181,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                                             updateFilter('areaMin', min)
                                             updateFilter('areaMax', max)
                                         }}
-                                        className="text-xs"
+                                        className="text-xs border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700"
                                     >
                                         {range} m²
                                     </Button>
@@ -173,28 +193,25 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
 
                 {/* Type (Listing only) */}
                 {type === 'listing' && (
-                    <AccordionItem value="type">
-                        <AccordionTrigger className="text-sm font-semibold">Loại hình</AccordionTrigger>
+                    <AccordionItem value="type" className="border-slate-100">
+                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                            Loại hình
+                        </AccordionTrigger>
                         <AccordionContent>
-                            <RadioGroup value={filters.type} onValueChange={(v) => updateFilter('type', v)}>
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="" id="type-all" />
-                                        <Label htmlFor="type-all">Tất cả</Label>
+                            <RadioGroup value={filters.type} onValueChange={(v) => updateFilter('type', v)} className="space-y-3 pt-2">
+                                {[
+                                    { value: '', label: 'Tất cả' },
+                                    { value: 'APARTMENT', label: 'Căn hộ' },
+                                    { value: 'HOUSE', label: 'Nhà riêng' },
+                                    { value: 'LAND', label: 'Đất nền' },
+                                ].map((opt) => (
+                                    <div key={opt.value} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={opt.value} id={`type-${opt.value}`} className="text-amber-500 border-slate-300" />
+                                        <Label htmlFor={`type-${opt.value}`} className="text-sm text-slate-700 cursor-pointer">
+                                            {opt.label}
+                                        </Label>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="APARTMENT" id="type-apt" />
-                                        <Label htmlFor="type-apt">Căn hộ</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="HOUSE" id="type-house" />
-                                        <Label htmlFor="type-house">Nhà riêng</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="LAND" id="type-land" />
-                                        <Label htmlFor="type-land">Đất nền</Label>
-                                    </div>
-                                </div>
+                                ))}
                             </RadioGroup>
                         </AccordionContent>
                     </AccordionItem>
@@ -202,12 +219,14 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
 
                 {/* Beds/Baths (Listing only) */}
                 {type === 'listing' && (
-                    <AccordionItem value="rooms">
-                        <AccordionTrigger className="text-sm font-semibold">Phòng ngủ & WC</AccordionTrigger>
+                    <AccordionItem value="rooms" className="border-slate-100">
+                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                            Phòng ngủ & WC
+                        </AccordionTrigger>
                         <AccordionContent>
-                            <div className="space-y-4">
+                            <div className="space-y-4 pt-2">
                                 <div>
-                                    <Label className="text-xs text-slate-600 mb-2 block">Phòng ngủ</Label>
+                                    <Label className="text-xs font-bold text-slate-600 mb-2 block uppercase tracking-wide">Phòng ngủ</Label>
                                     <div className="flex gap-2">
                                         {['1', '2', '3', '4+'].map((num) => (
                                             <Button
@@ -215,7 +234,10 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                                                 variant={filters.beds === num ? 'default' : 'outline'}
                                                 size="sm"
                                                 onClick={() => updateFilter('beds', num === filters.beds ? '' : num)}
-                                                className="flex-1"
+                                                className={`flex-1 ${filters.beds === num
+                                                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500'
+                                                        : 'border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700'
+                                                    }`}
                                             >
                                                 {num}
                                             </Button>
@@ -223,7 +245,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                                     </div>
                                 </div>
                                 <div>
-                                    <Label className="text-xs text-slate-600 mb-2 block">WC</Label>
+                                    <Label className="text-xs font-bold text-slate-600 mb-2 block uppercase tracking-wide">WC</Label>
                                     <div className="flex gap-2">
                                         {['1', '2', '3+'].map((num) => (
                                             <Button
@@ -231,7 +253,10 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                                                 variant={filters.baths === num ? 'default' : 'outline'}
                                                 size="sm"
                                                 onClick={() => updateFilter('baths', num === filters.baths ? '' : num)}
-                                                className="flex-1"
+                                                className={`flex-1 ${filters.baths === num
+                                                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500'
+                                                        : 'border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700'
+                                                    }`}
                                             >
                                                 {num}
                                             </Button>
@@ -245,46 +270,49 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
 
                 {/* Status (Project only) */}
                 {type === 'project' && (
-                    <AccordionItem value="status">
-                        <AccordionTrigger className="text-sm font-semibold">Trạng thái</AccordionTrigger>
+                    <AccordionItem value="status" className="border-slate-100">
+                        <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                            Trạng thái
+                        </AccordionTrigger>
                         <AccordionContent>
-                            <RadioGroup value={filters.status} onValueChange={(v) => updateFilter('status', v)}>
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="" id="status-all" />
-                                        <Label htmlFor="status-all">Tất cả</Label>
+                            <RadioGroup value={filters.status} onValueChange={(v) => updateFilter('status', v)} className="space-y-3 pt-2">
+                                {[
+                                    { value: '', label: 'Tất cả' },
+                                    { value: 'SELLING', label: 'Đang mở bán' },
+                                    { value: 'UPCOMING', label: 'Sắp mở bán' },
+                                ].map((opt) => (
+                                    <div key={opt.value} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={opt.value} id={`status-${opt.value}`} className="text-amber-500 border-slate-300" />
+                                        <Label htmlFor={`status-${opt.value}`} className="text-sm text-slate-700 cursor-pointer">
+                                            {opt.label}
+                                        </Label>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="SELLING" id="status-selling" />
-                                        <Label htmlFor="status-selling">Đang mở bán</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="UPCOMING" id="status-upcoming" />
-                                        <Label htmlFor="status-upcoming">Sắp mở bán</Label>
-                                    </div>
-                                </div>
+                                ))}
                             </RadioGroup>
                         </AccordionContent>
                     </AccordionItem>
                 )}
 
                 {/* Location */}
-                <AccordionItem value="location">
-                    <AccordionTrigger className="text-sm font-semibold">Khu vực</AccordionTrigger>
+                <AccordionItem value="location" className="border-slate-100">
+                    <AccordionTrigger className="text-sm font-bold text-slate-700 hover:text-amber-600 hover:no-underline">
+                        Khu vực
+                    </AccordionTrigger>
                     <AccordionContent>
                         <Input
                             placeholder="Nhập khu vực..."
                             value={filters.location}
                             onChange={(e) => updateFilter('location', e.target.value)}
+                            className="border-slate-200 focus:border-amber-500 focus:ring-amber-500 mt-2"
                         />
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
 
-            {/* Apply Button */}
+            {/* Apply Button - EXACT GRADIENT from reference */}
             <Button
                 onClick={applyFilters}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
             >
                 Áp dụng bộ lọc
             </Button>
