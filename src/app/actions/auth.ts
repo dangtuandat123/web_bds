@@ -10,6 +10,8 @@ const JWT_SECRET = new TextEncoder().encode(
     process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
 
+type SessionPayload = { userId: number; email: string; role: string }
+
 export async function loginAction(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -46,7 +48,8 @@ export async function loginAction(formData: FormData) {
             .sign(JWT_SECRET)
 
         // Set cookie
-        cookies().set('admin_session', token, {
+        const cookieStore = await cookies()
+        cookieStore.set('admin_session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -61,20 +64,22 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-    cookies().delete('admin_session')
+    const cookieStore = await cookies()
+    cookieStore.delete('admin_session')
     redirect('/login')
 }
 
-export async function getSession() {
-    const sessionCookie = cookies().get('admin_session')
+export async function getSession(): Promise<SessionPayload | null> {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('admin_session')?.value
 
-    if (!sessionCookie) {
+    if (!token) {
         return null
     }
 
     try {
-        const verified = await jwtVerify(sessionCookie.value, JWT_SECRET)
-        return verified.payload as { userId: number; email: string; role: string }
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+        return payload as SessionPayload
     } catch (error) {
         return null
     }
