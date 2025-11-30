@@ -4,7 +4,7 @@ import Footer from '@/components/layout/footer'
 export default function PublicLayout({
     children,
 }: {
-    children: React.NodeNode
+    children: React.ReactNode
 }) {
     return (
         <>

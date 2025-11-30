@@ -97,7 +97,7 @@ export default async function HomePage() {
                                 categoryId={project.category.toLowerCase()}
                                 price={project.priceRange}
                                 location={project.location}
-                                fullLocation={project.fullLocation}
+                                fullLocation={project.fullLocation || ''}
                                 image={project.thumbnailUrl}
                                 slug={project.slug}
                             />
@@ -141,7 +141,7 @@ export default async function HomePage() {
                                     bathrooms={listing.bathrooms}
                                     direction={listing.direction || undefined}
                                     location={listing.location}
-                                    fullLocation={listing.fullLocation}
+                                    fullLocation={listing.fullLocation || ''}
                                     image={listing.thumbnailUrl}
                                     tags={getListingTags(listing)}
                                     slug={listing.slug}
