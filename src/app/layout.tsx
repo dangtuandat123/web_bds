@@ -26,7 +26,7 @@ export default function RootLayout({
     return (
         <html lang="vi" suppressHydrationWarning>
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden h-screen`}
+                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 {children}
                 <Toaster position="top-right" richColors />
