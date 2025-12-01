@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Phone, User, MessageSquare } from 'lucide-react'
+import { toast } from 'sonner'
+import { submitLead } from '@/app/actions/lead'
 
 interface ContactFormProps {
     title?: string
@@ -9,17 +11,31 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ title, price }: ContactFormProps) {
+    const [isPending, startTransition] = useTransition()
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
         message: `Tôi quan tâm đến: ${title || 'sản phẩm này'}`
     })
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Implement server action later
-        console.log('Form submitted:', formData)
-        alert('Yêu cầu tư vấn đã được gửi! (Demo)')
+
+        startTransition(async () => {
+            const result = await submitLead(formData)
+
+            if (result.success) {
+                toast.success(result.message)
+                // Reset form
+                setFormData({
+                    name: '',
+                    phone: '',
+                    message: `Tôi quan tâm đến: ${title || 'sản phẩm này'}`
+                })
+            } else {
+                toast.error(result.message)
+            }
+        })
     }
 
     return (
@@ -48,10 +64,11 @@ export default function ContactForm({ title, price }: ContactFormProps) {
                     <input
                         type="text"
                         required
+                        disabled={isPending}
                         placeholder="Họ tên của bạn"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all"
+                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
 
@@ -61,10 +78,11 @@ export default function ContactForm({ title, price }: ContactFormProps) {
                     <input
                         type="tel"
                         required
+                        disabled={isPending}
                         placeholder="Số điện thoại"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all"
+                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
 
@@ -73,25 +91,28 @@ export default function ContactForm({ title, price }: ContactFormProps) {
                     <MessageSquare className="absolute left-3 top-3.5 text-slate-400" size={16} />
                     <textarea
                         rows={4}
+                        disabled={isPending}
                         placeholder="Nội dung tin nhắn..."
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all resize-none"
+                        className="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                     ></textarea>
                 </div>
 
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-amber-500/30 transition-all transform hover:-translate-y-1 uppercase text-sm tracking-wider"
+                    disabled={isPending}
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-amber-500/30 transition-all transform hover:-translate-y-1 uppercase text-sm tracking-wider disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                    Gửi yêu cầu tư vấn
+                    {isPending ? 'Đang gửi...' : 'Gửi yêu cầu tư vấn'}
                 </button>
 
                 {/* Call Button */}
                 <button
                     type="button"
-                    className="w-full bg-white border-2 border-slate-100 text-slate-700 py-3.5 rounded-xl font-bold hover:border-amber-500 hover:text-amber-600 transition-all flex items-center justify-center text-sm"
+                    disabled={isPending}
+                    className="w-full bg-white border-2 border-slate-100 text-slate-700 py-3.5 rounded-xl font-bold hover:border-amber-500 hover:text-amber-600 transition-all flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <Phone size={18} className="mr-2" /> 0912 345 678
                 </button>
