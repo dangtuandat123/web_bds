@@ -99,8 +99,8 @@ export async function POST(req: Request) {
 
             // Execute tools
             for (const toolCall of toolCalls) {
-                const functionName = toolCall.function.name
-                const functionArgs = JSON.parse(toolCall.function.arguments)
+                const functionName = (toolCall as any).function.name
+                const functionArgs = JSON.parse((toolCall as any).function.arguments)
                 let functionResult = ''
 
                 if (functionName === 'searchProperties') {
