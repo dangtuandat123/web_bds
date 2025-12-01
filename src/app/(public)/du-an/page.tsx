@@ -75,7 +75,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
     return (
         <div className="bg-slate-50 min-h-screen pb-20 animate-fade-in">
             {/* Hero Header - Dark with Background Image (Reference Design) */}
-            <div className="bg-slate-900 py-20 px-4 text-center relative overflow-hidden">
+            <div className="bg-slate-900 py-20 pb-32 px-4 text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-20"></div>
                 <div className="relative z-10">
                     <h1 className="text-4xl font-black text-white mb-4">Dự Án Phân Phối</h1>
@@ -86,7 +86,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
             </div>
 
             {/* AdvancedSearch Compact - Below Hero (Reference Design) */}
-            <div className="container mx-auto px-4 -mt-8 relative z-20 mb-12">
+            <div className="container mx-auto px-4 -mt-16 relative z-20 mb-12">
                 <AdvancedSearch isProjectSearch={true} />
             </div>
 
