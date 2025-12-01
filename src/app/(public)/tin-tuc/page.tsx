@@ -29,8 +29,8 @@ export default async function NewsPage({ searchParams }: PageProps) {
     }
     if (searchQuery) {
         where.OR = [
-            { title: { contains: searchQuery, mode: 'insensitive' } },
-            { summary: { contains: searchQuery, mode: 'insensitive' } },
+            { title: { contains: searchQuery } },
+            { summary: { contains: searchQuery } },
         ]
     }
 
