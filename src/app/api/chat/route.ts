@@ -38,8 +38,8 @@ export async function POST(req: Request) {
         }
 
         // Stream chat completion
-        const result = await streamText({
-            model: openrouter('google/gemini-flash-1.5'),
+        const result = streamText({
+            model: openrouter('google/gemini-2.0-flash-exp:free'),
             system: systemPrompt,
             messages,
             temperature: 0.7,
