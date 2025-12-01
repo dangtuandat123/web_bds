@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useChat } from 'ai/react'
-import { MessageCircle, X, Minimize2 } from 'lucide-react'
+import { useChat } from 'ai'
+import { MessageCircle, X } from 'lucide-react'
 import ChatMessage from './chat-message'
 import ChatInput from './chat-input'
 
