@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building, Home, Users, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth'
 
 const navigation = [
     { name: 'Tổng quan', href: '/admin', icon: LayoutDashboard },
     { name: 'Dự án', href: '/admin/projects', icon: Building },
     { name: 'Sàn giao dịch', href: '/admin/listings', icon: Home },
+    { name: 'Tin tức', href: '/admin/news', icon: Newspaper },
     { name: 'Khách hàng', href: '/admin/leads', icon: Users },
     { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
 ]
@@ -38,8 +39,8 @@ export default function AdminSidebar() {
                             key={item.name}
                             href={item.href}
                             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                                    ? 'bg-amber-500 text-white shadow-lg'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                ? 'bg-amber-500 text-white shadow-lg'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
                             <item.icon size={18} />
