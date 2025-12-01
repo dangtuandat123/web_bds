@@ -86,9 +86,19 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
         }
 
         const targetPage = isProjectSearch ? '/du-an' : '/nha-dat'
-        router.push(`${targetPage}?${params.toString()}`
+        router.push(`${targetPage}?${params.toString()}`)
+    }
 
-        )
+    const handleReset = () => {
+        setKeyword('')
+        setLocation(LOCATIONS[0])
+        setPriceIndex(0)
+        setAreaIndex(0)
+        setType(isProjectSearch ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id)
+        setBedrooms(BEDROOM_OPTIONS[0].value)
+        setDirection(DIRECTION_OPTIONS[0].value)
+        const targetPage = isProjectSearch ? '/du-an' : '/nha-dat'
+        router.push(targetPage)
     }
 
     const SelectBox = ({ label, value, onChange, options, icon: Icon }: any) => (
@@ -165,20 +175,18 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                     />
                 </div>
 
-                {/* Row 2: Price (listing only), Area (listing only), Beds, Direction, Button */}
+                {/* Row 2: Price (listing only), Area (listing only), Beds, Direction, Buttons */}
                 <div className={`grid gap-x-4 gap-y-4 items-end ${isProjectSearch ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
                     {!isProjectSearch && (
-                        <div className="col-span-2 md:col-span-1">
-                            <SelectBox
-                                label="Mức giá"
-                                value={priceIndex}
-                                onChange={(v: string) => setPriceIndex(Number(v))}
-                                options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-                            />
-                        </div>
-                    )}
-                    {!isProjectSearch && (
                         <>
+                            <div className="col-span-2 md:col-span-1">
+                                <SelectBox
+                                    label="Mức giá"
+                                    value={priceIndex}
+                                    onChange={(v: string) => setPriceIndex(Number(v))}
+                                    options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
+                                />
+                            </div>
                             <div className="col-span-2 md:col-span-1">
                                 <SelectBox
                                     label="Diện tích"
@@ -207,10 +215,17 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                             </div>
                         </>
                     )}
-                    <div className={`col-span-2 ${isProjectSearch ? '' : 'md:col-span-4 lg:col-span-1'}`}>
+                    <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1 grid grid-cols-2 gap-3' : 'md:col-span-4 lg:col-span-1 flex gap-2'}`}>
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="h-11 px-3 bg-white border-2 border-slate-300 hover:border-amber-500 text-slate-700 hover:text-amber-600 rounded-lg font-bold text-sm transition-all shadow-sm hover:shadow-md flex items-center justify-center whitespace-nowrap"
+                        >
+                            Xóa
+                        </button>
                         <button
                             type="submit"
-                            className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                            className="flex-1 h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
                         >
                             Tìm Kiếm
                         </button>
