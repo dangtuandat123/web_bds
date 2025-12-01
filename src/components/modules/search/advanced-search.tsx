@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Home, MapPin, Bed, Compass, ChevronDown } from 'lucide-react'
+import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react'
 
 interface AdvancedSearchProps {
     isProjectSearch?: boolean
@@ -136,9 +136,14 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                     </span>
                     Tìm kiếm {isProjectSearch ? 'dự án' : 'bất động sản'}
                 </h3>
-                <span className="text-xs text-slate-400 italic hidden sm:inline">
-                    Lọc nhanh theo nhu cầu của bạn
-                </span>
+                <button
+                    type="button"
+                    onClick={handleReset}
+                    className="text-xs text-slate-400 hover:text-amber-600 font-medium transition-colors flex items-center gap-1 group"
+                >
+                    <X size={14} className="group-hover:rotate-90 transition-transform duration-200" />
+                    <span className="hidden sm:inline">Xóa bộ lọc</span>
+                </button>
             </div>
 
             <form onSubmit={handleSearch}>
@@ -215,17 +220,10 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                             </div>
                         </>
                     )}
-                    <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1 grid grid-cols-2 gap-3' : 'md:col-span-4 lg:col-span-1 flex gap-2'}`}>
-                        <button
-                            type="button"
-                            onClick={handleReset}
-                            className="h-11 px-3 bg-white border-2 border-slate-300 hover:border-amber-500 text-slate-700 hover:text-amber-600 rounded-lg font-bold text-sm transition-all shadow-sm hover:shadow-md flex items-center justify-center whitespace-nowrap"
-                        >
-                            Xóa
-                        </button>
+                    <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1' : 'md:col-span-4 lg:col-span-1'}`}>
                         <button
                             type="submit"
-                            className="flex-1 h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                            className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
                         >
                             Tìm Kiếm
                         </button>
