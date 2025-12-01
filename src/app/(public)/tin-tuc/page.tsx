@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { Metadata } from 'next'
+import { Search } from 'lucide-react'
 import NewsCard from '@/components/modules/news-card'
 
 export const metadata: Metadata = {
@@ -14,13 +15,24 @@ const categoryConfig: Record<string, string> = {
 }
 
 interface PageProps {
-    searchParams: { category?: string }
+    searchParams: { category?: string; q?: string }
 }
 
 export default async function NewsPage({ searchParams }: PageProps) {
     const category = searchParams.category || 'all'
+    const searchQuery = searchParams.q || ''
 
-    const where = category !== 'all' ? { category: category as any } : {}
+    // Build where clause
+    const where: any = {}
+    if (category !== 'all') {
+        where.category = category
+    }
+    if (searchQuery) {
+        where.OR = [
+            { title: { contains: searchQuery, mode: 'insensitive' } },
+            { summary: { contains: searchQuery, mode: 'insensitive' } },
+        ]
+    }
 
     const news = await prisma.news.findMany({
         where,
@@ -38,13 +50,12 @@ export default async function NewsPage({ searchParams }: PageProps) {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Hero Section */}
-            <div
-                className="relative h-[40vh] flex items-center justify-center text-white bg-cover bg-center"
-                style={{ backgroundImage: "url('/images/news-hero.jpg')" }}
-            >
-                <div className="absolute inset-0 bg-slate-900/70"></div>
-                <div className="relative z-10 text-center">
-                    <h1 className="text-4xl md:text-5xl font-black mb-4">Tin tức & Pháp lý</h1>
+            <div className="relative h-[40vh] flex items-center justify-center text-white bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20"></div>
+                <div className="relative z-10 text-center px-4">
+                    <h1 className="text-4xl md:text-5xl font-black mb-4 drop-shadow-lg">
+                        Tin tức & Pháp lý
+                    </h1>
                     <p className="text-lg md:text-xl text-slate-200">
                         Cập nhật mới nhất về thị trường BĐS
                     </p>
@@ -53,20 +64,107 @@ export default async function NewsPage({ searchParams }: PageProps) {
 
             {/* Content */}
             <div className="container mx-auto px-4 py-12">
-                {/* Category Tabs */}
-                <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-                    {categories.map((cat) => (
-                        <a
-                            key={cat.id}
-                            href={cat.id === 'all' ? '/tin-tuc' : `/tin-tuc?category=${cat.id}`}
-                            className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all whitespace-nowrap ${category === cat.id
-                                    ? 'bg-amber-500 text-white shadow-lg'
-                                    : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-600 border border-slate-200'
-                                }`}
-                        >
-                            {cat.label}
-                        </a>
-                    ))}
+                {/* Search & Filter Section */}
+                <div className="bg-white/90 backdrop-blur-lg p-6 rounded-2xl shadow-2xl border border-white/50 -mt-24 mb-12 relative z-20">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                        <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
+                            <span className="bg-amber-100 text-amber-600 p-1.5 rounded mr-2">
+                                <Search size={16} />
+                            </span>
+                            Tìm kiếm tin tức
+                        </h3>
+                        <span className="text-xs text-slate-400 italic hidden sm:inline">
+                            Lọc theo danh mục hoặc từ khóa
+                        </span>
+                    </div>
+
+                    <form method="GET" action="/tin-tuc">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            {/* Search Input */}
+                            <div className="md:col-span-6 lg:col-span-7">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                                    Từ khóa
+                                </label>
+                                <div className="relative">
+                                    <Search
+                                        size={16}
+                                        className="absolute left-3 top-3.5 text-slate-400"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="q"
+                                        defaultValue={searchQuery}
+                                        placeholder="Nhập từ khóa tìm kiếm..."
+                                        className="w-full h-11 pl-10 pr-3 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm font-medium transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Category Select */}
+                            <div className="md:col-span-4 lg:col-span-3">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                                    Danh mục
+                                </label>
+                                <select
+                                    name="category"
+                                    defaultValue={category}
+                                    className="w-full h-11 px-3 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm font-medium transition-all cursor-pointer"
+                                >
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Search Button */}
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-bold text-transparent uppercase mb-1">
+                                    .
+                                </label>
+                                <button
+                                    type="submit"
+                                    className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                                >
+                                    <Search size={16} />
+                                    <span className="hidden sm:inline">Tìm kiếm</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {/* Active Filters Display */}
+                    {(searchQuery || category !== 'all') && (
+                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-sm">
+                            <span className="text-slate-500 font-medium">Lọc theo:</span>
+                            {searchQuery && (
+                                <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    "{searchQuery}"
+                                </span>
+                            )}
+                            {category !== 'all' && (
+                                <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    {categories.find((c) => c.id === category)?.label}
+                                </span>
+                            )}
+                            <a
+                                href="/tin-tuc"
+                                className="ml-auto text-slate-400 hover:text-amber-600 text-xs font-medium underline"
+                            >
+                                Xóa bộ lọc
+                            </a>
+                        </div>
+                    )}
+                </div>
+
+                {/* Results Count */}
+                <div className="mb-6">
+                    <p className="text-slate-600 font-medium">
+                        Tìm thấy <span className="text-amber-600 font-bold">{news.length}</span> tin
+                        tức
+                    </p>
                 </div>
 
                 {/* News Grid */}
@@ -88,8 +186,11 @@ export default async function NewsPage({ searchParams }: PageProps) {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-12">
-                        <p className="text-slate-500">Chưa có tin tức nào</p>
+                    <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
+                        <p className="text-slate-500 text-lg mb-2">Không tìm thấy tin tức nào</p>
+                        <p className="text-slate-400 text-sm">
+                            Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                        </p>
                     </div>
                 )}
             </div>
