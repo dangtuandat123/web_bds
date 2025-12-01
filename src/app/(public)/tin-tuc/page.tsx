@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma'
 import { Metadata } from 'next'
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import NewsCard from '@/components/modules/news-card'
 
 export const metadata: Metadata = {
@@ -65,7 +65,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
             {/* Content */}
             <div className="container mx-auto px-4 py-12">
                 {/* Search & Filter Section */}
-                <div className="bg-white/90 backdrop-blur-lg p-6 rounded-2xl shadow-2xl border border-white/50 -mt-24 mb-12 relative z-20">
+                <div className="bg-white/90 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl border border-white/50 -mt-24 mb-12 relative z-20 max-w-6xl mx-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                         <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
@@ -80,7 +80,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
                     </div>
 
                     <form method="GET" action="/tin-tuc">
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
                             {/* Search Input */}
                             <div className="md:col-span-6 lg:col-span-7">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
@@ -132,6 +132,17 @@ export default async function NewsPage({ searchParams }: PageProps) {
                                     <span className="hidden sm:inline">Tìm kiếm</span>
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Clear Button Row */}
+                        <div className="flex justify-end">
+                            <a
+                                href="/tin-tuc"
+                                className="text-slate-400 hover:text-amber-600 text-sm font-medium underline flex items-center gap-1 transition-colors"
+                            >
+                                <X size={14} />
+                                Xóa bộ lọc
+                            </a>
                         </div>
                     </form>
 
