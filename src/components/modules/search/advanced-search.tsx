@@ -165,16 +165,18 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                     />
                 </div>
 
-                {/* Row 2: Price, Area (listing only), Beds, Direction, Button */}
-                <div className={`grid gap-x-4 gap-y-4 items-end ${isProjectSearch ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
-                    <div className="col-span-2 md:col-span-1">
-                        <SelectBox
-                            label="Mức giá"
-                            value={priceIndex}
-                            onChange={(v: string) => setPriceIndex(Number(v))}
-                            options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-                        />
-                    </div>
+                {/* Row 2: Price (listing only), Area (listing only), Beds, Direction, Button */}
+                <div className={`grid gap-x-4 gap-y-4 items-end ${isProjectSearch ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
+                    {!isProjectSearch && (
+                        <div className="col-span-2 md:col-span-1">
+                            <SelectBox
+                                label="Mức giá"
+                                value={priceIndex}
+                                onChange={(v: string) => setPriceIndex(Number(v))}
+                                options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
+                            />
+                        </div>
+                    )}
                     {!isProjectSearch && (
                         <>
                             <div className="col-span-2 md:col-span-1">
@@ -205,7 +207,7 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                             </div>
                         </>
                     )}
-                    <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1' : 'md:col-span-4 lg:col-span-1'}`}>
+                    <div className={`col-span-2 ${isProjectSearch ? '' : 'md:col-span-4 lg:col-span-1'}`}>
                         <button
                             type="submit"
                             className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
