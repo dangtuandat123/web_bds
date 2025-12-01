@@ -1,19 +1,20 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Bold, Italic, List, ListOrdered, Heading2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface RichTextEditorProps {
-    content: string
+    value: string
     onChange: (content: string) => void
 }
 
-export default function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [StarterKit],
-        content,
+        content: value,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML())
@@ -24,6 +25,13 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
             },
         },
     })
+
+    // Update editor content when value prop changes (for edit mode)
+    useEffect(() => {
+        if (editor && value !== editor.getHTML()) {
+            editor.commands.setContent(value)
+        }
+    }, [value, editor])
 
     if (!editor) {
         return null
