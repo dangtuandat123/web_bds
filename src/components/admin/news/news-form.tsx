@@ -185,7 +185,7 @@ export default function NewsForm({ initialData }: NewsFormProps) {
                         <FormItem>
                             <FormLabel>Nội dung</FormLabel>
                             <FormControl>
-                                <RichTextEditor value={field.value} onChange={field.onChange} />
+                                <RichTextEditor value={field.value || ''} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
