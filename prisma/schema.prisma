@@ -178,3 +178,27 @@ model ChatSession {
   @@index([sessionId])
   @@index([createdAt])
 }
+
+enum NewsCategory {
+  MARKET     // Thị trường
+  FENG_SHUI  // Phong thủy
+  LEGAL      // Pháp lý
+}
+
+model News {
+  id          Int          @id @default(autoincrement())
+  title       String
+  slug        String       @unique
+  category    NewsCategory
+  summary     String       @db.Text
+  content     String       @db.Text
+  thumbnailUrl String
+  author      String?      @default("Admin")
+  views       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  @@index([category])
+  @@index([createdAt])
+  @@index([slug])
+}
