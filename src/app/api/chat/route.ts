@@ -1,13 +1,13 @@
-import { streamText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
+import { OpenAIStream, StreamingTextResponse } from 'ai'
+import OpenAI from 'openai'
 
-// Configure OpenRouter client (OpenAI-compatible)
-const openrouter = createOpenAI({
+// Configure OpenRouter client
+const openai = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY || '',
     baseURL: 'https://openrouter.ai/api/v1',
 })
 
-// System prompt for Happy Land AI assistant
+// System prompt
 const systemPrompt = `Bạn là trợ lý ảo thông minh của Happy Land - nền tảng bất động sản hàng đầu Việt Nam.
 
 NHIỆM VỤ:
@@ -32,20 +32,22 @@ export async function POST(req: Request) {
     try {
         const { messages } = await req.json()
 
-        // Validate API key
         if (!process.env.OPENROUTER_API_KEY) {
             return new Response('OpenRouter API key not configured', { status: 500 })
         }
 
-        // Stream chat completion
-        const result = streamText({
-            model: openrouter('google/gemini-2.5-flash'),
-            system: systemPrompt,
-            messages,
+        const response = await openai.chat.completions.create({
+            model: 'google/gemini-2.5-flash',
+            stream: true,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...messages
+            ],
             temperature: 0.7,
         })
 
-        return result.toTextStreamResponse()
+        const stream = OpenAIStream(response)
+        return new StreamingTextResponse(stream)
     } catch (error) {
         console.error('Chat API Error:', error)
         return new Response('Internal Server Error', { status: 500 })
