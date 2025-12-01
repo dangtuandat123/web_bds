@@ -56,5 +56,23 @@
 *   **User**: "Quy trình mua nhà thế nào?"
 *   **Bot**: Trả lời dựa trên kiến thức có sẵn.
 
-## 5. Kết Luận
-Hệ thống Chatbot hiện tại đã đạt mức độ **Agentic cơ bản**: Có khả năng nhận thức, sử dụng công cụ và tương tác dữ liệu thực tế. Đây là bước tiến lớn so với chatbot hỏi-đáp thông thường.
+## 5. Tối Ưu Hóa & Nâng Cao (AI-003)
+
+### 🧠 Khắc Phục "Mất Trí Nhớ" (Memory Fix)
+*   **Vấn đề**: Trước đây, sau khi gọi tool tìm kiếm, AI quên mất ngữ cảnh và không biết mình vừa tìm gì.
+*   **Giải pháp**: Cập nhật logic trong `route.ts` để đảm bảo lịch sử hội thoại (`messages`) được nối thêm:
+    1.  Tin nhắn gọi tool của Assistant (`tool_calls`).
+    2.  Kết quả trả về từ Tool (`tool_result`).
+    *   Điều này giúp AI "nhớ" được nó vừa tìm thấy những căn nhà nào để tiếp tục tư vấn.
+
+### ⚡ Tư Duy Chủ Động (Proactive Logic)
+*   **System Prompt Mới**: Áp dụng nguyên tắc "SEARCH FIRST, ASK LATER".
+*   **Hành vi**: Thay vì hỏi lại "Bạn muốn giá bao nhiêu?", AI sẽ tự động đoán ý và tìm kiếm ngay lập tức với các tham số mặc định hoặc suy luận được.
+*   **Kết quả**: Giảm số bước hội thoại, đưa ra thông tin hữu ích nhanh hơn.
+
+### 🔍 Tìm Kiếm Linh Hoạt (Flexible Search)
+*   **Cập nhật `tools.ts`**: Hàm `searchProperties` giờ chấp nhận các tham số tùy chọn: `minPrice`, `maxPrice`, `minArea`, `direction`.
+*   **Lợi ích**: AI có thể lọc kết quả chính xác hơn khi người dùng cung cấp chi tiết (VD: "Tìm nhà hướng Đông, dưới 5 tỷ").
+
+## 6. Kết Luận
+Hệ thống Chatbot hiện tại đã đạt mức độ **Agentic cơ bản**: Có khả năng nhận thức, sử dụng công cụ, ghi nhớ ngữ cảnh và tương tác dữ liệu thực tế. Đây là bước tiến lớn so với chatbot hỏi-đáp thông thường.

@@ -80,8 +80,9 @@ async function getListings(params: SearchParams) {
     return { listings, total, page, perPage }
 }
 
-export default async function ListingsPage({ searchParams }: { searchParams: SearchParams }) {
-    const { listings, total, page, perPage } = await getListings(searchParams)
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+    const resolvedParams = await searchParams
+    const { listings, total, page, perPage } = await getListings(resolvedParams)
     const totalPages = Math.ceil(total / perPage)
 
     const getListingTags = (type: string) => {
@@ -155,7 +156,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                             <div className="flex justify-center gap-3 items-center mt-12">
                                 {page > 1 && (
                                     <a
-                                        href={`?${new URLSearchParams({ ...searchParams, page: (page - 1).toString() })}`}
+                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page - 1).toString() })}`}
                                         className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
                                     >
                                         ← Trang trước
@@ -166,7 +167,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                                 </span>
                                 {page < totalPages && (
                                     <a
-                                        href={`?${new URLSearchParams({ ...searchParams, page: (page + 1).toString() })}`}
+                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page + 1).toString() })}`}
                                         className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
                                     >
                                         Trang sau →

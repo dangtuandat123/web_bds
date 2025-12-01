@@ -14,13 +14,13 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         type: 'function',
         function: {
             name: 'searchProperties',
-            description: 'Tìm kiếm bất động sản. ƯU TIÊN GỌI HÀM NÀY NGAY khi người dùng nhắc đến nhu cầu (mua, thuê, tìm nhà...) dù thông tin chưa đầy đủ.',
+            description: 'Tìm kiếm bất động sản. ƯU TIÊN GỌI HÀM NÀY NGAY khi người dùng nhắc đến nhu cầu.',
             parameters: {
                 type: 'object',
                 properties: {
                     query: {
                         type: 'string',
-                        description: 'Từ khóa chính (địa điểm, tên dự án, loại hình). Ví dụ: "quận 9", "vinhomes", "chung cư"',
+                        description: 'Từ khóa tìm kiếm. Có thể bao gồm địa điểm, loại hình, tên dự án. Ví dụ: "căn hộ quận 9", "nhà phố thủ đức", "vinhomes".',
                     },
                     minPrice: { type: 'number', description: 'Giá tối thiểu (tỷ đồng)' },
                     maxPrice: { type: 'number', description: 'Giá tối đa (tỷ đồng)' },
@@ -49,22 +49,27 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     },
 ]
 
-// System prompt
-const systemPrompt = `Bạn là chuyên gia tư vấn BĐS của Happy Land.
+// System prompt generator
+const getSystemPrompt = (host: string, date: string) => `Bạn là chuyên gia tư vấn BĐS của Happy Land.
+THÔNG TIN NGỮ CẢNH:
+- Website: ${host}
+- Thời gian hiện tại: ${date}
+- Loại hình BĐS hỗ trợ: Căn hộ (Apartment), Nhà phố - Biệt thự (Villa), Đất nền (Land).
 
 NGUYÊN TẮC VÀNG (PROACTIVE):
-1. SEARCH FIRST, ASK LATER: Nếu khách nói "tìm nhà quận 9", GỌI NGAY \`searchProperties({query: "quận 9"})\`. Đừng hỏi "Bạn muốn giá bao nhiêu?" trước khi tìm.
+1. SEARCH FIRST, ASK LATER: Nếu khách nói "tìm nhà quận 9", GỌI NGAY \`searchProperties({query: "nhà quận 9"})\`.
 2. ĐOÁN Ý: Nếu khách nói "tài chính 5 tỷ", hãy tự động thêm tham số \`maxPrice: 5\`.
 3. HIỂN THỊ TRƯỚC: Luôn đưa ra danh sách BĐS tìm được trước, sau đó mới hỏi thêm chi tiết để lọc kỹ hơn.
 
 QUY TẮC TRẢ LỜI:
 - BẮT BUỘC dùng Markdown Link: [Tiêu đề](url) cho mọi BĐS.
-- Không hiển thị URL trần.
+- URL phải là ĐƯỜNG DẪN TƯƠNG ĐỐI (bắt đầu bằng \`/\`) để hoạt động trên cả localhost và production.
+- Ví dụ ĐÚNG: \`[Căn hộ ABC](/nha-dat/abc)\`
 - Giọng điệu: Nhiệt tình, chuyên nghiệp, ngắn gọn.
 
 VÍ DỤ:
 User: "Tìm căn hộ quận 2"
-AI: (Gọi tool searchProperties) -> (Nhận kết quả) -> "Dạ, em tìm thấy vài căn hộ tốt ở Quận 2 cho anh/chị tham khảo:
+AI: (Gọi tool searchProperties với query="Quận 2") -> (Nhận kết quả) -> "Dạ, em tìm thấy vài căn hộ tốt ở Quận 2 cho anh/chị tham khảo:
 1. [Masteri Thảo Điền - 3.5 tỷ](/nha-dat/masteri-td)
 2. [The Vista - 4 tỷ](/nha-dat/the-vista)
 Anh/chị thấy căn nào ưng ý không ạ? Hay mình muốn tìm mức giá khác?"`
@@ -72,6 +77,16 @@ Anh/chị thấy căn nào ưng ý không ạ? Hay mình muốn tìm mức giá 
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json()
+
+        // Get dynamic context
+        const host = req.headers.get('host') || 'happyland.me'
+        const date = new Date().toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        const systemPrompt = getSystemPrompt(host, date)
 
         if (!process.env.OPENROUTER_API_KEY) {
             return new Response('OpenRouter API key not configured', { status: 500 })
@@ -106,6 +121,8 @@ export async function POST(req: Request) {
                 const functionName = (toolCall as any).function.name
                 const functionArgs = JSON.parse((toolCall as any).function.arguments)
                 let functionResult = ''
+
+                console.log(`[AI Tool] Calling ${functionName} with args:`, functionArgs)
 
                 if (functionName === 'searchProperties') {
                     functionResult = await searchProperties(
