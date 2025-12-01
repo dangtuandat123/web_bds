@@ -92,22 +92,6 @@ export async function POST(req: Request) {
 
             // Create a new messages array with the assistant's tool call message
             const newMessages = [
-                { role: 'system', content: systemPrompt },
-                ...messages,
-                responseMessage
-            ]
-
-            // Execute tools
-            for (const toolCall of toolCalls) {
-                const functionName = toolCall.function.name
-                const functionArgs = JSON.parse(toolCall.function.arguments)
-                let functionResult = ''
-
-                if (functionName === 'searchProperties') {
-                    functionResult = await searchProperties(functionArgs.query)
-                } else if (functionName === 'createLead') {
-                    functionResult = await createLead(functionArgs.name, functionArgs.phone, functionArgs.message)
-                }
 
                 newMessages.push({
                     tool_call_id: toolCall.id,
@@ -117,16 +101,16 @@ export async function POST(req: Request) {
                 })
             }
 
-            // Second call to model with tool results
-            const secondResponse = await openai.chat.completions.create({
-                model: 'google/gemini-2.5-flash',
-                stream: true,
-                messages: newMessages as any,
-            })
+        // Second call to model with tool results
+        const secondResponse = await openai.chat.completions.create({
+            model: 'google/gemini-2.5-flash',
+            stream: true,
+            messages: newMessages as any,
+        })
 
-            const stream = OpenAIStream(secondResponse as any)
-            return new StreamingTextResponse(stream)
-        }
+        const stream = OpenAIStream(secondResponse as any)
+        return new StreamingTextResponse(stream)
+    }
 
         // If no tool calls, just stream the response (but we need to stream it, the first response was not streamed)
         // So we need to make a streaming call if there were no tool calls.
@@ -134,20 +118,20 @@ export async function POST(req: Request) {
         // Re-call with stream: true for the text response.
 
         const streamResponse = await openai.chat.completions.create({
-            model: 'google/gemini-2.5-flash',
-            stream: true,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                ...messages
-            ],
-            temperature: 0.7,
-        })
+        model: 'google/gemini-2.5-flash',
+        stream: true,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages
+        ],
+        temperature: 0.7,
+    })
 
-        const stream = OpenAIStream(streamResponse as any)
-        return new StreamingTextResponse(stream)
+    const stream = OpenAIStream(streamResponse as any)
+    return new StreamingTextResponse(stream)
 
-    } catch (error) {
-        console.error('Chat API Error:', error)
-        return new Response('Internal Server Error', { status: 500 })
-    }
+} catch (error) {
+    console.error('Chat API Error:', error)
+    return new Response('Internal Server Error', { status: 500 })
+}
 }
