@@ -5,29 +5,43 @@ export async function searchProperties(
     minPrice?: number,
     maxPrice?: number,
     minArea?: number,
-    direction?: string
+    direction?: string,
+    district?: string,
+    type?: string,
+    limit?: number
 ) {
     try {
-        // Smart Search: Split query into keywords and require ALL keywords to match (AND logic)
-        // This mimics "semantic" search better than a simple exact phrase match.
-        const terms = query.trim().split(/\s+/).filter(t => t.length > 0)
+        // Smart Search: Clean query
+        const keyword = query ? query.trim() : ''
 
         // Build dynamic filter for Listings
         const listingWhere: any = {
             isActive: true,
         }
 
-        // If there are terms, add AND condition for each term
-        if (terms.length > 0) {
-            listingWhere.AND = terms.map(term => ({
-                OR: [
-                    { title: { contains: term } },
-                    { location: { contains: term } },
-                    { description: { contains: term } },
-                    // Also search in fullLocation if available
-                    { fullLocation: { contains: term } }
-                ]
-            }))
+        // Fuzzy Search Logic: OR condition for keyword in title, location, description
+        if (keyword) {
+            listingWhere.OR = [
+                { title: { contains: keyword } },
+                { location: { contains: keyword } },
+                { description: { contains: keyword } },
+                { fullLocation: { contains: keyword } }
+            ]
+        }
+
+        // If district is provided, add it as a specific filter or part of search
+        if (district) {
+            // If we already have an OR from keyword, we need to combine it carefully.
+            // Requirement says: "Allow flexible keyword" and "Fuzzy Search".
+            // If district is explicit, we should enforce it.
+            listingWhere.AND = [
+                {
+                    OR: [
+                        { location: { contains: district } },
+                        { fullLocation: { contains: district } }
+                    ]
+                }
+            ]
         }
 
         if (minPrice !== undefined) listingWhere.price = { ...listingWhere.price, gte: minPrice }
@@ -35,10 +49,16 @@ export async function searchProperties(
         if (minArea !== undefined) listingWhere.area = { ...listingWhere.area, gte: minArea }
         if (direction) listingWhere.direction = { contains: direction }
 
+        // Filter by Type (APARTMENT, HOUSE, LAND, RENT)
+        if (type) {
+            listingWhere.type = type
+        }
+
         // Search Listings
+        const takeLimit = limit || 5
         const listings = await prisma.listing.findMany({
             where: listingWhere,
-            take: 5,
+            take: takeLimit,
             select: {
                 title: true,
                 slug: true,
@@ -49,33 +69,49 @@ export async function searchProperties(
             },
         })
 
-        // Search Projects (Simple text search for now)
-        // For projects, we also try to match all terms if possible, or just fallback to simple OR if complex
-        // To keep it simple for now, we'll use OR for projects but try to match name or location
-        const projectWhere: any = {
-            status: { not: 'SOLD_OUT' }
-        }
+        // Search Projects
+        let projects: any[] = []
+        if (!type || type === 'APARTMENT' || type === 'LAND' || type === 'VILLA') {
+            const projectWhere: any = {
+                status: { not: 'SOLD_OUT' }
+            }
 
-        if (terms.length > 0) {
-            projectWhere.AND = terms.map(term => ({
-                OR: [
-                    { name: { contains: term } },
-                    { location: { contains: term } },
+            if (keyword) {
+                projectWhere.OR = [
+                    { name: { contains: keyword } },
+                    { location: { contains: keyword } },
+                    { description: { contains: keyword } }
                 ]
-            }))
-        }
+            }
 
-        const projects = await prisma.project.findMany({
-            where: projectWhere,
-            take: 3,
-            select: {
-                name: true,
-                slug: true,
-                priceRange: true,
-                location: true,
-                category: true,
-            },
-        })
+            if (district) {
+                projectWhere.AND = [
+                    {
+                        OR: [
+                            { location: { contains: district } },
+                            { fullLocation: { contains: district } }
+                        ]
+                    }
+                ]
+            }
+
+            // Map ListingType to ProjectCategory
+            if (type === 'APARTMENT') projectWhere.category = 'APARTMENT'
+            if (type === 'LAND') projectWhere.category = 'LAND'
+            if (type === 'VILLA') projectWhere.category = 'VILLA'
+
+            projects = await prisma.project.findMany({
+                where: projectWhere,
+                take: 3,
+                select: {
+                    name: true,
+                    slug: true,
+                    priceRange: true,
+                    location: true,
+                    category: true,
+                },
+            })
+        }
 
         // Format results
         const formattedListings = listings.map(l => ({
