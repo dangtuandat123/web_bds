@@ -32,4 +32,23 @@ export async function POST(req: Request) {
     try {
         const { messages } = await req.json()
 
+        // Validate API key
+        if (!process.env.OPENROUTER_API_KEY) {
+            return new Response('OpenRouter API key not configured', { status: 500 })
+        }
+
+        // Stream chat completion
+        const result = streamText({
+            model: openrouter('google/gemini-2.5-flash'),
+            system: systemPrompt,
+            messages,
+            temperature: 0.7,
+            maxTokens: 1000,
+        })
+
+        return result.toDataStreamResponse()
+    } catch (error) {
+        console.error('Chat API Error:', error)
+        return new Response('Internal Server Error', { status: 500 })
     }
+}
