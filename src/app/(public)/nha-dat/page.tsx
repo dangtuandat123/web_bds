@@ -1,8 +1,7 @@
 import prisma from '@/lib/prisma'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ListingCard from '@/components/modules/listing-card'
-import { Suspense } from 'react'
-import { Home, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 interface SearchParams {
     keyword?: string
@@ -12,7 +11,6 @@ interface SearchParams {
     areaMin?: string
     areaMax?: string
     beds?: string
-    baths?: string
     direction?: string
     location?: string
     page?: string
@@ -29,6 +27,7 @@ async function getListings(params: SearchParams) {
     }
 
     if (params.type && params.type !== 'all') where.type = params.type
+    if (params.location) where.location = { contains: params.location }
 
     if (params.priceMin || params.priceMax) {
         where.price = {}
@@ -42,13 +41,17 @@ async function getListings(params: SearchParams) {
         if (params.areaMax) where.area.lte = parseFloat(params.areaMax)
     }
 
-    if (params.beds && params.beds !== 'all') where.bedrooms = parseInt(params.beds)
-    if (params.baths) where.bathrooms = parseInt(params.baths)
-    if (params.direction && params.direction !== 'all') where.direction = params.direction
-    if (params.location) where.location = { contains: params.location }
+    if (params.beds && params.beds !== 'all') {
+        const bedsNum = params.beds === '4+' ? 4 : parseInt(params.beds)
+        where.bedrooms = params.beds === '4+' ? { gte: bedsNum } : bedsNum
+    }
+
+    if (params.direction && params.direction !== 'all') {
+        where.direction = params.direction
+    }
 
     const page = parseInt(params.page || '1')
-    const perPage = 6
+    const perPage = 12
 
     const [listings, total] = await Promise.all([
         prisma.listing.findMany({
@@ -86,13 +89,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         if (type === 'APARTMENT') tags.push('Căn hộ')
         if (type === 'HOUSE') tags.push('Nhà riêng')
         if (type === 'LAND') tags.push('Đất nền')
-        if (type === 'RENT') tags.push('Cho thuê')
         return tags
     }
 
     return (
         <div className="bg-white min-h-screen pb-20 animate-fade-in">
-            {/* Dark Hero Header - EXACT match reference */}
+            {/* Hero Header - Dark with Background Image (Reference Design) */}
             <div className="bg-slate-900 py-20 px-4 text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-20"></div>
                 <div className="relative z-10">
@@ -103,13 +105,11 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                 </div>
             </div>
 
-            {/* Compact AdvancedSearch - EXACT -mt-8 from reference */}
+            {/* AdvancedSearch Compact - Below Hero (Reference Design) */}
             <div className="container mx-auto px-4 -mt-8 relative z-20">
-                <Suspense fallback={<div className="bg-white/90 p-8 rounded-2xl shadow-2xl h-48 animate-pulse"></div>}>
-                    <AdvancedSearch />
-                </Suspense>
+                <AdvancedSearch />
 
-                {/* Result count header */}
+                {/* Results Header with Count + Sort */}
                 <div className="flex justify-between items-center mt-12 mb-8">
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center">
                         Kết quả tìm kiếm
@@ -127,7 +127,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                     </div>
                 </div>
 
-                {/* Results Grid - 4 columns like reference */}
+                {/* Results Grid - 4 columns on large screens (Reference Design) */}
                 {listings.length > 0 ? (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -181,49 +181,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                             <Search size={48} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-600">Không tìm thấy kết quả phù hợp</h3>
-                        <a href="/nha-dat" className="mt-4 text-amber-600 font-bold hover:underline inline-block">
+                        <a href="/nha-dat" className="mt-4 inline-block text-amber-600 font-bold hover:underline">
                             Xóa bộ lọc & thử lại
                         </a>
                     </div>
                 )}
             </div>
         </div>
-    )
-}
-
-                                </div >
-
-    {/* Pagination - AMBER/SLATE style */ }
-{
-    totalPages > 1 && (
-        <div className="flex justify-center gap-3 items-center">
-            {page > 1 && (
-                <a
-                    href={`?${new URLSearchParams({ ...searchParams, page: (page - 1).toString() })}`}
-                    className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                >
-                    ← Trang trước
-                </a>
-            )}
-            <span className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-bold shadow-lg">
-                {page} / {totalPages}
-            </span>
-            {page < totalPages && (
-                <a
-                    href={`?${new URLSearchParams({ ...searchParams, page: (page + 1).toString() })}`}
-                    className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                >
-                    Trang sau →
-                </a>
-            )}
-        </div>
-    )
-}
-                            </>
-                        )}
-                    </div >
-                </div >
-            </div >
-        </div >
     )
 }

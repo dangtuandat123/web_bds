@@ -1,14 +1,13 @@
 import prisma from '@/lib/prisma'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ProjectCard from '@/components/modules/project-card'
-import { Suspense } from 'react'
 import { Building } from 'lucide-react'
 
 interface SearchParams {
     keyword?: string
+    type?: string
     status?: string
     location?: string
-    type?: string
     priceMin?: string
     priceMax?: string
     areaMin?: string
@@ -26,8 +25,8 @@ async function getProjects(params: SearchParams) {
         ]
     }
 
-    if (params.status) where.status = params.status
-    if (params.type) where.category = params.type
+    if (params.type && params.type !== 'all') where.category = params.type
+    if (params.status && params.status !== 'all') where.status = params.status
     if (params.location) where.location = { contains: params.location }
 
     if (params.priceMin || params.priceMax) {
@@ -37,7 +36,7 @@ async function getProjects(params: SearchParams) {
     }
 
     const page = parseInt(params.page || '1')
-    const perPage = 6
+    const perPage = 12
 
     const [projects, total] = await Promise.all([
         prisma.project.findMany({
@@ -75,7 +74,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 animate-fade-in">
-            {/* Dark Hero Header - EXACT match reference */}
+            {/* Hero Header - Dark with Background Image (Reference Design) */}
             <div className="bg-slate-900 py-20 px-4 text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-20"></div>
                 <div className="relative z-10">
@@ -86,14 +85,12 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
                 </div>
             </div>
 
-            {/* Compact AdvancedSearch - EXACT -mt-8 from reference */}
+            {/* AdvancedSearch Compact - Below Hero (Reference Design) */}
             <div className="container mx-auto px-4 -mt-8 relative z-20 mb-12">
-                <Suspense fallback={<div className="bg-white/90 p-8 rounded-2xl shadow-2xl h-48 animate-pulse"></div>}>
-                    <AdvancedSearch isProjectSearch={true} />
-                </Suspense>
+                <AdvancedSearch isProjectSearch={true} />
             </div>
 
-            {/* Results Grid - 3 columns like reference */}
+            {/* Results Grid - 3 columns (Reference Design) */}
             <div className="container mx-auto px-4 mt-12">
                 {projects.length > 0 ? (
                     <>
@@ -141,50 +138,14 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
                     </>
                 ) : (
                     <div className="text-center py-20">
+                        <Building size={64} className="mx-auto text-slate-300 mb-4" />
                         <h3 className="text-xl font-bold text-slate-600">Không tìm thấy dự án phù hợp</h3>
-                        <a href="/du-an" className="mt-4 text-amber-600 font-bold hover:underline inline-block">
+                        <a href="/du-an" className="mt-4 inline-block text-amber-600 font-bold hover:underline">
                             Xóa bộ lọc & thử lại
                         </a>
                     </div>
                 )}
             </div>
         </div>
-    )
-}
-
-                                </div >
-
-    {/* Pagination - AMBER/SLATE style */ }
-{
-    totalPages > 1 && (
-        <div className="flex justify-center gap-3 items-center">
-            {page > 1 && (
-                <a
-                    href={`?${new URLSearchParams({ ...searchParams, page: (page - 1).toString() })}`}
-                    className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                >
-                    ← Trang trước
-                </a>
-            )}
-            <span className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-bold shadow-lg">
-                {page} / {totalPages}
-            </span>
-            {page < totalPages && (
-                <a
-                    href={`?${new URLSearchParams({ ...searchParams, page: (page + 1).toString() })}`}
-                    className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                >
-                    Trang sau →
-                </a>
-            )}
-        </div>
-    )
-}
-                            </>
-                        )}
-                    </div >
-                </div >
-            </div >
-        </div >
     )
 }
