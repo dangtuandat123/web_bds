@@ -14,14 +14,18 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         type: 'function',
         function: {
             name: 'searchProperties',
-            description: 'Tìm kiếm bất động sản (nhà phố, căn hộ, đất nền, dự án) dựa trên từ khóa, địa điểm, nhu cầu.',
+            description: 'Tìm kiếm bất động sản. ƯU TIÊN GỌI HÀM NÀY NGAY khi người dùng nhắc đến nhu cầu (mua, thuê, tìm nhà...) dù thông tin chưa đầy đủ.',
             parameters: {
                 type: 'object',
                 properties: {
                     query: {
                         type: 'string',
-                        description: 'Từ khóa tìm kiếm (ví dụ: "căn hộ 2 phòng ngủ quận 1", "vinhomes grand park", "đất nền giá rẻ")',
+                        description: 'Từ khóa chính (địa điểm, tên dự án, loại hình). Ví dụ: "quận 9", "vinhomes", "chung cư"',
                     },
+                    minPrice: { type: 'number', description: 'Giá tối thiểu (tỷ đồng)' },
+                    maxPrice: { type: 'number', description: 'Giá tối đa (tỷ đồng)' },
+                    minArea: { type: 'number', description: 'Diện tích tối thiểu (m2)' },
+                    direction: { type: 'string', description: 'Hướng nhà (Đông, Tây, Nam, Bắc...)' },
                 },
                 required: ['query'],
             },
@@ -31,7 +35,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         type: 'function',
         function: {
             name: 'createLead',
-            description: 'Lưu thông tin liên hệ của khách hàng khi họ muốn được tư vấn kỹ hơn.',
+            description: 'Lưu thông tin khách hàng. Chỉ gọi khi khách hàng cung cấp Tên và SĐT.',
             parameters: {
                 type: 'object',
                 properties: {
@@ -46,24 +50,24 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 ]
 
 // System prompt
-const systemPrompt = `Bạn là trợ lý ảo thông minh của Happy Land - nền tảng bất động sản hàng đầu Việt Nam.
+const systemPrompt = `Bạn là chuyên gia tư vấn BĐS của Happy Land.
 
-NHIỆM VỤ:
-- Tư vấn về các dự án bất động sản (căn hộ, nhà phố, đất nền).
-- Giải đáp thắc mắc về giá cả, vị trí, pháp lý.
-- Hỗ trợ tìm kiếm bất động sản phù hợp bằng công cụ searchProperties.
-- Lưu thông tin khách hàng bằng công cụ createLead khi khách hàng cung cấp tên và số điện thoại.
+NGUYÊN TẮC VÀNG (PROACTIVE):
+1. SEARCH FIRST, ASK LATER: Nếu khách nói "tìm nhà quận 9", GỌI NGAY \`searchProperties({query: "quận 9"})\`. Đừng hỏi "Bạn muốn giá bao nhiêu?" trước khi tìm.
+2. ĐOÁN Ý: Nếu khách nói "tài chính 5 tỷ", hãy tự động thêm tham số \`maxPrice: 5\`.
+3. HIỂN THỊ TRƯỚC: Luôn đưa ra danh sách BĐS tìm được trước, sau đó mới hỏi thêm chi tiết để lọc kỹ hơn.
 
-QUY TẮC ĐƯỜNG DẪN (QUAN TRỌNG):
-- Khi tìm thấy bất động sản, BẮT BUỘC phải cung cấp đường dẫn dưới dạng Markdown Link: [Tiêu đề BĐS](url).
-- Ví dụ: "Tôi tìm thấy [Căn hộ 2PN Vinhomes](/nha-dat/can-ho-2pn) phù hợp với bạn."
-- KHÔNG được hiển thị URL trần (như https://...).
+QUY TẮC TRẢ LỜI:
+- BẮT BUỘC dùng Markdown Link: [Tiêu đề](url) cho mọi BĐS.
+- Không hiển thị URL trần.
+- Giọng điệu: Nhiệt tình, chuyên nghiệp, ngắn gọn.
 
-PHONG CÁCH:
-- Thân thiện, lịch sự, chuyên nghiệp.
-- Trả lời ngắn gọn, súc tích.
-- Sử dụng emoji phù hợp 🏠💰✨.
-- Luôn hỏi thông tin cụ thể để tư vấn tốt hơn.`
+VÍ DỤ:
+User: "Tìm căn hộ quận 2"
+AI: (Gọi tool searchProperties) -> (Nhận kết quả) -> "Dạ, em tìm thấy vài căn hộ tốt ở Quận 2 cho anh/chị tham khảo:
+1. [Masteri Thảo Điền - 3.5 tỷ](/nha-dat/masteri-td)
+2. [The Vista - 4 tỷ](/nha-dat/the-vista)
+Anh/chị thấy căn nào ưng ý không ạ? Hay mình muốn tìm mức giá khác?"`
 
 export async function POST(req: Request) {
     try {
@@ -90,7 +94,7 @@ export async function POST(req: Request) {
         if (responseMessage.tool_calls) {
             const toolCalls = responseMessage.tool_calls
 
-            // Create a new messages array with the assistant's tool call message
+            // CRITICAL: Append assistant's tool call message to history to maintain context
             const newMessages = [
                 { role: 'system', content: systemPrompt },
                 ...messages,
@@ -104,11 +108,18 @@ export async function POST(req: Request) {
                 let functionResult = ''
 
                 if (functionName === 'searchProperties') {
-                    functionResult = await searchProperties(functionArgs.query)
+                    functionResult = await searchProperties(
+                        functionArgs.query,
+                        functionArgs.minPrice,
+                        functionArgs.maxPrice,
+                        functionArgs.minArea,
+                        functionArgs.direction
+                    )
                 } else if (functionName === 'createLead') {
                     functionResult = await createLead(functionArgs.name, functionArgs.phone, functionArgs.message)
                 }
 
+                // Append tool result to history
                 newMessages.push({
                     tool_call_id: toolCall.id,
                     role: 'tool',
@@ -117,7 +128,7 @@ export async function POST(req: Request) {
                 } as any)
             }
 
-            // Second call to model with tool results
+            // Second call to model with COMPLETE history (User + Assistant Tool Call + Tool Result)
             const secondResponse = await openai.chat.completions.create({
                 model: 'google/gemini-2.5-flash',
                 stream: true,
