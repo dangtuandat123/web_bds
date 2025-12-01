@@ -29,11 +29,7 @@ async function getProjects(params: SearchParams) {
     if (params.status && params.status !== 'all') where.status = params.status
     if (params.location) where.location = { contains: params.location }
 
-    if (params.priceMin || params.priceMax) {
-        where.priceRange = {}
-        if (params.priceMin) where.priceRange.gte = parseFloat(params.priceMin)
-        if (params.priceMax) where.priceRange.lte = parseFloat(params.priceMax)
-    }
+    // Note: priceRange is a String field (e.g., "5-10 tỷ"), cannot filter numerically
 
     const page = parseInt(params.page || '1')
     const perPage = 12
