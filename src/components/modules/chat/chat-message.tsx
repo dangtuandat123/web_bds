@@ -72,22 +72,21 @@ function parseToolResults(message: Message): ChatProperty[] {
 
 export default function ChatMessage({ message }: ChatMessageProps) {
     const isUser = message.role === 'user'
-    const propertyResults = !isUser ? parseToolResults(message) : []
-
     const normalizeHref = (href?: string) => {
         if (!href) return '#'
         try {
-            const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
-            const url = new URL(href, base)
-            if (href.startsWith('http') && url.origin === base) {
+            const url = new URL(href, href.startsWith('http') ? undefined : 'http://localhost')
+            // Strip host for any absolute URL to avoid wrong origin in chatbot
+            if (href.startsWith('http')) {
                 return url.pathname + url.search + url.hash
             }
-            if (!href.startsWith('http')) return href
-            return url.href
+            return href.startsWith('/') ? href : `/${href}`
         } catch {
             return href
         }
     }
+
+    const propertyResults = !isUser ? parseToolResults(message) : []
 
     return (
         <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -108,14 +107,13 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                     components={{
                         a: ({ node, href, ...props }) => {
                             const safeHref = normalizeHref(href as string | undefined)
-                            const isExternal = safeHref.startsWith('http')
                             return (
                                 <a
                                     {...props}
                                     href={safeHref}
                                     className="text-blue-600 hover:underline font-medium"
-                                    target={isExternal ? '_blank' : '_self'}
-                                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                 />
                             )
                         },

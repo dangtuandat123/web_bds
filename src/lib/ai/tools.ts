@@ -56,7 +56,8 @@ export async function searchProperties(
         if (minArea !== undefined) listingWhere.area = { ...listingWhere.area, gte: minArea }
         if (direction) listingWhere.direction = { contains: direction }
 
-        if (type) {
+        const validListingTypes = new Set(['APARTMENT', 'HOUSE', 'LAND', 'RENT'])
+        if (type && validListingTypes.has(type)) {
             listingWhere.type = type
         }
 
