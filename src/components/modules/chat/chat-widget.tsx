@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useChat } from 'ai/react'
+import { useChat } from '@ai-sdk/react'
 import { MessageCircle, X } from 'lucide-react'
 import ChatMessage from './chat-message'
 import ChatInput from './chat-input'
@@ -11,17 +11,34 @@ export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
-        api: '/api/chat',
-        initialMessages: [
+    const { messages, status, sendMessage } = useChat({
+        messages: [
             {
                 id: 'welcome',
                 role: 'assistant',
-                content:
-                    'Xin chào! 👋 Tôi là trợ lý ảo của Happy Land. Tôi có thể giúp bạn tìm hiểu về các dự án bất động sản, giá cả, vị trí và pháp lý. Bạn quan tâm đến loại hình nào? 🏠',
+                parts: [{
+                    type: 'text',
+                    text: 'Xin chào! 👋 Tôi là trợ lý ảo của Happy Land. Tôi có thể giúp bạn tìm hiểu về các dự án bất động sản, giá cả, vị trí và pháp lý. Bạn quan tâm đến loại hình nào? 🏠',
+                }],
             },
         ],
     })
+
+    const [input, setInput] = useState('')
+    const isLoading = status === 'streaming' || status === 'submitted'
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setInput(e.target.value)
+    }
+
+    const handleSubmit = async (e?: { preventDefault?: () => void }) => {
+        e?.preventDefault?.()
+        if (!input.trim()) return
+        await sendMessage({ text: input })
+        setInput('')
+    }
+
+    const append = (message: { role: 'user'; content: string }) => sendMessage({ text: message.content })
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {

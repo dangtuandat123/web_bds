@@ -1,70 +1,44 @@
-import { Message } from 'ai'
+import { UIMessage, isTextUIPart, isToolUIPart } from 'ai'
 import { User, Bot } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import ChatPropertyCard, { ChatProperty } from './chat-property-card'
 
 interface ChatMessageProps {
-    message: Message
+    message: UIMessage
 }
 
-function parseToolResults(message: Message): ChatProperty[] {
+function parseToolResults(message: UIMessage): ChatProperty[] {
     const results: ChatProperty[] = []
 
-    // Prefer toolInvocations if present
-    const toolInvocations = (message as any).toolInvocations as Array<{
-        toolName?: string
-        state?: string
-        result?: unknown
-    }> | undefined
-
-    toolInvocations?.forEach((invocation) => {
-        if (invocation.toolName === 'searchProperties' && invocation.state === 'result' && invocation.result) {
-            try {
-                const parsed = typeof invocation.result === 'string' ? JSON.parse(invocation.result) : invocation.result
-                if (Array.isArray(parsed)) {
-                    parsed.forEach((item: any) => {
-                        if (item && item.title && item.url) {
-                            results.push({
-                                title: item.title,
-                                price: item.price || '',
-                                area: item.area,
-                                location: item.location,
-                                url: item.url,
-                                thumbnailUrl: item.thumbnailUrl,
-                                type: item.type,
+    if (message.parts) {
+        message.parts.forEach((part) => {
+            if (isToolUIPart(part)) {
+                const toolPart = part as any // Cast to access properties easily if types are complex
+                if (toolPart.toolName === 'searchVectorDB' && toolPart.state === 'output-available' && toolPart.output) {
+                    try {
+                        const parsed = typeof toolPart.output === 'string' ? JSON.parse(toolPart.output) : toolPart.output
+                        if (Array.isArray(parsed)) {
+                            parsed.forEach((item: any) => {
+                                if (item && item.title && item.url) {
+                                    results.push({
+                                        title: item.title,
+                                        price: item.price || '',
+                                        area: item.area,
+                                        location: item.location,
+                                        url: item.url,
+                                        thumbnailUrl: item.thumbnailUrl,
+                                        type: item.type,
+                                    })
+                                }
                             })
                         }
-                    })
-                }
-            } catch {
-                // Ignore parsing errors for tool results
-            }
-        }
-    })
-
-    // Fallback: try parsing content as JSON array
-    if (results.length === 0 && typeof message.content === 'string') {
-        try {
-            const parsed = JSON.parse(message.content)
-            if (Array.isArray(parsed)) {
-                parsed.forEach((item: any) => {
-                    if (item && item.title && item.url) {
-                        results.push({
-                            title: item.title,
-                            price: item.price || '',
-                            area: item.area,
-                            location: item.location,
-                            url: item.url,
-                            thumbnailUrl: item.thumbnailUrl,
-                            type: item.type,
-                        })
+                    } catch {
+                        // Ignore parsing errors
                     }
-                })
+                }
             }
-        } catch {
-            // not JSON, ignore
-        }
+        })
     }
 
     return results
@@ -87,6 +61,12 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     }
 
     const propertyResults = !isUser ? parseToolResults(message) : []
+
+    // Extract text content from parts
+    const textContent = message.parts
+        .filter(isTextUIPart)
+        .map(part => part.text)
+        .join('')
 
     return (
         <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -122,7 +102,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                         ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
                     }}
                 >
-                    {message.content}
+                    {textContent}
                 </ReactMarkdown>
 
                 {propertyResults.length > 0 && (
