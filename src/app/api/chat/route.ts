@@ -3,6 +3,7 @@ import OpenAI from 'openai'
 import { searchProperties, createLead } from '@/lib/ai/tools'
 import prisma from '@/lib/prisma'
 import { randomUUID } from 'crypto'
+import { ensureSeedVectors, similaritySearch, upsertVectors } from '@/lib/ai/vector-store'
 
 // Configure OpenRouter client
 const openai = new OpenAI({
@@ -135,7 +136,57 @@ export async function POST(req: Request) {
             month: 'long',
             day: 'numeric'
         })
-        const systemPrompt = getSalesPrompt(host, date)
+        const baseSystemPrompt = getSalesPrompt(host, date)
+
+        // Seed vector store once with listings & projects
+        await ensureSeedVectors(async () => {
+            const [listings, projects] = await Promise.all([
+                prisma.listing.findMany({
+                    where: { isActive: true },
+                    take: 100,
+                    select: { id: true, title: true, description: true, location: true, slug: true },
+                }),
+                prisma.project.findMany({
+                    where: { status: { not: 'SOLD_OUT' } },
+                    take: 50,
+                    select: { id: true, name: true, description: true, location: true, slug: true },
+                }),
+            ])
+
+            const seedItems = [
+                ...listings.map((l) => ({
+                    id: `listing-${l.id}`,
+                    content: `${l.title}. ${l.description || ''} tại ${l.location || ''}`,
+                    metadata: { type: 'listing', title: l.title, url: `/nha-dat/${l.slug}` },
+                })),
+                ...projects.map((p) => ({
+                    id: `project-${p.id}`,
+                    content: `${p.name}. ${p.description || ''} tại ${p.location || ''}`,
+                    metadata: { type: 'project', title: p.name, url: `/du-an/${p.slug}` },
+                })),
+            ]
+
+            await upsertVectors(seedItems)
+        })
+
+        // RAG context from last user message
+        const lastUser = [...messages].reverse().find((m: any) => m.role === 'user')
+        let ragContext = ''
+        if (lastUser?.content) {
+            const queryText = typeof lastUser.content === 'string' ? lastUser.content : JSON.stringify(lastUser.content)
+            const ragResults = await similaritySearch(queryText, 4)
+            if (ragResults.length) {
+                ragContext =
+                    'Ngữ cảnh tham khảo (RAG):\n' +
+                    ragResults
+                        .map(
+                            (r) =>
+                                `- ${r.metadata?.title || ''} (${r.metadata?.url || ''}): ${r.content?.slice(0, 180)}...`
+                        )
+                        .join('\n')
+            }
+        }
+        const systemPrompt = ragContext ? `${baseSystemPrompt}\n\n${ragContext}` : baseSystemPrompt
 
         if (!process.env.OPENROUTER_API_KEY) {
             return new Response('OpenRouter API key not configured', { status: 500 })
