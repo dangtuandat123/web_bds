@@ -3,16 +3,12 @@
 interface ChatSuggestionChipsProps {
     onSelect: (prompt: string) => void
     disabled?: boolean
+    suggestions?: string[]
 }
 
-const suggestions = [
-    'Căn hộ dưới 3 tỷ',
-    'Nhà phố Quận 9',
-    'Dự án mới nhất',
-    'Tư vấn pháp lý',
-]
+export default function ChatSuggestionChips({ onSelect, disabled, suggestions = [] }: ChatSuggestionChipsProps) {
+    if (!suggestions.length) return null
 
-export default function ChatSuggestionChips({ onSelect, disabled }: ChatSuggestionChipsProps) {
     return (
         <div className="flex flex-wrap gap-2 px-4 pb-2">
             {suggestions.map((text) => (

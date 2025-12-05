@@ -33,6 +33,12 @@ export default function ChatWidget() {
     }
 
     const shouldShowSuggestions = messages.length <= 1 && !isLoading
+    const defaultSuggestions = [
+        'Tìm căn hộ giá tốt',
+        'Nhà phố khu đông',
+        'Dự án mới mở bán',
+        'Tư vấn đầu tư BĐS',
+    ]
 
     return (
         <>
@@ -80,7 +86,11 @@ export default function ChatWidget() {
                                 <ChatMessage key={message.id} message={message} />
                             ))}
                             {shouldShowSuggestions && (
-                                <ChatSuggestionChips onSelect={handleSelectSuggestion} disabled={isLoading} />
+                                <ChatSuggestionChips
+                                    onSelect={handleSelectSuggestion}
+                                    disabled={isLoading}
+                                    suggestions={defaultSuggestions}
+                                />
                             )}
                             {isLoading && (
                                 <div className="flex gap-3">

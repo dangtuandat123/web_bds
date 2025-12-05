@@ -1,5 +1,8 @@
-const config = {
-    extends: ["next/core-web-vitals", "next/typescript"],
-};
+import next from 'eslint-config-next'
 
-export default config;
+export default [
+    ...next(),
+    {
+        ignores: ['.next/**', 'node_modules/**'],
+    },
+]
