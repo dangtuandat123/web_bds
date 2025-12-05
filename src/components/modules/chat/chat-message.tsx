@@ -20,17 +20,24 @@ function parseToolResults(message: UIMessage): ChatProperty[] {
                         const parsed = typeof toolPart.output === 'string' ? JSON.parse(toolPart.output) : toolPart.output
                         if (Array.isArray(parsed)) {
                             parsed.forEach((item: any) => {
-                                if (item && item.title && item.url) {
-                                    results.push({
-                                        title: item.title,
-                                        price: item.price || '',
-                                        area: item.area,
-                                        location: item.location,
-                                        url: item.url,
-                                        thumbnailUrl: item.thumbnailUrl,
-                                        type: item.type,
-                                    })
-                                }
+                                if (!item) return
+                                const meta = item.metadata || {}
+                                const urlFromMeta =
+                                    meta.type === 'PROJECT'
+                                        ? meta.slug ? `/du-an/${meta.slug}` : undefined
+                                        : meta.type === 'LISTING'
+                                            ? meta.slug ? `/nha-dat/${meta.slug}` : undefined
+                                            : undefined
+
+                                results.push({
+                                    title: item.title || meta.name || meta.title || 'Bất động sản',
+                                    price: item.price ?? meta.price ?? meta.priceRange ?? '',
+                                    area: item.area ?? meta.area,
+                                    location: item.location ?? meta.fullLocation ?? meta.location,
+                                    url: item.url || urlFromMeta || '/',
+                                    thumbnailUrl: item.thumbnailUrl ?? meta.thumbnailUrl,
+                                    type: item.type || meta.type,
+                                })
                             })
                         }
                     } catch {

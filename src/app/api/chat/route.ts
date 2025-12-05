@@ -1,4 +1,4 @@
-import { streamText, tool, convertToCoreMessages, stepCountIs } from 'ai'
+import { streamText, tool, stepCountIs } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { searchVectorDB, createLead } from '@/lib/ai/tools'
 import prisma from '@/lib/prisma'
@@ -11,34 +11,25 @@ const openrouter = createOpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
 })
 
-// System prompt generator - STRICT SALES PERSONA
+// System prompt generator - concise sales persona with tool-first discipline
 const getSystemPrompt = (host: string, date: string) => `
-BẠN LÀ: Chuyên gia Bất Động Sản hàng đầu của Happy Land (${host}).
-THỜI GIAN: ${date}
-
-NGUYÊN TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ):
-1. **KHÔNG NÓI NHẢM:** Chỉ trả lời đúng trọng tâm câu hỏi. Nếu không tìm thấy thông tin, hãy nói thẳng "Hiện tại em chưa tìm thấy BĐS phù hợp với yêu cầu này" và gợi ý các lựa chọn khác gần nhất.
-2. **TƯ DUY TRƯỚC KHI LÀM (ReAct):**
-   - Luôn phân tích kỹ yêu cầu của khách hàng.
-   - Sử dụng công cụ \`searchVectorDB\` để tìm kiếm thông tin chính xác từ cơ sở dữ liệu.
-   - KHÔNG ĐƯỢC BỊA ĐẶT thông tin bất động sản.
-3. **CHỐT KHÁCH:** Mục tiêu cuối cùng là lấy được thông tin liên hệ (SĐT).
-   - Sau khi cung cấp thông tin nhà, LUÔN hỏi khéo: "Anh/chị thấy căn này thế nào ạ? Em gửi thêm sổ hồng qua Zalo cho mình nhé?"
-   - Nếu khách quan tâm, hãy gợi ý họ để lại SĐT để được tư vấn kỹ hơn.
-4. **PHÁP LÝ & QUY HOẠCH:**
-   - Chỉ cung cấp thông tin pháp lý cơ bản (Sổ hồng, HĐMB) nếu có trong dữ liệu.
-   - Tuyệt đối KHÔNG tư vấn pháp lý chuyên sâu hoặc cam kết lợi nhuận nếu không có căn cứ xác thực.
-
-QUY TRÌNH TƯ VẤN:
-Bước 1: Lắng nghe và Phân tích nhu cầu (Khu vực, Giá, Loại hình...).
-Bước 2: Sử dụng \`searchVectorDB\` để tìm BĐS phù hợp.
-Bước 3: Trình bày kết quả ngắn gọn, rõ ràng (kèm Link Markdown).
-Bước 4: Mời khách để lại SĐT hoặc đặt lịch xem nhà.
-`;
+BAN LA: Chuyen gia BDS Happy Land (${host}), thoi gian: ${date}.
+NGUYEN TAC:
+- Luon dung \`searchVectorDB\` truoc khi tra loi ve BDS. Neu khong co ket qua, noi ro va de xuat phuong an gan nhat.
+- Khong bia dat. Chi su dung du lieu tu cong cu. Neu chua ro, hoi lai de lam ro nhu cau.
+- Giai thich ngan gon, uu tien 3 goi y phu hop (ten + gia/area + link).
+- Luon moi khach de lai ten + SDT/Zalo. Neu khach da cung cap ten/SDT -> goi \`createLead\` de luu.
+- Giong noi ban hang chu dong, nhac lai khu vuc, ngan sach, loai hinh de xac nhan.
+`
 
 export async function POST(req: Request) {
     try {
-        const { messages, sessionId: clientSessionId } = await req.json()
+        const bodySchema = z.object({
+            messages: z.any(),
+            sessionId: z.string().optional(),
+        })
+
+        const { messages, sessionId: clientSessionId } = bodySchema.parse(await req.json())
 
         // Generate or use existing session ID
         const sessionId = clientSessionId || randomUUID()
@@ -61,32 +52,32 @@ export async function POST(req: Request) {
             stopWhen: stepCountIs(5), // Enable multi-step reasoning (ReAct)
             tools: {
                 searchVectorDB: tool({
-                    description: 'Tìm kiếm bất động sản trong cơ sở dữ liệu vector. Sử dụng khi khách hàng hỏi về mua bán, cho thuê nhà đất, căn hộ, dự án.',
+                    description: 'Tim kiem bat dong san trong co so du lieu vector. Dung khi khach hoi ve mua ban/cho thue.',
                     parameters: z.object({
-                        query: z.string().describe('Mô tả chi tiết nhu cầu tìm kiếm (VD: "chung cư quận 9 giá 3 tỷ", "nhà phố thủ đức").'),
-                        limit: z.number().optional().describe('Số lượng kết quả tối đa. Mặc định là 5.'),
-                    }) as any,
-                    execute: async ({ query, limit }: { query: string; limit?: number }) => {
+                        query: z.string().describe('Mo ta nhu cau tim kiem, vi du: "chung cu quan 9 gia 3 ty"'),
+                        limit: z.number().optional().describe('So ket qua toi da (mac dinh 5)'),
+                    }),
+                    execute: async ({ query, limit }) => {
                         return await searchVectorDB(query, limit)
                     },
-                } as any) as any,
+                }),
                 createLead: tool({
-                    description: 'Lưu thông tin khách hàng tiềm năng. CHỈ GỌI khi khách hàng CUNG CẤP Tên và Số điện thoại.',
+                    description: 'Luu thong tin khach hang tiem nang sau khi da co ten + so dien thoai.',
                     parameters: z.object({
-                        name: z.string().describe('Tên khách hàng'),
-                        phone: z.string().describe('Số điện thoại khách hàng'),
-                        message: z.string().optional().describe('Ghi chú hoặc nhu cầu cụ thể'),
-                    }) as any,
-                    execute: async ({ name, phone, message }: { name: string; phone: string; message?: string }) => {
+                        name: z.string().describe('Ten khach hang'),
+                        phone: z.string().describe('So dien thoai khach hang'),
+                        message: z.string().optional().describe('Nhu cau cu the'),
+                    }),
+                    execute: async ({ name, phone, message }) => {
                         return await createLead(name, phone, message)
                     },
-                } as any) as any,
+                }),
             },
             onFinish: async ({ response }) => {
                 // Save chat session to database
                 try {
-                    const responseMessages = response.messages;
-                    const lastMessage = responseMessages[responseMessages.length - 1];
+                    const responseMessages = response.messages
+                    const lastMessage = responseMessages[responseMessages.length - 1]
                     if (lastMessage.role === 'assistant') {
                         await prisma.chatSession.upsert({
                             where: { sessionId },
@@ -111,6 +102,8 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('Chat API Error:', error)
-        return new Response('Internal Server Error', { status: 500 })
+        const message = error instanceof Error ? error.message : 'Internal Server Error'
+        return new Response(message, { status: 500 })
     }
 }
+

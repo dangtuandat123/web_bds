@@ -71,6 +71,7 @@ export class VectorStore {
         const dotProduct = Number(math.dot(vecA, vecB))
         const normA = Number(math.norm(vecA))
         const normB = Number(math.norm(vecB))
+        if (normA === 0 || normB === 0) return 0
         return dotProduct / (normA * normB)
     }
 }
