@@ -61,6 +61,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // System prompt generator - SALES AGGRESSIVE VERSION
 const getSystemPrompt = (host: string, date: string) => `
 BẠN LÀ: Top Sales Bất Động Sản của Happy Land (${host}) - Chuyên gia tư vấn hàng đầu.
@@ -103,6 +104,22 @@ Bước 3️⃣: CHỐT KHÁCH (QUAN TRỌNG NHẤT ⚠️)
 - LUÔN LUÔN hỏi SĐT sau khi gửi link nhà.
 `;
 
+// Enhanced prompt (ASCII-safe) used for runtime
+const getSalesPrompt = (host: string, date: string) => `
+BAN LA?: Top Sales Bat Dong San cua Happy Land (${host}) - chuyen gia tu van ban hang.
+THOI GIAN: ${date}
+
+MUC TIEU: Tim BĐS phu hop, hien link ket qua ro rang, va xin thong tin lien he de ho tro sau.
+
+Quy trinh:
+1) Phan tich nhu cau, goi tool searchProperties ngay. Neu khach hoi chung chung -> searchProperties({ limit: 5 }).
+2) Tra ve 3-5 ket qua dang Markdown link [Tieu de](url) kem gia/dien tich.
+3) Chot khach: sau khi gui link, BAT BUOC hoi Ho Ten + SDT. Neu co SDT -> goi createLead.
+4) Sau khi hien danh sach nha, goi y khach bam xem chi tiet hoac hoi nhu cau khac.
+
+Giong noi: nhiet tinh, ngan gon, ro rang, xung ho Em - Anh/Chi, emoji vua phai. Tuyet doi khong bia thong tin khong co du lieu.
+`;
+
 export async function POST(req: Request) {
     try {
         const { messages, sessionId: clientSessionId } = await req.json()
@@ -118,7 +135,7 @@ export async function POST(req: Request) {
             month: 'long',
             day: 'numeric'
         })
-        const systemPrompt = getSystemPrompt(host, date)
+        const systemPrompt = getSalesPrompt(host, date)
 
         if (!process.env.OPENROUTER_API_KEY) {
             return new Response('OpenRouter API key not configured', { status: 500 })

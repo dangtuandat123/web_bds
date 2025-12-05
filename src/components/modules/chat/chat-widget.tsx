@@ -5,12 +5,13 @@ import { useChat } from 'ai/react'
 import { MessageCircle, X } from 'lucide-react'
 import ChatMessage from './chat-message'
 import ChatInput from './chat-input'
+import ChatSuggestionChips from './chat-suggestion-chips'
 
 export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
         api: '/api/chat',
         initialMessages: [
             {
@@ -26,6 +27,12 @@ export default function ChatWidget() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
+
+    const handleSelectSuggestion = (prompt: string) => {
+        append({ role: 'user', content: prompt })
+    }
+
+    const shouldShowSuggestions = messages.length <= 1 && !isLoading
 
     return (
         <>
@@ -72,6 +79,9 @@ export default function ChatWidget() {
                             {messages.map((message) => (
                                 <ChatMessage key={message.id} message={message} />
                             ))}
+                            {shouldShowSuggestions && (
+                                <ChatSuggestionChips onSelect={handleSelectSuggestion} disabled={isLoading} />
+                            )}
                             {isLoading && (
                                 <div className="flex gap-3">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-700 to-slate-800 flex items-center justify-center flex-shrink-0">
