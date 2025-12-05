@@ -11,9 +11,11 @@ import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatArea } from '@/lib/utils/format'
 
 // Generate Metadata for SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params
+
     const listing = await prisma.listing.findUnique({
-        where: { slug: params.slug },
+        where: { slug },
         select: { title: true, description: true, thumbnailUrl: true, price: true, area: true }
     })
 
@@ -107,8 +109,10 @@ const typeLabels: Record<string, string> = {
     RENT: 'Cho thuê',
 }
 
-export default async function ListingDetailPage({ params }: { params: { slug: string } }) {
-    const listing = await getListing(params.slug)
+export default async function ListingDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+
+    const listing = await getListing(slug)
     const relatedListings = await getRelatedListings(listing)
 
     // Parse images from JSON

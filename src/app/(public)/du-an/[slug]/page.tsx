@@ -10,9 +10,11 @@ import { MapPin, Building2, TrendingUp, Home } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 // Generate Metadata for SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params
+
     const project = await prisma.project.findUnique({
-        where: { slug: params.slug },
+        where: { slug },
         select: { name: true, description: true, thumbnailUrl: true }
     })
 
@@ -74,8 +76,10 @@ async function getProject(slug: string) {
     return project
 }
 
-export default async function ProjectDetailPage({ params }: { params: { slug: string } }) {
-    const project = await getProject(params.slug)
+export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+
+    const project = await getProject(slug)
 
     // Parse images from JSON
     const images = Array.isArray(project.images)

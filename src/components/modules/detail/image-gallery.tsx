@@ -72,10 +72,13 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
 
                 {/* Main Image */}
                 <div className="relative w-full h-full flex justify-center items-center">
-                    <img
+                    <Image
                         src={images[lightboxIndex]}
                         alt={`Gallery ${lightboxIndex + 1}`}
-                        className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
+                        fill
+                        className="object-contain shadow-2xl rounded-sm"
+                        sizes="100vw"
+                        priority
                     />
                 </div>
 

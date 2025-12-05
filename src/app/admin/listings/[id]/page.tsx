@@ -47,9 +47,10 @@ async function getFormData() {
 export default async function EditListingPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
 
     if (isNaN(id)) {
         notFound()

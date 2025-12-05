@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma'
 import NewsForm from '@/components/admin/news/news-form'
 
 interface PageProps {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }
 
 export const metadata: Metadata = {
@@ -13,8 +13,10 @@ export const metadata: Metadata = {
 }
 
 export default async function EditNewsPage({ params }: PageProps) {
+    const { id } = await params
+
     const news = await prisma.news.findUnique({
-        where: { id: parseInt(params.id) },
+        where: { id: parseInt(id) },
     })
 
     if (!news) {

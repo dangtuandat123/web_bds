@@ -66,8 +66,9 @@ const categoryMap: Record<string, string> = {
     VILLA: 'Biệt thự',
 }
 
-export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
-    const keyword = searchParams.keyword || ''
+export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+    const resolvedParams = await searchParams
+    const keyword = resolvedParams.keyword || ''
     const { listings, projects } = keyword ? await searchAll(keyword) : { listings: [], projects: [] }
 
     const getListingTags = (type: string) => {

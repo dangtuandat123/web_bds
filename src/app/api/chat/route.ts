@@ -165,8 +165,6 @@ export async function POST(req: Request) {
                 const functionArgs = JSON.parse((toolCall as any).function.arguments)
                 let functionResult = ''
 
-                console.log(`[AI Tool] Calling ${functionName} with args:`, functionArgs)
-
                 if (functionName === 'searchProperties') {
                     functionResult = await searchProperties(
                         functionArgs.query || '',
@@ -229,7 +227,6 @@ export async function POST(req: Request) {
                                 }
                             }
                         })
-                        console.log('[Chat Session] Saved:', sessionId)
                     } catch (error) {
                         console.error('[Chat Session] Save failed:', error)
                     }
@@ -287,7 +284,6 @@ export async function POST(req: Request) {
                             }
                         }
                     })
-                    console.log('[Chat Session] Saved:', sessionId)
                 } catch (error) {
                     console.error('[Chat Session] Save failed:', error)
                 }

@@ -15,12 +15,13 @@ const categoryConfig: Record<string, string> = {
 }
 
 interface PageProps {
-    searchParams: { category?: string; q?: string }
+    searchParams: Promise<{ category?: string; q?: string }>
 }
 
 export default async function NewsPage({ searchParams }: PageProps) {
-    const category = searchParams.category || 'all'
-    const searchQuery = searchParams.q || ''
+    const resolvedSearchParams = await searchParams
+    const category = resolvedSearchParams.category || 'all'
+    const searchQuery = resolvedSearchParams.q || ''
 
     // Build where clause
     const where: any = {}

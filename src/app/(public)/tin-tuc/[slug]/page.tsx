@@ -7,7 +7,7 @@ import { incrementNewsViews } from '@/app/actions/news'
 import NewsCard from '@/components/modules/news-card'
 
 interface PageProps {
-    params: { slug: string }
+    params: Promise<{ slug: string }>
 }
 
 const categoryConfig: Record<string, string> = {
@@ -17,8 +17,10 @@ const categoryConfig: Record<string, string> = {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params
+
     const news = await prisma.news.findUnique({
-        where: { slug: params.slug },
+        where: { slug },
     })
 
     if (!news) {
@@ -32,8 +34,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function NewsDetailPage({ params }: PageProps) {
+    const { slug } = await params
+
     const news = await prisma.news.findUnique({
-        where: { slug: params.slug },
+        where: { slug },
     })
 
     if (!news) {
@@ -41,7 +45,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
     }
 
     // Increment views (async, don't await)
-    incrementNewsViews(params.slug)
+    incrementNewsViews(slug)
 
     // Related news
     const relatedNews = await prisma.news.findMany({
