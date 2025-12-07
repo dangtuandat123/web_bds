@@ -286,7 +286,7 @@ export default function ProjectForm({ initialData, amenities }: ProjectFormProps
                                 <FormLabel>Nội dung chi tiết</FormLabel>
                                 <FormControl>
                                     <RichTextEditor
-                                        content={field.value || ''}
+                                        value={field.value || ''}
                                         onChange={field.onChange}
                                     />
                                 </FormControl>
