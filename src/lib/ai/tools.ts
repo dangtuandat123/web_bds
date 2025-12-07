@@ -19,7 +19,7 @@ export async function searchVectorDB(query: string, limit: number = 5) {
         const results = await vectorStore.similaritySearch(query, limit)
 
         if (results.length === 0) {
-            return 'KhA'ng tAªm th §y b §t Ž` ¯Tng s §œn phA1 h ¯œp trong c’­ s ¯Y d ¯_ li ¯Øu.'
+            return 'Không tìm thấy bất động sản phù hợp trong cơ sở dữ liệu.'
         }
 
         const mapped: VectorResult[] = results.map((r) => {
@@ -54,7 +54,7 @@ export async function searchVectorDB(query: string, limit: number = 5) {
         return JSON.stringify(mapped)
     } catch (error) {
         console.error('Vector Search Error:', error)
-        return 'Ž?Aœ cA3 l ¯-i x §œy ra khi tAªm ki §¨m trong vector database.'
+        return 'Đã có lỗi xảy ra khi tìm kiếm trong vector database.'
     }
 }
 
@@ -74,4 +74,3 @@ export async function createLead(name: string, phone: string, message?: string) 
         return JSON.stringify({ success: false, error: 'Khong the luu thong tin.' })
     }
 }
-

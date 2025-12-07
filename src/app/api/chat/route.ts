@@ -1,40 +1,71 @@
-import { streamText, tool, stepCountIs } from 'ai'
+import { streamText, tool, convertToCoreMessages, CoreMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
-import { searchVectorDB, createLead } from '@/lib/ai/tools'
-import prisma from '@/lib/prisma'
-import { randomUUID } from 'crypto'
 import { z } from 'zod'
+import { searchVectorDB, createLead } from '@/lib/ai/tools'
+import { SearchVectorDBArgs, CreateLeadArgs } from '@/types'
 
-// Configure OpenRouter Provider (using OpenAI compatible API)
+// Configure OpenRouter Provider
 const openrouter = createOpenAI({
     apiKey: process.env.OPENROUTER_API_KEY || '',
     baseURL: 'https://openrouter.ai/api/v1',
 })
 
-// System prompt generator - concise sales persona with tool-first discipline
+// System prompt generator
 const getSystemPrompt = (host: string, date: string) => `
-BAN LA: Chuyen gia BDS Happy Land (${host}), thoi gian: ${date}.
-NGUYEN TAC:
-- Luon dung \`searchVectorDB\` truoc khi tra loi ve BDS. Neu khong co ket qua, noi ro va de xuat phuong an gan nhat.
-- Khong bia dat. Chi su dung du lieu tu cong cu. Neu chua ro, hoi lai de lam ro nhu cau.
-- Giai thich ngan gon, uu tien 3 goi y phu hop (ten + gia/area + link).
-- Luon moi khach de lai ten + SDT/Zalo. Neu khach da cung cap ten/SDT -> goi \`createLead\` de luu.
-- Giong noi ban hang chu dong, nhac lai khu vuc, ngan sach, loai hinh de xac nhan.
-`
+BẠN LÀ: Chuyên gia BDS Happy Land (${host}), thời gian: ${date}.
+NHIỆM VỤ: Tư vấn và CHỐT KHÁCH (lấy SĐT).
+
+NGUYÊN TẮC BẮT BUỘC:
+1. **TÌM KIẾM TRƯỚC**: Luôn gọi \`searchVectorDB\` KHI khách hỏi về BDS.
+   - Không có kết quả -> Nói thẳng "Hiện chưa có căn nào khớp 100%" -> Gợi ý căn gần nhất.
+   - TUYỆT ĐỐI KHÔNG BỊA ĐẶT thông tin.
+2. **CHỐT SALE**:
+   - Cuối mỗi câu trả lời phải MỤC TIÊU LẤY SĐT.
+   - VD: "Anh/chị để lại SĐT em gửi sơ hồng qua Zalo nhé?", "Em có thể gọi tư vấn kỹ hơn không ạ?"
+3. **LƯU LEAD**:
+   - Ngay khi khách đưa Tên/SĐT -> Gọi \`createLead\` NGAY LẬP TỨC.
+4. **PHONG CÁCH**:
+   - Ngắn gọn, chuyên nghiệp, tự tin.
+   - Chỉ đưa ra tối đa 3 lựa chọn tốt nhất.
+`;
+
+// Helper to sanitize messages for OpenRouter/Gemini compatibility
+function sanitizeMessages(messages: CoreMessage[]): CoreMessage[] {
+    return messages.map(msg => {
+        // Handle content if it's an array (common in Vercel AI SDK for multimodal/tools)
+        if (Array.isArray(msg.content)) {
+            // Extract text parts
+            const textContent = msg.content
+                .filter(part => part.type === 'text')
+                .map(part => (part as any).text)
+                .join('\n');
+
+            // For tool-result, we might want to keep it as is or stringify?
+            // OpenRouter/Gemini often expects 'user' role for tool results if not strictly supported
+            // But here we just want to ensure 'content' is a string for normal messages.
+
+            return {
+                ...msg,
+                content: textContent || '' // Ensure string
+            } as CoreMessage;
+        }
+
+        // If content is not a string (and not an array, e.g. object?), stringify it
+        if (msg.content && typeof msg.content !== 'string') {
+            return {
+                ...msg,
+                content: JSON.stringify(msg.content)
+            } as CoreMessage;
+        }
+
+        return msg;
+    });
+}
 
 export async function POST(req: Request) {
     try {
-        const bodySchema = z.object({
-            messages: z.any(),
-            sessionId: z.string().optional(),
-        })
+        const { messages } = await req.json()
 
-        const { messages, sessionId: clientSessionId } = bodySchema.parse(await req.json())
-
-        // Generate or use existing session ID
-        const sessionId = clientSessionId || randomUUID()
-
-        // Get dynamic context
         const host = req.headers.get('host') || 'happyland.me'
         const date = new Date().toLocaleDateString('vi-VN', {
             weekday: 'long',
@@ -44,66 +75,87 @@ export async function POST(req: Request) {
         })
         const systemPrompt = getSystemPrompt(host, date)
 
-        // Call AI with ReAct Agent capabilities
-        const result = await streamText({
-            model: openrouter('google/gemini-2.5-flash'),
-            system: systemPrompt,
-            messages,
-            stopWhen: stepCountIs(5), // Enable multi-step reasoning (ReAct)
-            tools: {
-                searchVectorDB: tool({
-                    description: 'Tim kiem bat dong san trong co so du lieu vector. Dung khi khach hoi ve mua ban/cho thue.',
-                    parameters: z.object({
-                        query: z.string().describe('Mo ta nhu cau tim kiem, vi du: "chung cu quan 9 gia 3 ty"'),
-                        limit: z.number().optional().describe('So ket qua toi da (mac dinh 5)'),
-                    }),
-                    execute: async ({ query, limit }) => {
-                        return await searchVectorDB(query, limit)
-                    },
-                }),
-                createLead: tool({
-                    description: 'Luu thong tin khach hang tiem nang sau khi da co ten + so dien thoai.',
-                    parameters: z.object({
-                        name: z.string().describe('Ten khach hang'),
-                        phone: z.string().describe('So dien thoai khach hang'),
-                        message: z.string().optional().describe('Nhu cau cu the'),
-                    }),
-                    execute: async ({ name, phone, message }) => {
-                        return await createLead(name, phone, message)
-                    },
-                }),
-            },
-            onFinish: async ({ response }) => {
-                // Save chat session to database
-                try {
-                    const responseMessages = response.messages
-                    const lastMessage = responseMessages[responseMessages.length - 1]
-                    if (lastMessage.role === 'assistant') {
-                        await prisma.chatSession.upsert({
-                            where: { sessionId },
-                            create: {
-                                sessionId,
-                                messages: [...messages, lastMessage],
-                                metadata: { host, lastUpdated: new Date().toISOString() }
-                            },
-                            update: {
-                                messages: [...messages, lastMessage],
-                                metadata: { host, lastUpdated: new Date().toISOString() }
+        if (!process.env.OPENROUTER_API_KEY) {
+            return new Response('OpenRouter API key missing', { status: 500 })
+        }
+
+        // 1. Convert UI messages to Core messages
+        const coreMessages = convertToCoreMessages(messages)
+
+        // 2. Sanitize messages for OpenRouter (flatten text arrays)
+        const sanitizedMessages = sanitizeMessages(coreMessages)
+
+        // 3. Call AI with Tools and ReAct logic
+        try {
+            const result = await streamText({
+                model: openrouter('google/gemini-2.5-flash'),
+                system: systemPrompt,
+                messages: sanitizedMessages,
+                tools: {
+                    searchVectorDB: (tool as any)({
+                        description: 'Tìm kiếm bất động sản. ƯU TIÊN GỌI HÀM NÀY NGAY khi người dùng nhắc đến nhu cầu.',
+                        parameters: z.object({
+                            query: z.string().describe('Mô tả nhu cầu tìm kiếm').default(''),
+                            limit: z.number().optional().describe('Số kết quả tối đa').default(5),
+                        }),
+                        execute: async ({ query, limit }: { query: string, limit?: number }) => {
+                            console.log(`[Tool] searchVectorDB: ${query}`)
+                            if (!query) return 'Vui lòng cung cấp thông tin tìm kiếm cụ thể hơn.';
+                            try {
+                                return await searchVectorDB(query, limit)
+                            } catch (error) {
+                                console.error('[Tool Error] searchVectorDB:', error)
+                                return 'Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.'
                             }
-                        })
-                    }
-                } catch (error) {
-                    console.error('[Chat Session] Save failed:', error)
-                }
+                        },
+                    }),
+                    createLead: (tool as any)({
+                        description: 'Lưu thông tin khách hàng.',
+                        parameters: z.object({
+                            name: z.string().describe('Tên khách hàng').default('Khách hàng'),
+                            phone: z.string().describe('Số điện thoại').default(''),
+                            message: z.string().optional().describe('Lời nhắn'),
+                        }),
+                        execute: async ({ name, phone, message }: { name: string, phone: string, message?: string }) => {
+                            console.log(`[Tool] createLead: ${name}, ${phone}`)
+                            if (!phone) return 'Vui lòng cung cấp số điện thoại để lưu thông tin.';
+                            try {
+                                return await createLead(name, phone, message)
+                            } catch (error) {
+                                console.error('[Tool Error] createLead:', error)
+                                return 'Lỗi lưu thông tin. Vui lòng thử lại sau.'
+                            }
+                        },
+                    }),
+                },
+                onStepFinish: (step) => {
+                    console.log('[Chat] Step finished:', JSON.stringify(step, null, 2))
+                },
+            })
+
+            // Debug logging
+            console.log('[Debug] streamText result keys:', Object.keys(result))
+
+            if (result && typeof (result as any).toDataStreamResponse === 'function') {
+                return (result as any).toDataStreamResponse()
+            } else if (result && typeof (result as any).toTextStreamResponse === 'function') {
+                console.warn('[Warning] Using toTextStreamResponse as fallback.')
+                return (result as any).toTextStreamResponse()
+            } else {
+                console.error('[Critical] Result object is invalid:', result)
+                return new Response(JSON.stringify({ error: 'AI Service Error: Invalid response from model' }), { status: 500 })
             }
-        })
 
-        return result.toUIMessageStreamResponse()
+        } catch (streamError: any) {
+            console.error('[Stream Error]', streamError)
+            return new Response(JSON.stringify({ error: streamError.message || 'Stream Error' }), { status: 500 })
+        }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Chat API Error:', error)
-        const message = error instanceof Error ? error.message : 'Internal Server Error'
-        return new Response(message, { status: 500 })
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
 }
-
