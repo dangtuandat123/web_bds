@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator'
 import RichTextEditor from './rich-text-editor'
 import ImageUpload from '../image-upload'
 import { createProject, updateProject } from '@/app/actions/project'
+import { LOCATION_OPTIONS } from '@/lib/constants'
 
 // Zod schema
 const projectSchema = z.object({
@@ -217,10 +218,21 @@ export default function ProjectForm({ initialData, amenities }: ProjectFormProps
                         name="location"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Vị trí *</FormLabel>
-                                <FormControl>
-                                    <Input {...field} placeholder="Ví dụ: Quận 9, TP. Thủ Đức" />
-                                </FormControl>
+                                <FormLabel>Khu vực *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Chọn khu vực" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {LOCATION_OPTIONS.map((loc) => (
+                                            <SelectItem key={loc} value={loc}>
+                                                {loc}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}

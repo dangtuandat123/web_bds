@@ -34,6 +34,7 @@ import RichTextEditor from '../projects/rich-text-editor'
 import ImageUpload from '../image-upload'
 import { createListing, updateListing } from '@/app/actions/listing'
 import { generateSlug } from '@/lib/utils/format'
+import { LOCATION_OPTIONS } from '@/lib/constants'
 
 // Zod schema
 const listingSchema = z.object({
@@ -242,10 +243,21 @@ export default function ListingForm({ initialData, amenities, projects }: Listin
                         name="location"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Vị trí *</FormLabel>
-                                <FormControl>
-                                    <Input {...field} placeholder="Ví dụ: Quận 9, TP. Thủ Đức" />
-                                </FormControl>
+                                <FormLabel>Khu vực *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Chọn khu vực" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {LOCATION_OPTIONS.map((loc) => (
+                                            <SelectItem key={loc} value={loc}>
+                                                {loc}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
