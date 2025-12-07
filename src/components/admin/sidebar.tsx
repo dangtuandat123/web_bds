@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin } from 'lucide-react'
+import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin, MessageSquare } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth'
 
 const navigation = [
@@ -12,6 +12,7 @@ const navigation = [
     { name: 'Tiện ích', href: '/admin/amenities', icon: Sparkles },
     { name: 'Khu vực', href: '/admin/locations', icon: MapPin },
     { name: 'Tin tức', href: '/admin/news', icon: Newspaper },
+    { name: 'Chatbot AI', href: '/admin/chatbot', icon: MessageSquare },
     { name: 'Khách hàng', href: '/admin/leads', icon: Users },
     { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
 ]
