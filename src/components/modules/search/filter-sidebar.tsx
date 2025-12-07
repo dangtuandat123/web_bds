@@ -6,7 +6,6 @@ import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-    LOCATIONS,
     PRICE_RANGES,
     AREA_RANGES,
     LISTING_TYPES,
@@ -17,14 +16,16 @@ import {
 
 interface FilterSidebarProps {
     type: 'project' | 'listing'
+    locations: string[]
 }
 
-export default function FilterSidebar({ type }: FilterSidebarProps) {
+export default function FilterSidebar({ type, locations }: FilterSidebarProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
+    const allLocations = ['Tất cả khu vực', ...locations]
     const [keyword, setKeyword] = useState(searchParams.get('keyword') || '')
-    const [location, setLocation] = useState(searchParams.get('location') || LOCATIONS[0])
+    const [location, setLocation] = useState(searchParams.get('location') || allLocations[0])
     const [priceIndex, setPriceIndex] = useState(0)
     const [areaIndex, setAreaIndex] = useState(0)
     const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || (type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id))
@@ -62,7 +63,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
 
     const resetFilters = () => {
         setKeyword('')
-        setLocation(LOCATIONS[0])
+        setLocation(allLocations[0])
         setPriceIndex(0)
         setAreaIndex(0)
         setTypeFilter(type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id)
@@ -72,7 +73,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
         router.push(window.location.pathname)
     }
 
-    const hasActiveFilters = keyword || location !== LOCATIONS[0] || priceIndex !== 0 || areaIndex !== 0 ||
+    const hasActiveFilters = keyword || location !== allLocations[0] || priceIndex !== 0 || areaIndex !== 0 ||
         typeFilter !== (type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id) ||
         bedrooms !== BEDROOM_OPTIONS[0].value || direction !== DIRECTION_OPTIONS[0].value || status !== 'all'
 
@@ -154,7 +155,7 @@ export default function FilterSidebar({ type }: FilterSidebarProps) {
                 label="Khu vực"
                 value={location}
                 onChange={setLocation}
-                options={LOCATIONS}
+                options={allLocations}
                 icon={MapPin}
             />
 

@@ -3,6 +3,15 @@ import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ListingCard from '@/components/modules/listing-card'
 import { Search } from 'lucide-react'
 
+async function getLocations() {
+    const locations = await prisma.location.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { name: true },
+    })
+    return locations.map(l => l.name)
+}
+
 interface SearchParams {
     keyword?: string
     type?: string
@@ -82,7 +91,10 @@ async function getListings(params: SearchParams) {
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
     const resolvedParams = await searchParams
-    const { listings, total, page, perPage } = await getListings(resolvedParams)
+    const [{ listings, total, page, perPage }, locations] = await Promise.all([
+        getListings(resolvedParams),
+        getLocations(),
+    ])
     const totalPages = Math.ceil(total / perPage)
 
     const getListingTags = (type: string) => {
@@ -108,7 +120,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
 
             {/* AdvancedSearch Compact - Below Hero (Reference Design) */}
             <div className="container mx-auto px-4 -mt-16 relative z-20">
-                <AdvancedSearch />
+                <AdvancedSearch locations={locations} />
 
                 {/* Results Header with Count + Sort */}
                 <div className="flex justify-between items-center mt-12 mb-8">

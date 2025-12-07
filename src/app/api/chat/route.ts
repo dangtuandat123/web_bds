@@ -227,11 +227,11 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
         });
 
         // Save session async
-        prisma.chatSession.upsert({
+        prisma.chatsession.upsert({
             where: { sessionId },
             update: { updatedAt: new Date() },
             create: { sessionId, messages: JSON.stringify(messages), updatedAt: new Date() }
-        }).catch(e => console.error("[Chat API] DB Error:", e));
+        }).catch((e: any) => console.error("[Chat API] DB Error:", e));
 
         return new Response(stream, {
             headers: {

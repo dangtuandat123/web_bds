@@ -6,7 +6,7 @@ async function getProject(id: number) {
     const project = await prisma.project.findUnique({
         where: { id },
         include: {
-            amenities: {
+            projectamenity: {
                 select: {
                     amenityId: true,
                 },
@@ -32,6 +32,15 @@ async function getAmenities() {
     return amenities
 }
 
+async function getLocations() {
+    const locations = await prisma.location.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { name: true },
+    })
+    return locations.map(l => l.name)
+}
+
 export default async function EditProjectPage({
     params,
 }: {
@@ -44,9 +53,10 @@ export default async function EditProjectPage({
         notFound()
     }
 
-    const [project, amenities] = await Promise.all([
+    const [project, amenities, locations] = await Promise.all([
         getProject(id),
         getAmenities(),
+        getLocations(),
     ])
 
     return (
@@ -58,7 +68,7 @@ export default async function EditProjectPage({
                 </p>
             </div>
 
-            <ProjectForm initialData={project} amenities={amenities} />
+            <ProjectForm initialData={project} amenities={amenities} locations={locations} />
         </div>
     )
 }

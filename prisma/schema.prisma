@@ -16,6 +16,14 @@ model amenity {
   projectamenity projectamenity[]
 }
 
+model location {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique(map: "Location_name_key")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model chatsession {
   id        Int      @id @default(autoincrement())
   sessionId String   @unique(map: "ChatSession_sessionId_key")
@@ -87,20 +95,33 @@ model listingamenity {
   @@index([listingId], map: "ListingAmenity_listingId_idx")
 }
 
+model newscategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique(map: "NewsCategory_name_key")
+  slug      String   @unique(map: "NewsCategory_slug_key")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  news      news[]
+}
+
 model news {
-  id           Int           @id @default(autoincrement())
-  title        String
-  slug         String        @unique(map: "News_slug_key")
-  category     news_category
-  summary      String        @db.Text
-  content      String        @db.Text
-  thumbnailUrl String
-  author       String?       @default("Admin")
-  views        Int           @default(0)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime
+  id             Int            @id @default(autoincrement())
+  title          String
+  slug           String         @unique(map: "News_slug_key")
+  category       news_category
+  categoryId     Int?
+  newsCategory   newscategory?  @relation(fields: [categoryId], references: [id])
+  summary        String         @db.Text
+  content        String         @db.Text
+  thumbnailUrl   String
+  author         String?        @default("Admin")
+  views          Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
 
   @@index([category], map: "News_category_idx")
+  @@index([categoryId], map: "News_categoryId_idx")
   @@index([createdAt], map: "News_createdAt_idx")
   @@index([slug], map: "News_slug_idx")
 }

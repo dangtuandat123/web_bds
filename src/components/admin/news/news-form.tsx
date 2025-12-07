@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import type { News } from '@prisma/client'
+import type { news } from '@prisma/client'
 import { toast } from 'sonner'
 import {
     Form,
@@ -26,24 +26,33 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import RichTextEditor from '../projects/rich-text-editor'
+import ImageUpload from '../image-upload'
 import { createNews, updateNews } from '@/app/actions/news'
 
 const newsSchema = z.object({
     title: z.string().min(1, 'Tiêu đề là bắt buộc'),
     category: z.enum(['MARKET', 'FENG_SHUI', 'LEGAL']),
+    categoryId: z.number().optional().nullable(),
     summary: z.string().min(1, 'Tóm tắt là bắt buộc'),
     content: z.string().min(1, 'Nội dung là bắt buộc'),
-    thumbnailUrl: z.string().url('URL không hợp lệ'),
+    thumbnailUrl: z.string().min(1, 'Ảnh đại diện là bắt buộc'),
     author: z.string().optional(),
 })
 
 type NewsFormData = z.infer<typeof newsSchema>
 
-interface NewsFormProps {
-    initialData?: News
+interface Category {
+    id: number
+    name: string
+    slug: string
 }
 
-export default function NewsForm({ initialData }: NewsFormProps) {
+interface NewsFormProps {
+    initialData?: news
+    categories?: Category[]
+}
+
+export default function NewsForm({ initialData, categories = [] }: NewsFormProps) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const isEdit = !!initialData
@@ -118,9 +127,19 @@ export default function NewsForm({ initialData }: NewsFormProps) {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="MARKET">Thị trường</SelectItem>
-                                        <SelectItem value="FENG_SHUI">Phong thủy</SelectItem>
-                                        <SelectItem value="LEGAL">Pháp lý</SelectItem>
+                                        {categories.length > 0 ? (
+                                            categories.map((cat) => (
+                                                <SelectItem key={cat.id} value={cat.slug.toUpperCase().replace(/-/g, '_')}>
+                                                    {cat.name}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <SelectItem value="MARKET">Thị trường</SelectItem>
+                                                <SelectItem value="FENG_SHUI">Phong thủy</SelectItem>
+                                                <SelectItem value="LEGAL">Pháp lý</SelectItem>
+                                            </>
+                                        )}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -143,15 +162,19 @@ export default function NewsForm({ initialData }: NewsFormProps) {
                     />
                 </div>
 
-                {/* Thumbnail URL */}
+                {/* Thumbnail Upload */}
                 <FormField
                     control={form.control}
                     name="thumbnailUrl"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>URL ảnh đại diện</FormLabel>
+                            <FormLabel>Ảnh đại diện *</FormLabel>
                             <FormControl>
-                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                                <ImageUpload
+                                    value={field.value || ''}
+                                    onChange={field.onChange}
+                                    disabled={isLoading}
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

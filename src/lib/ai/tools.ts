@@ -70,6 +70,7 @@ export async function createLead(name: string, phone: string, message?: string) 
                 phone,
                 message: message || 'Khach hang tu Chatbot',
                 source: 'CHATBOT',
+                updatedAt: new Date(),
             },
         })
         return JSON.stringify({ success: true, message: 'Da luu thong tin lien he thanh cong.' })

@@ -12,12 +12,28 @@ export const metadata: Metadata = {
     description: 'Chỉnh sửa tin tức',
 }
 
+async function getCategories() {
+    try {
+        const categories = await prisma.newscategory.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { id: true, name: true, slug: true }
+        })
+        return categories
+    } catch {
+        return []
+    }
+}
+
 export default async function EditNewsPage({ params }: PageProps) {
     const { id } = await params
 
-    const news = await prisma.news.findUnique({
-        where: { id: parseInt(id) },
-    })
+    const [news, categories] = await Promise.all([
+        prisma.news.findUnique({
+            where: { id: parseInt(id) },
+        }),
+        getCategories()
+    ])
 
     if (!news) {
         notFound()
@@ -31,7 +47,7 @@ export default async function EditNewsPage({ params }: PageProps) {
             </div>
 
             <div className="bg-white rounded-lg border border-slate-200 p-6">
-                <NewsForm initialData={news} />
+                <NewsForm initialData={news} categories={categories} />
             </div>
         </div>
     )

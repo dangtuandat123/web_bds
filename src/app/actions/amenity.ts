@@ -13,10 +13,10 @@ export async function getAmenities() {
         // Get counts separately
         const amenitiesWithCounts = await Promise.all(
             amenities.map(async (amenity) => {
-                const projectCount = await prisma.projectAmenity.count({
+                const projectCount = await prisma.projectamenity.count({
                     where: { amenityId: amenity.id }
                 })
-                const listingCount = await prisma.listingAmenity.count({
+                const listingCount = await prisma.listingamenity.count({
                     where: { amenityId: amenity.id }
                 })
                 return {

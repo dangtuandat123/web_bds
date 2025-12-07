@@ -6,7 +6,7 @@ async function getListing(id: number) {
     const listing = await prisma.listing.findUnique({
         where: { id },
         include: {
-            amenities: {
+            listingamenity: {
                 select: {
                     amenityId: true,
                 },
@@ -22,7 +22,7 @@ async function getListing(id: number) {
 }
 
 async function getFormData() {
-    const [amenities, projects] = await Promise.all([
+    const [amenities, projects, locations] = await Promise.all([
         prisma.amenity.findMany({
             select: {
                 id: true,
@@ -39,9 +39,14 @@ async function getFormData() {
                 name: 'asc',
             },
         }),
+        prisma.location.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { name: true },
+        }),
     ])
 
-    return { amenities, projects }
+    return { amenities, projects, locations: locations.map(l => l.name) }
 }
 
 export default async function EditListingPage({
@@ -56,7 +61,7 @@ export default async function EditListingPage({
         notFound()
     }
 
-    const [listing, { amenities, projects }] = await Promise.all([
+    const [listing, { amenities, projects, locations }] = await Promise.all([
         getListing(id),
         getFormData(),
     ])
@@ -74,6 +79,7 @@ export default async function EditListingPage({
                 initialData={listing}
                 amenities={amenities}
                 projects={projects}
+                locations={locations}
             />
         </div>
     )

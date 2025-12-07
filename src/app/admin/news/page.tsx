@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import NewsTable from '@/components/admin/news/news-table'
+import NewsCategoryManager from '@/components/admin/news/news-category-manager'
 
 export const metadata: Metadata = {
     title: 'Quản lý Tin tức | Admin',
@@ -11,12 +12,22 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminNewsPage() {
-    const news = await prisma.news.findMany({
-        orderBy: { createdAt: 'desc' },
-    })
+    const [news, categories] = await Promise.all([
+        prisma.news.findMany({
+            orderBy: { createdAt: 'desc' },
+        }),
+        prisma.newscategory.findMany({
+            orderBy: { sortOrder: 'asc' },
+            include: {
+                _count: {
+                    select: { news: true }
+                }
+            }
+        })
+    ])
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
@@ -33,7 +44,10 @@ export default async function AdminNewsPage() {
                 </Link>
             </div>
 
-            {/* Table */}
+            {/* Category Manager */}
+            <NewsCategoryManager categories={categories} />
+
+            {/* News Table */}
             <NewsTable news={news} />
         </div>
     )

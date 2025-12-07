@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import type { Listing, Prisma } from '@prisma/client'
+import type { listing, Prisma } from '@prisma/client'
 import { X, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -34,7 +34,6 @@ import RichTextEditor from '../projects/rich-text-editor'
 import ImageUpload from '../image-upload'
 import { createListing, updateListing } from '@/app/actions/listing'
 import { generateSlug } from '@/lib/utils/format'
-import { LOCATION_OPTIONS } from '@/lib/constants'
 
 // Zod schema
 const listingSchema = z.object({
@@ -71,12 +70,13 @@ interface Project {
 }
 
 interface ListingFormProps {
-    initialData?: Listing & { amenities: { amenityId: number }[] }
+    initialData?: listing & { listingamenity: { amenityId: number }[] }
     amenities: Amenity[]
     projects: Project[]
+    locations: string[]
 }
 
-export default function ListingForm({ initialData, amenities, projects }: ListingFormProps) {
+export default function ListingForm({ initialData, amenities, projects, locations }: ListingFormProps) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const isEdit = !!initialData
@@ -105,7 +105,7 @@ export default function ListingForm({ initialData, amenities, projects }: Listin
             type: initialData?.type || 'APARTMENT',
             projectId: initialData?.projectId || null,
             images: defaultImages,
-            amenityIds: initialData?.amenities?.map((a) => a.amenityId) || [],
+            amenityIds: initialData?.listingamenity?.map((a: { amenityId: number }) => a.amenityId) || [],
             isFeatured: initialData?.isFeatured || false,
             isActive: initialData?.isActive ?? true,
         },
@@ -251,7 +251,7 @@ export default function ListingForm({ initialData, amenities, projects }: Listin
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {LOCATION_OPTIONS.map((loc) => (
+                                        {locations.map((loc: string) => (
                                             <SelectItem key={loc} value={loc}>
                                                 {loc}
                                             </SelectItem>

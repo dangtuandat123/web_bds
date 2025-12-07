@@ -45,7 +45,7 @@ async function getListing(slug: string) {
                     slug: true,
                 },
             },
-            amenities: {
+            listingamenity: {
                 include: {
                     amenity: {
                         select: {
@@ -121,7 +121,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         : [listing.thumbnailUrl]
 
     // Transform amenities
-    const amenities = listing.amenities.map((la) => la.amenity)
+    const amenities = listing.listingamenity.map((la: any) => la.amenity)
 
     // Generate tags
     const getListingTags = (type: string) => {
@@ -268,7 +268,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                                         Tin đăng tương tự
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {relatedListings.map((related) => (
+                                        {relatedListings.map((related: any) => (
                                             <ListingCard
                                                 key={related.id}
                                                 id={related.id}

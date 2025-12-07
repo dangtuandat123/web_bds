@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
-import type { News } from '@prisma/client'
+import type { news } from '@prisma/client'
+import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -34,7 +35,7 @@ import { Button } from '@/components/ui/button'
 import { deleteNews } from '@/app/actions/news'
 
 interface NewsTableProps {
-    news: News[]
+    news: news[]
 }
 
 const categoryConfig: Record<string, { label: string; color: string }> = {
@@ -76,6 +77,7 @@ export default function NewsTable({ news }: NewsTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-[80px]">Ảnh</TableHead>
                             <TableHead>Tiêu đề</TableHead>
                             <TableHead>Danh mục</TableHead>
                             <TableHead>Lượt xem</TableHead>
@@ -86,6 +88,17 @@ export default function NewsTable({ news }: NewsTableProps) {
                     <TableBody>
                         {news.map((item) => (
                             <TableRow key={item.id}>
+                                <TableCell>
+                                    <div className="relative w-16 h-12 rounded-md overflow-hidden bg-slate-100">
+                                        <Image
+                                            src={item.thumbnailUrl}
+                                            alt={item.title}
+                                            fill
+                                            className="object-cover"
+                                            sizes="64px"
+                                        />
+                                    </div>
+                                </TableCell>
                                 <TableCell className="font-medium max-w-md">
                                     <div className="line-clamp-2">{item.title}</div>
                                 </TableCell>

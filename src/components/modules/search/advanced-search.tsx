@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react'
 import {
-    LOCATIONS,
     PRICE_RANGES,
     AREA_RANGES,
     LISTING_TYPES,
@@ -15,12 +14,14 @@ import {
 
 interface AdvancedSearchProps {
     isProjectSearch?: boolean
+    locations: string[]
 }
 
-export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSearchProps) {
+export default function AdvancedSearch({ isProjectSearch = false, locations }: AdvancedSearchProps) {
     const router = useRouter()
+    const allLocations = ['Tất cả khu vực', ...locations]
     const [keyword, setKeyword] = useState('')
-    const [location, setLocation] = useState(LOCATIONS[0])
+    const [location, setLocation] = useState(allLocations[0])
     const [priceIndex, setPriceIndex] = useState(0)
     const [areaIndex, setAreaIndex] = useState(0)
     const [type, setType] = useState(isProjectSearch ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id)
@@ -57,7 +58,7 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
 
     const handleReset = () => {
         setKeyword('')
-        setLocation(LOCATIONS[0])
+        setLocation(allLocations[0])
         setPriceIndex(0)
         setAreaIndex(0)
         setType(isProjectSearch ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id)
@@ -141,7 +142,7 @@ export default function AdvancedSearch({ isProjectSearch = false }: AdvancedSear
                         label="Khu vực"
                         value={location}
                         onChange={setLocation}
-                        options={LOCATIONS}
+                        options={allLocations}
                         icon={MapPin}
                     />
                 </div>

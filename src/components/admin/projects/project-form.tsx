@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import type { Project, Prisma } from '@prisma/client'
+import type { project, Prisma } from '@prisma/client'
 import { X, Plus } from 'lucide-react'
 import {
     Form,
@@ -30,7 +30,6 @@ import { Separator } from '@/components/ui/separator'
 import RichTextEditor from './rich-text-editor'
 import ImageUpload from '../image-upload'
 import { createProject, updateProject } from '@/app/actions/project'
-import { LOCATION_OPTIONS } from '@/lib/constants'
 
 // Zod schema
 const projectSchema = z.object({
@@ -56,11 +55,12 @@ interface Amenity {
 }
 
 interface ProjectFormProps {
-    initialData?: Project & { amenities: { amenityId: number }[] }
+    initialData?: project & { projectamenity: { amenityId: number }[] }
     amenities: Amenity[]
+    locations: string[]
 }
 
-export default function ProjectForm({ initialData, amenities }: ProjectFormProps) {
+export default function ProjectForm({ initialData, amenities, locations }: ProjectFormProps) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const isEdit = !!initialData
@@ -85,7 +85,7 @@ export default function ProjectForm({ initialData, amenities }: ProjectFormProps
             priceRange: initialData?.priceRange || '',
             status: initialData?.status || 'SELLING',
             images: defaultImages,
-            amenityIds: initialData?.amenities?.map((a) => a.amenityId) || [],
+            amenityIds: initialData?.projectamenity?.map((a: { amenityId: number }) => a.amenityId) || [],
         },
     })
 
@@ -226,7 +226,7 @@ export default function ProjectForm({ initialData, amenities }: ProjectFormProps
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {LOCATION_OPTIONS.map((loc) => (
+                                        {locations.map((loc: string) => (
                                             <SelectItem key={loc} value={loc}>
                                                 {loc}
                                             </SelectItem>

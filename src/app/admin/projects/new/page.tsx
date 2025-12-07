@@ -12,8 +12,20 @@ async function getAmenities() {
     return amenities
 }
 
+async function getLocations() {
+    const locations = await prisma.location.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { name: true },
+    })
+    return locations.map(l => l.name)
+}
+
 export default async function NewProjectPage() {
-    const amenities = await getAmenities()
+    const [amenities, locations] = await Promise.all([
+        getAmenities(),
+        getLocations(),
+    ])
 
     return (
         <div className="space-y-6">
@@ -24,7 +36,8 @@ export default async function NewProjectPage() {
                 </p>
             </div>
 
-            <ProjectForm amenities={amenities} />
+            <ProjectForm amenities={amenities} locations={locations} />
         </div>
     )
 }
+

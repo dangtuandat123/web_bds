@@ -6,6 +6,15 @@ import ListingCard from '@/components/modules/listing-card'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
+async function getLocations() {
+    const locations = await prisma.location.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { name: true },
+    })
+    return locations.map(l => l.name)
+}
+
 async function getFeaturedData() {
     const [projects, listings] = await Promise.all([
         // Get 3 recent projects
@@ -58,7 +67,10 @@ const categoryMap: Record<string, string> = {
 }
 
 export default async function HomePage() {
-    const { projects, listings } = await getFeaturedData()
+    const [{ projects, listings }, locations] = await Promise.all([
+        getFeaturedData(),
+        getLocations(),
+    ])
 
     // Generate tags for listings based on type
     const getListingTags = (listing: any) => {
@@ -77,7 +89,7 @@ export default async function HomePage() {
 
             {/* Advanced Search Box */}
             <div className="container mx-auto px-4 relative z-20">
-                <AdvancedSearch />
+                <AdvancedSearch locations={locations} />
             </div>
 
             {/* Featured Projects Section */}

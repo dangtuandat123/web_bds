@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma'
 import ListingForm from '@/components/admin/listings/listing-form'
 
 async function getFormData() {
-    const [amenities, projects] = await Promise.all([
+    const [amenities, projects, locations] = await Promise.all([
         prisma.amenity.findMany({
             select: {
                 id: true,
@@ -19,13 +19,18 @@ async function getFormData() {
                 name: 'asc',
             },
         }),
+        prisma.location.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { name: true },
+        }),
     ])
 
-    return { amenities, projects }
+    return { amenities, projects, locations: locations.map(l => l.name) }
 }
 
 export default async function NewListingPage() {
-    const { amenities, projects } = await getFormData()
+    const { amenities, projects, locations } = await getFormData()
 
     return (
         <div className="space-y-6">
@@ -36,7 +41,8 @@ export default async function NewListingPage() {
                 </p>
             </div>
 
-            <ListingForm amenities={amenities} projects={projects} />
+            <ListingForm amenities={amenities} projects={projects} locations={locations} />
         </div>
     )
 }
+
