@@ -1,11 +1,20 @@
-import { z } from "zod";
-import { searchVectorDB, createLead } from "@/lib/ai/tools";
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { searchVectorDB } from "@/lib/ai/tools";
 
 export const maxDuration = 60;
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+interface PropertyResult {
+    title: string;
+    price: string | number;
+    area?: number;
+    location?: string;
+    url?: string;
+    thumbnailUrl?: string;
+    type?: string;
+}
 
 export async function POST(req: Request) {
     try {
@@ -14,7 +23,7 @@ export async function POST(req: Request) {
         const host = req.headers.get("host") || "happyland.me";
         const date = new Date().toLocaleDateString("vi-VN");
 
-        // Convert UI messages to proper format and filter invalid ones
+        // Convert UI messages to proper format
         let processedMessages = uiMessages.map((m: any) => {
             if (m.parts && Array.isArray(m.parts)) {
                 const textContent = m.parts
@@ -29,39 +38,76 @@ export async function POST(req: Request) {
             return m;
         });
 
-        // Filter: remove empty messages and ensure conversation starts with user message
+        // Filter empty messages
         processedMessages = processedMessages.filter((m: any) => m.content && m.content.trim());
-
-        // Find first user message index and slice from there
         const firstUserIndex = processedMessages.findIndex((m: any) => m.role === 'user');
         const messages = firstUserIndex >= 0 ? processedMessages.slice(firstUserIndex) : processedMessages;
 
-        console.log("[Chat API] Final messages:", JSON.stringify(messages, null, 2));
+        // Get latest user message for RAG
+        const lastUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
+        const userQuery = lastUserMessage?.content || '';
 
-        // Build request for OpenRouter Chat Completions API
+        console.log("[Chat API] User query:", userQuery);
+
+        // RAG: Search vector database
+        let ragContext = '';
+        let properties: PropertyResult[] = [];
+
+        if (userQuery) {
+            try {
+                const searchResults = await searchVectorDB(userQuery, 5);
+                console.log("[Chat API] RAG results:", searchResults);
+
+                if (typeof searchResults === 'string' && searchResults.startsWith('[')) {
+                    const parsed = JSON.parse(searchResults);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // Transform for UI cards
+                        properties = parsed.map((p: any) => ({
+                            title: p.title || 'Bất động sản',
+                            price: typeof p.price === 'number' ? `${p.price} tỷ` : (p.price || 'Liên hệ'),
+                            area: p.area,
+                            location: p.location,
+                            url: p.url || '/',
+                            thumbnailUrl: p.thumbnailUrl,
+                            type: p.type === 'PROJECT' ? 'Dự án' : (p.type === 'LISTING' ? 'Tin đăng' : p.type),
+                        }));
+
+                        // Context for AI
+                        ragContext = `\n\n🏠 DỮ LIỆU BẤT ĐỘNG SẢN TÌM ĐƯỢC:\n`;
+                        properties.forEach((p, i) => {
+                            ragContext += `${i + 1}. ${p.title} - Giá: ${p.price}${p.area ? `, ${p.area}m²` : ''}${p.location ? `, ${p.location}` : ''}\n`;
+                        });
+                    }
+                }
+            } catch (ragError) {
+                console.error("[Chat API] RAG Error:", ragError);
+            }
+        }
+
         const systemMessage = {
             role: "system",
-            content: `BẠN LÀ: Chuyên gia Bất Động Sản hàng đầu của Happy Land (${host}).
+            content: `BẠN LÀ: Chuyên gia Bất Động Sản của Happy Land (${host}).
 THỜI GIAN: ${date}
 
-NGUYÊN TẮC:
-1. Trả lời đúng trọng tâm. Khi khách hỏi về BĐS, hãy hỏi thêm về nhu cầu cụ thể.
-2. Mục tiêu: Lấy SĐT khách hàng để tư vấn chi tiết.
-3. Không bịa đặt thông tin. Nếu không có dữ liệu, hãy nói rõ.
-4. Trả lời thân thiện, chuyên nghiệp bằng tiếng Việt.
-5. Giới thiệu các dự án phù hợp với nhu cầu của khách.`
+QUY TẮC QUAN TRỌNG:
+1. CHỈ giới thiệu BĐS nếu DỮ LIỆU BÊN DƯỚI có thông tin PHÙ HỢP với yêu cầu của khách.
+2. Nếu khách hỏi về VỊ TRÍ (ví dụ: Gia Lai, Đà Nẵng...) mà không có trong dữ liệu → nói thẳng "Happy Land CHƯA CÓ BĐS tại [vị trí đó]".
+3. KHÔNG bịa đặt. KHÔNG đề xuất BĐS ở vị trí khác nếu khách hỏi vị trí cụ thể.
+4. Nếu có dữ liệu phù hợp: đề cập TÊN, GIÁ, DIỆN TÍCH, VỊ TRÍ.
+5. Luôn hỏi SỐ ĐIỆN THOẠI để tư vấn chi tiết.
+6. Trả lời NGẮN GỌN, tự nhiên, thân thiện.
+${ragContext || '\n📋 KHÔNG CÓ DỮ LIỆU PHÙ HỢP trong hệ thống.'}`
         };
+
+        console.log("[Chat API] Found", properties.length, "properties");
 
         const requestBody = {
             model: "google/gemini-2.5-flash",
             messages: [systemMessage, ...messages],
             stream: true,
-            max_tokens: 1024,
+            max_tokens: 300,
         };
 
-        console.log("[Chat API] Request body:", JSON.stringify(requestBody, null, 2));
-
-        // Call OpenRouter directly with Chat Completions API
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -76,106 +122,95 @@ NGUYÊN TẮC:
         if (!response.ok) {
             const errorText = await response.text();
             console.error("[Chat API] OpenRouter error:", errorText);
-            return new Response(JSON.stringify({ error: "OpenRouter API Error", details: errorText }), {
+            return new Response(JSON.stringify({ error: "API Error" }), {
                 status: response.status,
                 headers: { "Content-Type": "application/json" },
             });
         }
 
-        // Stream response in AI SDK v5 UIMessage format (SSE)
+        const messageId = `msg_${randomUUID()}`;
+        const textId = `text_${randomUUID()}`;
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
 
+        let buffer = '';
+        let startSent = false;
+
+        // Prepare property marker to append after AI response
+        const propertyMarker = properties.length > 0
+            ? `\n\n<!-- PROPERTIES:${JSON.stringify(properties)} -->`
+            : '';
+
         const stream = new ReadableStream({
             async start(controller) {
-                const reader = response.body?.getReader();
-                if (!reader) {
-                    controller.close();
-                    return;
-                }
-
-                const messageId = `msg_${randomUUID()}`;
-                const textId = `text_${randomUUID()}`;
-                let fullContent = '';
-                let sentStart = false;
+                const reader = response.body!.getReader();
 
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
 
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n').filter(line => line.trim());
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
 
                         for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                const data = line.slice(6);
-                                if (data === '[DONE]') {
-                                    // Send text-end
-                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-end", id: textId })}\n\n`));
-                                    // Send finish message
-                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "finish", messageId: messageId, finishReason: "stop" })}\n\n`));
-                                    continue;
+                            if (!line.startsWith('data: ')) continue;
+                            const data = line.slice(6).trim();
+
+                            if (data === '[DONE]') {
+                                // Append property marker before finish
+                                if (propertyMarker) {
+                                    const escaped = JSON.stringify(propertyMarker);
+                                    controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
                                 }
+                                controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
+                                controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
+                                continue;
+                            }
 
-                                try {
-                                    const parsed = JSON.parse(data);
-                                    const delta = parsed.choices?.[0]?.delta;
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
 
-                                    if (delta?.content) {
-                                        // Send message-start and text-start only once
-                                        if (!sentStart) {
-                                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start", messageId: messageId })}\n\n`));
-                                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-start", id: textId })}\n\n`));
-                                            sentStart = true;
-                                        }
-
-                                        fullContent += delta.content;
-                                        // Send text-delta in AI SDK v5 format
-                                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-delta", id: textId, delta: delta.content })}\n\n`));
+                                if (content) {
+                                    if (!startSent) {
+                                        controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${messageId}"}\n\n`));
+                                        controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${textId}"}\n\n`));
+                                        startSent = true;
                                     }
-                                } catch (parseError) {
-                                    // Skip non-JSON lines
+                                    const escaped = JSON.stringify(content);
+                                    controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
                                 }
+                            } catch (e) {
+                                // Skip invalid JSON
                             }
                         }
                     }
 
-                    // If no content was sent, send empty finish
-                    if (!sentStart) {
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start", messageId: messageId })}\n\n`));
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-start", id: textId })}\n\n`));
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-end", id: textId })}\n\n`));
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "finish", messageId: messageId, finishReason: "stop" })}\n\n`));
+                    // Ensure stream ends properly
+                    if (startSent) {
+                        if (propertyMarker) {
+                            const escaped = JSON.stringify(propertyMarker);
+                            controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
+                        }
+                        controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
+                        controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
                     }
-
-                    // Save session to database
-                    try {
-                        const allMessages = [...messages, { role: 'assistant', content: fullContent }];
-                        await prisma.chatSession.upsert({
-                            where: { sessionId },
-                            update: {
-                                messages: JSON.stringify(allMessages),
-                                updatedAt: new Date()
-                            },
-                            create: {
-                                sessionId,
-                                messages: JSON.stringify(allMessages),
-                                updatedAt: new Date(),
-                            }
-                        });
-                        console.log("[Chat API] Session saved:", sessionId);
-                    } catch (dbError) {
-                        console.error("[Chat API] DB Error:", dbError);
-                    }
-                } catch (streamError) {
-                    console.error("[Chat API] Stream error:", streamError);
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: String(streamError) })}\n\n`));
+                } catch (error) {
+                    console.error("[Chat API] Stream error:", error);
                 } finally {
                     controller.close();
                 }
             }
         });
+
+        // Save session async
+        prisma.chatSession.upsert({
+            where: { sessionId },
+            update: { updatedAt: new Date() },
+            create: { sessionId, messages: JSON.stringify(messages), updatedAt: new Date() }
+        }).catch(e => console.error("[Chat API] DB Error:", e));
 
         return new Response(stream, {
             headers: {
@@ -187,7 +222,7 @@ NGUYÊN TẮC:
 
     } catch (error) {
         console.error("[Chat API] Error:", error);
-        return new Response(JSON.stringify({ error: "Internal Server Error", details: String(error) }), {
+        return new Response(JSON.stringify({ error: "Internal Server Error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
         });

@@ -18,11 +18,15 @@ export async function searchVectorDB(query: string, limit: number = 5) {
     try {
         const results = await vectorStore.similaritySearch(query, limit)
 
-        if (results.length === 0) {
+        // Filter by similarity threshold - only return relevant results
+        const SIMILARITY_THRESHOLD = 0.5
+        const relevantResults = results.filter(r => (r.similarity || 0) >= SIMILARITY_THRESHOLD)
+
+        if (relevantResults.length === 0) {
             return 'Không tìm thấy bất động sản phù hợp trong cơ sở dữ liệu.'
         }
 
-        const mapped: VectorResult[] = results.map((r) => {
+        const mapped: VectorResult[] = relevantResults.map((r) => {
             const meta = r.metadata || {}
             const type = (meta.type as string | undefined) || ''
             const slug = meta.slug as string | undefined
