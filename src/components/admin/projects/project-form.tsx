@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import RichTextEditor from './rich-text-editor'
+import ImageUpload from '../image-upload'
 import { createProject, updateProject } from '@/app/actions/project'
 
 // Zod schema
@@ -41,7 +42,7 @@ const projectSchema = z.object({
     content: z.string().optional(),
     priceRange: z.string().min(1, 'Giá là bắt buộc'),
     status: z.enum(['UPCOMING', 'SELLING', 'SOLD_OUT']),
-    images: z.array(z.string().url('URL không hợp lệ')).min(1, 'Cần ít nhất 1 ảnh'),
+    images: z.array(z.string().min(1, 'Ảnh không được trống')).min(1, 'Cần ít nhất 1 ảnh'),
     amenityIds: z.array(z.number()),
 })
 
@@ -301,28 +302,33 @@ export default function ProjectForm({ initialData, amenities }: ProjectFormProps
                 {/* Images */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Hình ảnh</h3>
-                    <p className="text-sm text-slate-600">Nhập URL hình ảnh (Unsplash hoặc nguồn khác)</p>
+                    <p className="text-sm text-slate-600">Upload ảnh dự án (JPG, PNG, WebP, GIF - tối đa 5MB)</p>
 
-                    <div className="space-y-2">
-                        {images.map((_, index) => (
-                            <div key={index} className="flex gap-2">
-                                <FormField
-                                    control={form.control}
-                                    name={`images.${index}`}
-                                    render={({ field }) => (
-                                        <FormItem className="flex-1">
-                                            <FormControl>
-                                                <Input {...field} placeholder="https://images.unsplash.com/..." />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                {images.length > 1 && (
+                    <div className="space-y-4">
+                        {images.map((img, index) => (
+                            <div key={index} className="flex gap-2 items-start">
+                                <div className="flex-1">
+                                    <ImageUpload
+                                        value={img}
+                                        onChange={(url) => {
+                                            const newImages = [...images]
+                                            newImages[index] = url
+                                            setValue('images', newImages)
+                                        }}
+                                        onRemove={() => {
+                                            if (images.length > 1) {
+                                                const newImages = images.filter((_, i) => i !== index)
+                                                setValue('images', newImages)
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {images.length > 1 && !img && (
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
+                                        className="mt-8"
                                         onClick={() => {
                                             const newImages = images.filter((_, i) => i !== index)
                                             setValue('images', newImages)

@@ -1,10 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { Bold, Italic, List, ListOrdered, Heading2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import dynamic from 'next/dynamic'
+import { useMemo } from 'react'
+import 'react-quill-new/dist/quill.snow.css'
+
+// Dynamic import to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill-new'), {
+    ssr: false,
+    loading: () => (
+        <div className="h-[250px] border rounded-lg bg-slate-50 animate-pulse" />
+    ),
+})
 
 interface RichTextEditorProps {
     value: string
@@ -12,84 +18,95 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: value,
-        immediatelyRender: false,
-        onUpdate: ({ editor }) => {
-            onChange(editor.getHTML())
-        },
-        editorProps: {
-            attributes: {
-                class: 'prose max-w-none focus:outline-none min-h-[200px] p-4',
-            },
-        },
-    })
+    // Full-featured Quill modules configuration
+    const modules = useMemo(() => ({
+        toolbar: [
+            // Headers
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'font': [] }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
 
-    // Update editor content when value prop changes (for edit mode)
-    useEffect(() => {
-        if (editor && value !== editor.getHTML()) {
-            editor.commands.setContent(value)
-        }
-    }, [value, editor])
+            // Text formatting
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
 
-    if (!editor) {
-        return null
-    }
+            // Scripts
+            [{ 'script': 'sub' }, { 'script': 'super' }],
+
+            // Lists & indentation
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+
+            // Alignment
+            [{ 'align': [] }],
+            [{ 'direction': 'rtl' }],
+
+            // Media & links
+            ['link', 'image', 'video'],
+
+            // Blockquote & code
+            ['blockquote', 'code-block'],
+
+            // Clear
+            ['clean'],
+        ],
+    }), [])
+
+    const formats = [
+        'header', 'font', 'size',
+        'bold', 'italic', 'underline', 'strike',
+        'color', 'background',
+        'script',
+        'list', 'indent',
+        'align', 'direction',
+        'link', 'image', 'video',
+        'blockquote', 'code-block',
+    ]
 
     return (
-        <div className="border rounded-lg">
-            {/* Toolbar */}
-            <div className="border-b p-2 flex gap-1 flex-wrap">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={editor.isActive('bold') ? 'bg-slate-200' : ''}
-                >
-                    <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={editor.isActive('italic') ? 'bg-slate-200' : ''}
-                >
-                    <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}
-                >
-                    <Heading2 className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}
-                >
-                    <List className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}
-                >
-                    <ListOrdered className="h-4 w-4" />
-                </Button>
-            </div>
-
-            {/* Editor */}
-            <EditorContent editor={editor} />
+        <div className="rich-text-editor">
+            <ReactQuill
+                theme="snow"
+                value={value}
+                onChange={onChange}
+                modules={modules}
+                formats={formats}
+                placeholder="Nhập nội dung chi tiết..."
+                className="bg-white rounded-lg"
+            />
+            <style jsx global>{`
+                .rich-text-editor .ql-container {
+                    min-height: 250px;
+                    font-size: 14px;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                }
+                .rich-text-editor .ql-toolbar {
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                    background: #f8fafc;
+                    flex-wrap: wrap;
+                }
+                .rich-text-editor .ql-editor {
+                    min-height: 220px;
+                }
+                .rich-text-editor .ql-editor img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                .rich-text-editor .ql-snow .ql-picker {
+                    color: #374151;
+                }
+                .rich-text-editor .ql-snow .ql-stroke {
+                    stroke: #374151;
+                }
+                .rich-text-editor .ql-snow .ql-fill {
+                    fill: #374151;
+                }
+                .rich-text-editor .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+                    z-index: 100;
+                }
+            `}</style>
         </div>
     )
 }

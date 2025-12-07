@@ -53,7 +53,17 @@ export async function POST(req: Request) {
         let ragContext = '';
         let properties: PropertyResult[] = [];
 
-        if (userQuery) {
+        // Known locations in our database
+        const knownLocations = ['thủ đức', 'thu duc', 'tp thủ đức', 'quận 2', 'district 2', 'an phú', 'thảo điền'];
+
+        // Locations that indicate specific but unavailable areas
+        const queryLower = userQuery.toLowerCase();
+        const unavailableLocations = ['gia lai', 'đà nẵng', 'hà nội', 'hải phòng', 'cần thơ', 'bình dương', 'đồng nai', 'long an', 'bà rịa', 'vũng tàu'];
+
+        // Check if user is asking for a specific unavailable location
+        const isAskingUnavailableLocation = unavailableLocations.some(loc => queryLower.includes(loc));
+
+        if (userQuery && !isAskingUnavailableLocation) {
             try {
                 const searchResults = await searchVectorDB(userQuery, 5);
                 console.log("[Chat API] RAG results:", searchResults);
@@ -82,21 +92,32 @@ export async function POST(req: Request) {
             } catch (ragError) {
                 console.error("[Chat API] RAG Error:", ragError);
             }
+        } else if (isAskingUnavailableLocation) {
+            console.log("[Chat API] User asking for unavailable location, skipping RAG");
         }
+
+        const hasRelevantData = properties.length > 0;
 
         const systemMessage = {
             role: "system",
-            content: `BẠN LÀ: Chuyên gia Bất Động Sản của Happy Land (${host}).
+            content: `BẠN LÀ: Trợ lý AI tư vấn Bất Động Sản của Happy Land (${host}).
 THỜI GIAN: ${date}
 
-QUY TẮC QUAN TRỌNG:
-1. CHỈ giới thiệu BĐS nếu DỮ LIỆU BÊN DƯỚI có thông tin PHÙ HỢP với yêu cầu của khách.
-2. Nếu khách hỏi về VỊ TRÍ (ví dụ: Gia Lai, Đà Nẵng...) mà không có trong dữ liệu → nói thẳng "Happy Land CHƯA CÓ BĐS tại [vị trí đó]".
-3. KHÔNG bịa đặt. KHÔNG đề xuất BĐS ở vị trí khác nếu khách hỏi vị trí cụ thể.
-4. Nếu có dữ liệu phù hợp: đề cập TÊN, GIÁ, DIỆN TÍCH, VỊ TRÍ.
-5. Luôn hỏi SỐ ĐIỆN THOẠI để tư vấn chi tiết.
-6. Trả lời NGẮN GỌN, tự nhiên, thân thiện.
-${ragContext || '\n📋 KHÔNG CÓ DỮ LIỆU PHÙ HỢP trong hệ thống.'}`
+TÍNH CÁCH:
+- Xưng hô: "em" với khách, gọi khách là "anh/chị"
+- Thân thiện, nhiệt tình, chuyên nghiệp
+- Ngắn gọn, tối đa 80 từ mỗi câu trả lời
+
+CÁCH TRẢ LỜI:
+1. CÂU CHÀO/HỎI THĂM → Chào lại lịch sự, hỏi "Anh/chị đang quan tâm đến loại BĐS nào ạ?"
+2. TÌM KIẾM BĐS:
+   - ${hasRelevantData ? 'CÓ dữ liệu phù hợp → Giới thiệu TÊN, GIÁ, DIỆN TÍCH, VỊ TRÍ từ danh sách bên dưới.' : 'KHÔNG có dữ liệu phù hợp → Nói "Hiện tại Happy Land chưa có BĐS phù hợp với yêu cầu của anh/chị."'}
+   - KHÔNG bịa đặt, KHÔNG đề xuất BĐS khác vị trí nếu khách hỏi vị trí cụ thể.
+3. YÊU CẦU GIÁ/NGÂN SÁCH → Hỏi rõ ngân sách, vị trí mong muốn.
+4. CÂU HỎI KHÁC → Trả lời nếu biết, hoặc "Em sẽ chuyển cho bộ phận chuyên môn."
+5. LUÔN gợi ý: "Anh/chị để lại SĐT để em tư vấn chi tiết nhé!"
+
+${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.'}`
         };
 
         console.log("[Chat API] Found", properties.length, "properties");

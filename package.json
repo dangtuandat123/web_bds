@@ -49,6 +49,7 @@
         "react-dom": "^19.0.0",
         "react-hook-form": "^7.67.0",
         "react-markdown": "^10.1.0",
+        "react-quill-new": "^3.6.0",
         "remark-gfm": "^4.0.1",
         "sonner": "^2.0.7",
         "tailwind-merge": "^2.6.0",
