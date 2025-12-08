@@ -156,6 +156,7 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
 
         let buffer = '';
         let startSent = false;
+        let fullResponse = ''; // Collect full AI response
 
         // Prepare property marker to append after AI response
         const propertyMarker = properties.length > 0
@@ -184,6 +185,7 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
                                 if (propertyMarker) {
                                     const escaped = JSON.stringify(propertyMarker);
                                     controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
+                                    fullResponse += propertyMarker;
                                 }
                                 controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
                                 controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
@@ -195,6 +197,7 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
                                 const content = parsed.choices?.[0]?.delta?.content;
 
                                 if (content) {
+                                    fullResponse += content; // Collect response content
                                     if (!startSent) {
                                         controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${messageId}"}\n\n`));
                                         controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${textId}"}\n\n`));
@@ -221,17 +224,29 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
                 } catch (error) {
                     console.error("[Chat API] Stream error:", error);
                 } finally {
+                    // Save session with full conversation AFTER stream ends
+                    const messagesWithResponse = [
+                        ...messages,
+                        { role: 'assistant', content: fullResponse || 'Xin chào! Tôi có thể giúp gì cho bạn?' }
+                    ];
+
+                    prisma.chatsession.upsert({
+                        where: { sessionId },
+                        update: {
+                            messages: JSON.stringify(messagesWithResponse),
+                            updatedAt: new Date()
+                        },
+                        create: {
+                            sessionId,
+                            messages: JSON.stringify(messagesWithResponse),
+                            updatedAt: new Date()
+                        }
+                    }).catch((e: any) => console.error("[Chat API] DB Error:", e));
+
                     controller.close();
                 }
             }
         });
-
-        // Save session async
-        prisma.chatsession.upsert({
-            where: { sessionId },
-            update: { updatedAt: new Date() },
-            create: { sessionId, messages: JSON.stringify(messages), updatedAt: new Date() }
-        }).catch((e: any) => console.error("[Chat API] DB Error:", e));
 
         return new Response(stream, {
             headers: {

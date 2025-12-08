@@ -78,6 +78,63 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
         return `${days} ngày trước`
     }
 
+    // Render message content with property cards
+    const renderMessageContent = (content: string) => {
+        if (typeof content !== 'string') {
+            return <span>{JSON.stringify(content)}</span>
+        }
+
+        // Check if content contains PROPERTIES
+        const propertiesMatch = content.match(/<!-- PROPERTIES:([\s\S]*?)-->/)
+
+        if (!propertiesMatch) {
+            return <span className="whitespace-pre-wrap">{content}</span>
+        }
+
+        // Extract text before PROPERTIES
+        const textContent = content.replace(/<!-- PROPERTIES:[\s\S]*?-->/g, '').trim()
+
+        // Parse properties
+        let properties: any[] = []
+        try {
+            properties = JSON.parse(propertiesMatch[1])
+        } catch {
+            properties = []
+        }
+
+        return (
+            <div className="space-y-3">
+                {textContent && (
+                    <p className="whitespace-pre-wrap">{textContent}</p>
+                )}
+                {properties.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                        <p className="text-xs font-semibold text-slate-500 uppercase">
+                            Bất động sản gợi ý ({properties.length})
+                        </p>
+                        {properties.map((prop: any, idx: number) => (
+                            <div
+                                key={idx}
+                                className="bg-white border border-slate-200 rounded-lg p-3 text-sm"
+                            >
+                                <p className="font-medium text-slate-800 line-clamp-1">
+                                    {prop.title}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1 text-slate-500 text-xs">
+                                    <span className="text-amber-600 font-semibold">
+                                        {prop.price}
+                                    </span>
+                                    {prop.area && <span>{prop.area}m²</span>}
+                                    {prop.location && <span>{prop.location}</span>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     if (sessions.length === 0) {
         return (
             <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
@@ -156,7 +213,7 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
 
             {/* Chat Detail Dialog */}
             <Dialog open={!!selectedSession} onOpenChange={() => setSelectedSession(null)}>
-                <DialogContent className="max-w-2xl max-h-[80vh]">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <MessageSquare className="h-5 w-5 text-amber-500" />
@@ -171,7 +228,7 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
                         )}
                     </DialogHeader>
 
-                    <ScrollArea className="h-[500px] pr-4">
+                    <div className="overflow-y-auto max-h-[400px] pr-2">
                         <div className="space-y-4">
                             {parsedMessages.map((message, index) => (
                                 <div
@@ -180,7 +237,7 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
                                 >
                                     <div
                                         className={`
-                                            max-w-[80%] rounded-2xl px-4 py-2.5
+                                            max-w-[85%] rounded-2xl px-4 py-2.5
                                             ${message.role === 'user'
                                                 ? 'bg-amber-500 text-white'
                                                 : 'bg-slate-100 text-slate-800'
@@ -197,11 +254,9 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
                                                 {message.role === 'user' ? 'Người dùng' : 'Chatbot'}
                                             </span>
                                         </div>
-                                        <p className="text-sm whitespace-pre-wrap">
-                                            {typeof message.content === 'string'
-                                                ? message.content
-                                                : JSON.stringify(message.content)}
-                                        </p>
+                                        <div className="text-sm">
+                                            {renderMessageContent(message.content)}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -212,7 +267,7 @@ export default function ChatSessionTable({ sessions }: ChatSessionTableProps) {
                                 </div>
                             )}
                         </div>
-                    </ScrollArea>
+                    </div>
                 </DialogContent>
             </Dialog>
         </>
