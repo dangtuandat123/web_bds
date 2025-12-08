@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import prisma from '@/lib/prisma'
-import ChatSessionTable from '@/components/admin/chatbot/chat-session-table'
+import ChatSessionsWithSearch from '@/components/admin/chatbot/chat-sessions-with-search'
 
 export const metadata: Metadata = {
     title: 'Quản lý Chatbot AI | Admin',
@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default async function AdminChatbotPage() {
     const sessions = await prisma.chatsession.findMany({
         orderBy: { updatedAt: 'desc' },
-        take: 100, // Limit to latest 100 sessions
     })
 
     // Parse messages for each session
@@ -73,8 +72,8 @@ export default async function AdminChatbotPage() {
                 </div>
             </div>
 
-            {/* Sessions Table */}
-            <ChatSessionTable sessions={parsedSessions} />
+            {/* Sessions Table with Search & Pagination */}
+            <ChatSessionsWithSearch sessions={parsedSessions} />
         </div>
     )
 }

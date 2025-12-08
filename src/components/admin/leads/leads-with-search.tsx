@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { lead } from '@prisma/client'
 import AdminSearchInput from '@/components/admin/admin-search-input'
+import AdminPagination from '@/components/admin/admin-pagination'
 import LeadTable from '@/components/admin/leads/lead-table'
 import {
     Select,
@@ -11,6 +12,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+
+const ITEMS_PER_PAGE = 10
 
 interface LeadsWithSearchProps {
     leads: lead[]
@@ -28,6 +31,7 @@ const statusOptions = [
 export default function LeadsWithSearch({ leads }: LeadsWithSearchProps) {
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('ALL')
+    const [currentPage, setCurrentPage] = useState(1)
 
     const filteredLeads = useMemo(() => {
         let result = leads
@@ -51,15 +55,33 @@ export default function LeadsWithSearch({ leads }: LeadsWithSearchProps) {
         return result
     }, [leads, search, statusFilter])
 
+    // Reset to page 1 when filters change
+    const handleSearch = (value: string) => {
+        setSearch(value)
+        setCurrentPage(1)
+    }
+
+    const handleStatusChange = (value: string) => {
+        setStatusFilter(value)
+        setCurrentPage(1)
+    }
+
+    // Pagination
+    const totalPages = Math.ceil(filteredLeads.length / ITEMS_PER_PAGE)
+    const paginatedLeads = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE
+        return filteredLeads.slice(start, start + ITEMS_PER_PAGE)
+    }, [filteredLeads, currentPage])
+
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-4 flex-wrap">
                 <AdminSearchInput
                     value={search}
-                    onChange={setSearch}
+                    onChange={handleSearch}
                     placeholder="Tìm theo tên, SĐT, email..."
                 />
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={handleStatusChange}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Trạng thái" />
                     </SelectTrigger>
@@ -75,7 +97,12 @@ export default function LeadsWithSearch({ leads }: LeadsWithSearchProps) {
                     {filteredLeads.length} / {leads.length} khách hàng
                 </span>
             </div>
-            <LeadTable leads={filteredLeads} />
+            <LeadTable leads={paginatedLeads} />
+            <AdminPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     )
 }

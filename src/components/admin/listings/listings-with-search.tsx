@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { listing, project } from '@prisma/client'
 import AdminSearchInput from '@/components/admin/admin-search-input'
+import AdminPagination from '@/components/admin/admin-pagination'
 import ListingTable from '@/components/admin/listings/listing-table'
 import {
     Tabs,
@@ -10,6 +11,8 @@ import {
     TabsList,
     TabsTrigger,
 } from '@/components/ui/tabs'
+
+const ITEMS_PER_PAGE = 10
 
 type ListingWithProject = listing & {
     project: { id: number; name: string } | null
@@ -27,6 +30,8 @@ export default function ListingsTabsWithSearch({
     all, apartments, houses, lands, rents
 }: ListingsTabsWithSearchProps) {
     const [search, setSearch] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [activeTab, setActiveTab] = useState('all')
 
     const filterListings = (listings: ListingWithProject[]) => {
         if (!search.trim()) return listings
@@ -44,20 +49,50 @@ export default function ListingsTabsWithSearch({
     const filteredLands = useMemo(() => filterListings(lands), [lands, search])
     const filteredRents = useMemo(() => filterListings(rents), [rents, search])
 
+    // Get current filtered list based on active tab
+    const getCurrentFiltered = () => {
+        switch (activeTab) {
+            case 'apartment': return filteredApartments
+            case 'house': return filteredHouses
+            case 'land': return filteredLands
+            case 'rent': return filteredRents
+            default: return filteredAll
+        }
+    }
+
+    const currentFiltered = getCurrentFiltered()
+    const totalPages = Math.ceil(currentFiltered.length / ITEMS_PER_PAGE)
+
+    const paginatedListings = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE
+        return currentFiltered.slice(start, start + ITEMS_PER_PAGE)
+    }, [currentFiltered, currentPage])
+
+    // Reset page on search or tab change
+    const handleSearch = (value: string) => {
+        setSearch(value)
+        setCurrentPage(1)
+    }
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value)
+        setCurrentPage(1)
+    }
+
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-4">
                 <AdminSearchInput
                     value={search}
-                    onChange={setSearch}
+                    onChange={handleSearch}
                     placeholder="Tìm theo tiêu đề, vị trí, dự án..."
                 />
                 <span className="text-sm text-slate-500">
-                    {filteredAll.length} / {all.length} tin đăng
+                    {currentFiltered.length} / {all.length} tin đăng
                 </span>
             </div>
 
-            <Tabs defaultValue="all" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="all">
                         Tất cả ({filteredAll.length})
@@ -76,26 +111,15 @@ export default function ListingsTabsWithSearch({
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="all">
-                    <ListingTable listings={filteredAll} />
-                </TabsContent>
+                <ListingTable listings={paginatedListings} />
 
-                <TabsContent value="apartment">
-                    <ListingTable listings={filteredApartments} />
-                </TabsContent>
-
-                <TabsContent value="house">
-                    <ListingTable listings={filteredHouses} />
-                </TabsContent>
-
-                <TabsContent value="land">
-                    <ListingTable listings={filteredLands} />
-                </TabsContent>
-
-                <TabsContent value="rent">
-                    <ListingTable listings={filteredRents} />
-                </TabsContent>
+                <AdminPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </Tabs>
         </div>
     )
 }
+
