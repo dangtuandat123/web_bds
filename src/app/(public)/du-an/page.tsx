@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ProjectCard from '@/components/modules/project-card'
+import PagePagination from '@/components/modules/page-pagination'
 import { Building } from 'lucide-react'
 
 async function getLocations() {
@@ -41,7 +42,7 @@ async function getProjects(params: SearchParams) {
     // Note: priceRange is a String field (e.g., "5-10 tỷ"), cannot filter numerically
 
     const page = parseInt(params.page || '1')
-    const perPage = 12
+    const perPage = 6
 
     const [projects, total] = await Promise.all([
         prisma.project.findMany({
@@ -54,6 +55,7 @@ async function getProjects(params: SearchParams) {
                 name: true,
                 slug: true,
                 category: true,
+                status: true,
                 priceRange: true,
                 location: true,
                 fullLocation: true,
@@ -80,6 +82,13 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         getLocations(),
     ])
     const totalPages = Math.ceil(total / perPage)
+
+    // Build searchParams object for pagination
+    const paginationParams: Record<string, string> = {}
+    if (resolvedParams.keyword) paginationParams.keyword = resolvedParams.keyword
+    if (resolvedParams.type) paginationParams.type = resolvedParams.type
+    if (resolvedParams.status) paginationParams.status = resolvedParams.status
+    if (resolvedParams.location) paginationParams.location = resolvedParams.location
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 animate-fade-in">
@@ -116,34 +125,18 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                                     fullLocation={project.fullLocation || ''}
                                     image={project.thumbnailUrl}
                                     slug={project.slug}
+                                    status={project.status}
                                 />
                             ))}
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center gap-3 items-center mt-12">
-                                {page > 1 && (
-                                    <a
-                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page - 1).toString() })}`}
-                                        className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                                    >
-                                        ← Trang trước
-                                    </a>
-                                )}
-                                <span className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-bold shadow-lg">
-                                    {page} / {totalPages}
-                                </span>
-                                {page < totalPages && (
-                                    <a
-                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page + 1).toString() })}`}
-                                        className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                                    >
-                                        Trang sau →
-                                    </a>
-                                )}
-                            </div>
-                        )}
+                        <PagePagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            baseUrl="/du-an"
+                            searchParams={paginationParams}
+                        />
                     </>
                 ) : (
                     <div className="text-center py-20">
@@ -158,3 +151,4 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         </div>
     )
 }
+

@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ListingCard from '@/components/modules/listing-card'
+import PagePagination from '@/components/modules/page-pagination'
 import { Search } from 'lucide-react'
 
 async function getLocations() {
@@ -60,7 +61,7 @@ async function getListings(params: SearchParams) {
     }
 
     const page = parseInt(params.page || '1')
-    const perPage = 12
+    const perPage = 8
 
     const [listings, total] = await Promise.all([
         prisma.listing.findMany({
@@ -96,6 +97,14 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         getLocations(),
     ])
     const totalPages = Math.ceil(total / perPage)
+
+    // Build searchParams object for pagination
+    const paginationParams: Record<string, string> = {}
+    if (resolvedParams.keyword) paginationParams.keyword = resolvedParams.keyword
+    if (resolvedParams.type) paginationParams.type = resolvedParams.type
+    if (resolvedParams.location) paginationParams.location = resolvedParams.location
+    if (resolvedParams.beds) paginationParams.beds = resolvedParams.beds
+    if (resolvedParams.direction) paginationParams.direction = resolvedParams.direction
 
     const getListingTags = (type: string) => {
         const tags: string[] = []
@@ -164,29 +173,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center gap-3 items-center mt-12">
-                                {page > 1 && (
-                                    <a
-                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page - 1).toString() })}`}
-                                        className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                                    >
-                                        ← Trang trước
-                                    </a>
-                                )}
-                                <span className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-bold shadow-lg">
-                                    {page} / {totalPages}
-                                </span>
-                                {page < totalPages && (
-                                    <a
-                                        href={`?${new URLSearchParams({ ...resolvedParams, page: (page + 1).toString() })}`}
-                                        className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all font-semibold text-slate-700 hover:text-amber-700 shadow-sm"
-                                    >
-                                        Trang sau →
-                                    </a>
-                                )}
-                            </div>
-                        )}
+                        <PagePagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            baseUrl="/nha-dat"
+                            searchParams={paginationParams}
+                        />
                     </>
                 ) : (
                     <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -203,3 +195,4 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         </div>
     )
 }
+

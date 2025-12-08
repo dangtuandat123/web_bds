@@ -37,7 +37,7 @@ async function getProject(slug: string) {
     const project = await prisma.project.findUnique({
         where: { slug },
         include: {
-            amenities: {
+            projectamenity: {
                 include: {
                     amenity: {
                         select: {
@@ -48,7 +48,7 @@ async function getProject(slug: string) {
                     },
                 },
             },
-            listings: {
+            listing: {
                 where: { isActive: true },
                 take: 6,
                 select: {
@@ -87,7 +87,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         : [project.thumbnailUrl]
 
     // Transform amenities
-    const amenities = project.amenities.map((pa) => pa.amenity)
+    const amenities = project.projectamenity.map((pa) => pa.amenity)
 
     // Generate tags for listings
     const getListingTags = (type: string) => {
@@ -187,7 +187,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                         )}
 
                         {/* Listings in Project */}
-                        {project.listings.length > 0 && (
+                        {project.listing.length > 0 && (
                             <>
                                 <Separator />
                                 <div>
@@ -195,11 +195,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                                         <span className="w-1 h-6 bg-amber-500 mr-3 rounded-full"></span>
                                         Sản phẩm trong dự án
                                         <span className="ml-3 bg-amber-100 text-amber-700 text-sm px-3 py-1 rounded-full">
-                                            {project.listings.length}
+                                            {project.listing.length}
                                         </span>
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {project.listings.map((listing) => (
+                                        {project.listing.map((listing) => (
                                             <ListingCard
                                                 key={listing.id}
                                                 id={listing.id}

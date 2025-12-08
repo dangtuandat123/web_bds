@@ -12,12 +12,27 @@ interface ProjectCardProps {
     fullLocation: string
     image: string
     slug?: string
+    status?: string
+}
+
+const statusLabels: Record<string, string> = {
+    SELLING: 'Đang mở bán',
+    UPCOMING: 'Sắp mở bán',
+    SOLD_OUT: 'Đã bán hết',
+}
+
+const statusColors: Record<string, string> = {
+    SELLING: 'bg-amber-500/90',
+    UPCOMING: 'bg-blue-500/90',
+    SOLD_OUT: 'bg-slate-500/90',
 }
 
 export default function ProjectCard({
-    id, title, category, categoryId, price, location, fullLocation, image, slug
+    id, title, category, categoryId, price, location, fullLocation, image, slug, status = 'SELLING'
 }: ProjectCardProps) {
     const href = slug ? `/du-an/${slug}` : `/du-an/${id}`
+    const statusLabel = statusLabels[status] || 'Đang mở bán'
+    const statusColor = statusColors[status] || 'bg-amber-500/90'
 
     return (
         <Link href={href}>
@@ -32,10 +47,10 @@ export default function ProjectCard({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
 
-                    {/* Top Left Badge */}
+                    {/* Top Left Badge - Status */}
                     <div className="absolute top-4 left-4">
-                        <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-wider">
-                            {categoryId === 'can-ho' ? 'Đang mở bán' : 'Hot'}
+                        <span className={`${statusColor} backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-wider`}>
+                            {statusLabel}
                         </span>
                     </div>
 

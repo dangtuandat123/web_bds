@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma'
 import { Metadata } from 'next'
 import { Search, X } from 'lucide-react'
 import NewsCard from '@/components/modules/news-card'
+import PagePagination from '@/components/modules/page-pagination'
 
 export const metadata: Metadata = {
     title: 'Tin tức & Pháp lý | HAPPY LAND',
@@ -15,13 +16,15 @@ const categoryConfig: Record<string, string> = {
 }
 
 interface PageProps {
-    searchParams: Promise<{ category?: string; q?: string }>
+    searchParams: Promise<{ category?: string; q?: string; page?: string }>
 }
 
 export default async function NewsPage({ searchParams }: PageProps) {
     const resolvedSearchParams = await searchParams
     const category = resolvedSearchParams.category || 'all'
     const searchQuery = resolvedSearchParams.q || ''
+    const page = parseInt(resolvedSearchParams.page || '1')
+    const perPage = 6
 
     // Build where clause
     const where: any = {}
@@ -35,11 +38,22 @@ export default async function NewsPage({ searchParams }: PageProps) {
         ]
     }
 
-    const news = await prisma.news.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: 12,
-    })
+    const [news, total] = await Promise.all([
+        prisma.news.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: perPage,
+            skip: (page - 1) * perPage,
+        }),
+        prisma.news.count({ where })
+    ])
+
+    const totalPages = Math.ceil(total / perPage)
+
+    // Build searchParams object for pagination
+    const paginationParams: Record<string, string> = {}
+    if (category !== 'all') paginationParams.category = category
+    if (searchQuery) paginationParams.q = searchQuery
 
     const categories = [
         { id: 'all', label: 'Tất cả' },
@@ -174,29 +188,39 @@ export default async function NewsPage({ searchParams }: PageProps) {
                 {/* Results Count */}
                 <div className="mb-6">
                     <p className="text-slate-600 font-medium">
-                        Tìm thấy <span className="text-amber-600 font-bold">{news.length}</span> tin
+                        Tìm thấy <span className="text-amber-600 font-bold">{total}</span> tin
                         tức
                     </p>
                 </div>
 
                 {/* News Grid */}
                 {news.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {news.map((item) => (
-                            <NewsCard
-                                key={item.id}
-                                id={item.id}
-                                title={item.title}
-                                category={item.category}
-                                categoryLabel={categoryConfig[item.category]}
-                                summary={item.summary}
-                                image={item.thumbnailUrl}
-                                slug={item.slug}
-                                date={item.createdAt}
-                                views={item.views}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {news.map((item) => (
+                                <NewsCard
+                                    key={item.id}
+                                    id={item.id}
+                                    title={item.title}
+                                    category={item.category}
+                                    categoryLabel={categoryConfig[item.category]}
+                                    summary={item.summary}
+                                    image={item.thumbnailUrl}
+                                    slug={item.slug}
+                                    date={item.createdAt}
+                                    views={item.views}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        <PagePagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            baseUrl="/tin-tuc"
+                            searchParams={paginationParams}
+                        />
+                    </>
                 ) : (
                     <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
                         <p className="text-slate-500 text-lg mb-2">Không tìm thấy tin tức nào</p>
