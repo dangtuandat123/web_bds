@@ -133,3 +133,183 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Rich Text Content Styles (Prose) */
+.prose {
+  line-height: 1.75;
+  color: #334155;
+}
+
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 0.875em;
+  color: #0f172a;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  color: #1e293b;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  color: #1e293b;
+}
+
+.prose h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #334155;
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.prose a {
+  color: #d97706;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.prose a:hover {
+  color: #b45309;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose blockquote {
+  font-style: italic;
+  border-left: 4px solid #d97706;
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  padding-left: 1em;
+  color: #475569;
+}
+
+.prose hr {
+  border-color: #e2e8f0;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose thead th {
+  background-color: #f8fafc;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.prose tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prose img {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-radius: 0.5rem;
+}
+
+.prose code {
+  background-color: #f1f5f9;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  color: #0f172a;
+}
+
+.prose pre {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.prose pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* Prose size variations */
+.prose-lg {
+  font-size: 1.125rem;
+}
+
+.prose-lg h1 {
+  font-size: 2.5rem;
+}
+
+.prose-lg h2 {
+  font-size: 1.75rem;
+}
+
+.prose-slate {
+  color: #475569;
+}
+
+.prose-slate h1,
+.prose-slate h2,
+.prose-slate h3,
+.prose-slate h4 {
+  color: #1e293b;
+}
+
