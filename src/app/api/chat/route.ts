@@ -191,6 +191,22 @@ VÍ DỤ:
             break;
         }
 
+        // Prepare CTA message
+        const ctaMessages = [
+            "Anh/chị quan tâm đến căn nào để em tư vấn chi tiết hơn ạ?",
+            "Anh/chị để lại SĐT để em liên hệ tư vấn trực tiếp nhé!",
+            "Anh/chị cho em xin SĐT để được hỗ trợ tốt nhất ạ!"
+        ];
+
+        const hasPhoneRequest = finalResponse.toLowerCase().includes('sđt') ||
+            finalResponse.toLowerCase().includes('số điện thoại') ||
+            finalResponse.toLowerCase().includes('liên hệ');
+
+        // CTA will be added AFTER the property cards
+        const ctaText = (properties.length > 0 && !hasPhoneRequest)
+            ? '\n\n' + ctaMessages[Math.floor(Math.random() * ctaMessages.length)]
+            : '';
+
         // Stream the final response
         const messageId = `msg_${randomUUID()}`;
         const textId = `text_${randomUUID()}`;
@@ -216,10 +232,16 @@ VÍ DỤ:
                         await new Promise(r => setTimeout(r, 20)); // Small delay for typing effect
                     }
 
-                    // Append property marker at the end
+                    // Append property marker (cards will be rendered from this)
                     if (propertyMarker) {
                         const escapedMarker = JSON.stringify(propertyMarker);
                         controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escapedMarker}}\n\n`));
+                    }
+
+                    // Append CTA AFTER the property cards
+                    if (ctaText) {
+                        const escapedCta = JSON.stringify(ctaText);
+                        controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escapedCta}}\n\n`));
                     }
 
                     controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));

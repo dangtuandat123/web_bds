@@ -10,10 +10,13 @@ interface ChatMessageProps {
 
 // Parse properties from embedded HTML comment in text
 // Format: <!-- PROPERTIES:[...JSON...] -->
-function parsePropertiesFromText(text: string): { cleanText: string; properties: ChatProperty[] } {
+// Also extract any text that comes after the property marker as "afterCardsText"
+function parsePropertiesFromText(text: string): { cleanText: string; properties: ChatProperty[]; afterCardsText: string } {
     const properties: ChatProperty[] = []
     const propRegex = /<!-- PROPERTIES:(\[[\s\S]*?\]) -->/
     const match = text.match(propRegex)
+
+    let afterCardsText = ''
 
     if (match && match[1]) {
         try {
@@ -47,12 +50,19 @@ function parsePropertiesFromText(text: string): { cleanText: string; properties:
         } catch (e) {
             console.error('Failed to parse properties from text:', e)
         }
+
+        // Extract text that comes AFTER the property marker
+        const markerIndex = text.indexOf(match[0])
+        const afterMarker = text.slice(markerIndex + match[0].length).trim()
+        if (afterMarker) {
+            afterCardsText = afterMarker
+        }
     }
 
-    // Remove the property marker from text
-    const cleanText = text.replace(propRegex, '').trim()
+    // Remove the property marker AND any text after it from cleanText
+    const cleanText = text.replace(propRegex, '').replace(afterCardsText, '').trim()
 
-    return { cleanText, properties }
+    return { cleanText, properties, afterCardsText }
 }
 
 function parseToolResults(message: UIMessage): ChatProperty[] {
@@ -133,8 +143,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         .map(part => part.text)
         .join('')
 
-    // Parse properties embedded in text and get clean text
-    const { cleanText: textContent, properties: textProperties } = parsePropertiesFromText(rawTextContent)
+    // Parse properties embedded in text and get clean text + after cards text
+    const { cleanText: textContent, properties: textProperties, afterCardsText } = parsePropertiesFromText(rawTextContent)
 
     // Combine properties from both sources
     const propertyResults = [...toolPropertyResults, ...textProperties]
@@ -181,6 +191,15 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                         {propertyResults.map((property, idx) => (
                             <ChatPropertyCard key={`${property.url}-${idx}`} property={property} />
                         ))}
+                    </div>
+                )}
+
+                {/* CTA text that appears AFTER the property cards */}
+                {afterCardsText && (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-amber-700 font-medium text-sm">
+                            {afterCardsText}
+                        </p>
                     </div>
                 )}
             </div>
