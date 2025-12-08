@@ -55,8 +55,9 @@ export async function createProject(data: ProjectData) {
             data: {
                 ...projectData,
                 thumbnailUrl: images[0] || '', // Use first image as thumbnail
-                images: images, // Store as JSON
-                amenities: {
+                images: JSON.stringify(images), // Store as JSON string
+                updatedAt: new Date(),
+                projectamenity: {
                     create: amenityIds.map((amenityId) => ({
                         amenity: {
                             connect: { id: amenityId },
@@ -97,8 +98,8 @@ export async function updateProject(id: number, data: ProjectData) {
             data: {
                 ...projectData,
                 thumbnailUrl: images[0] || '',
-                images: images,
-                amenities: {
+                images: JSON.stringify(images),
+                projectamenity: {
                     // Delete existing and create new
                     deleteMany: {},
                     create: amenityIds.map((amenityId) => ({

@@ -127,19 +127,9 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {categories.length > 0 ? (
-                                            categories.map((cat) => (
-                                                <SelectItem key={cat.id} value={cat.slug.toUpperCase().replace(/-/g, '_')}>
-                                                    {cat.name}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <>
-                                                <SelectItem value="MARKET">Thị trường</SelectItem>
-                                                <SelectItem value="FENG_SHUI">Phong thủy</SelectItem>
-                                                <SelectItem value="LEGAL">Pháp lý</SelectItem>
-                                            </>
-                                        )}
+                                        <SelectItem value="MARKET">Thị trường</SelectItem>
+                                        <SelectItem value="FENG_SHUI">Phong thủy</SelectItem>
+                                        <SelectItem value="LEGAL">Pháp lý</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -167,7 +157,7 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
                     control={form.control}
                     name="thumbnailUrl"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                             <FormLabel>Ảnh đại diện *</FormLabel>
                             <FormControl>
                                 <ImageUpload

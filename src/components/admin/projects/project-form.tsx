@@ -65,12 +65,32 @@ export default function ProjectForm({ initialData, amenities, locations }: Proje
     const [isLoading, setIsLoading] = useState(false)
     const isEdit = !!initialData
 
-    // Parse JSON images
-    const defaultImages: string[] = initialData
-        ? (Array.isArray(initialData.images)
-            ? (initialData.images as Prisma.JsonArray).filter((img): img is string => typeof img === 'string')
-            : [])
-        : ['']
+    // Parse JSON images - handle both JSON string and array
+    const parseImages = (): string[] => {
+        if (!initialData) return ['']
+
+        let imagesData = initialData.images
+
+        // If it's a string, try to parse as JSON
+        if (typeof imagesData === 'string') {
+            try {
+                imagesData = JSON.parse(imagesData)
+            } catch {
+                // If not valid JSON, use thumbnailUrl as fallback
+                return initialData.thumbnailUrl ? [initialData.thumbnailUrl] : ['']
+            }
+        }
+
+        // If it's an array, filter for strings
+        if (Array.isArray(imagesData)) {
+            const urls = imagesData.filter((img): img is string => typeof img === 'string' && img.length > 0)
+            return urls.length > 0 ? urls : (initialData.thumbnailUrl ? [initialData.thumbnailUrl] : [''])
+        }
+
+        return initialData.thumbnailUrl ? [initialData.thumbnailUrl] : ['']
+    }
+
+    const defaultImages = parseImages()
 
     const form = useForm<ProjectFormData>({
         resolver: zodResolver(projectSchema),

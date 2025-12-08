@@ -38,9 +38,10 @@ export async function createListing(data: ListingFormData) {
             data: {
                 ...listingData,
                 thumbnailUrl: images[0],
-                images: images,
+                images: JSON.stringify(images),
                 projectId: projectId || null,
-                amenities: {
+                updatedAt: new Date(),
+                listingamenity: {
                     create: amenityIds.map((amenityId) => ({
                         amenity: { connect: { id: amenityId } },
                     })),
@@ -76,9 +77,9 @@ export async function updateListing(id: number, data: ListingFormData) {
             data: {
                 ...listingData,
                 thumbnailUrl: images[0],
-                images: images,
+                images: JSON.stringify(images),
                 projectId: projectId || null,
-                amenities: {
+                listingamenity: {
                     deleteMany: {},
                     create: amenityIds.map((amenityId) => ({
                         amenity: { connect: { id: amenityId } },
