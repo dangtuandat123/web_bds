@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
-import { LeadStatus } from '@prisma/client'
+import { lead_status } from '@prisma/client'
 
 // Submit Lead from Contact Form
 export async function submitLead(data: {
@@ -34,6 +34,7 @@ export async function submitLead(data: {
                 message: data.message?.trim() || null,
                 source: 'FORM',
                 status: 'NEW',
+                updatedAt: new Date(),
             },
         })
 
@@ -48,7 +49,7 @@ export async function submitLead(data: {
 }
 
 // Update Lead Status (Admin only)
-export async function updateLeadStatus(leadId: number, newStatus: LeadStatus) {
+export async function updateLeadStatus(leadId: number, newStatus: lead_status) {
     try {
         await prisma.lead.update({
             where: { id: leadId },
