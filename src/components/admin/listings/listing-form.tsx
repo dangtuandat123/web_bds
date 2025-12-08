@@ -388,9 +388,23 @@ export default function ListingForm({ initialData, amenities, projects, location
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Hướng</FormLabel>
-                                <FormControl>
-                                    <Input {...field} placeholder="Ví dụ: Đông Nam, Tây Bắc" />
-                                </FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Chọn hướng nhà" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Đông">Đông</SelectItem>
+                                        <SelectItem value="Tây">Tây</SelectItem>
+                                        <SelectItem value="Nam">Nam</SelectItem>
+                                        <SelectItem value="Bắc">Bắc</SelectItem>
+                                        <SelectItem value="Đông Nam">Đông Nam</SelectItem>
+                                        <SelectItem value="Đông Bắc">Đông Bắc</SelectItem>
+                                        <SelectItem value="Tây Nam">Tây Nam</SelectItem>
+                                        <SelectItem value="Tây Bắc">Tây Bắc</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
