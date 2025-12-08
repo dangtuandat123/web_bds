@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getSession } from './auth'
+import { embedProject } from '@/lib/ai/auto-embed'
 
 export async function deleteProject(id: number) {
     // Validate session
@@ -53,11 +54,11 @@ export async function createProject(data: ProjectData) {
         const { amenityIds, images, ...projectData } = data
 
         // Create project with amenities
-        await prisma.project.create({
+        const project = await prisma.project.create({
             data: {
                 ...projectData,
-                thumbnailUrl: images[0] || '', // Use first image as thumbnail
-                images: JSON.stringify(images), // Store as JSON string
+                thumbnailUrl: images[0] || '',
+                images: JSON.stringify(images),
                 updatedAt: new Date(),
                 projectamenity: {
                     create: amenityIds.map((amenityId) => ({
@@ -67,6 +68,27 @@ export async function createProject(data: ProjectData) {
                     })),
                 },
             },
+            include: {
+                projectamenity: {
+                    include: { amenity: true }
+                }
+            }
+        })
+
+        // Auto-embed for chatbot
+        const amenities = project.projectamenity.map(pa => pa.amenity.name)
+        await embedProject({
+            id: project.id,
+            name: project.name,
+            slug: project.slug,
+            category: project.category,
+            location: project.location,
+            fullLocation: project.fullLocation,
+            priceRange: project.priceRange,
+            status: project.status,
+            description: project.description,
+            thumbnailUrl: project.thumbnailUrl,
+            amenities
         })
 
         revalidatePath('/admin/projects')
@@ -75,7 +97,6 @@ export async function createProject(data: ProjectData) {
     } catch (error: any) {
         console.error('Create project error:', error)
 
-        // Handle unique constraint error
         if (error.code === 'P2002') {
             return { error: 'Slug đã tồn tại, vui lòng chọn slug khác' }
         }
@@ -95,14 +116,13 @@ export async function updateProject(id: number, data: ProjectData) {
         const { amenityIds, images, ...projectData } = data
 
         // Update project and replace amenities
-        await prisma.project.update({
+        const project = await prisma.project.update({
             where: { id },
             data: {
                 ...projectData,
                 thumbnailUrl: images[0] || '',
                 images: JSON.stringify(images),
                 projectamenity: {
-                    // Delete existing and create new
                     deleteMany: {},
                     create: amenityIds.map((amenityId) => ({
                         amenity: {
@@ -111,6 +131,27 @@ export async function updateProject(id: number, data: ProjectData) {
                     })),
                 },
             },
+            include: {
+                projectamenity: {
+                    include: { amenity: true }
+                }
+            }
+        })
+
+        // Auto-embed for chatbot
+        const amenities = project.projectamenity.map(pa => pa.amenity.name)
+        await embedProject({
+            id: project.id,
+            name: project.name,
+            slug: project.slug,
+            category: project.category,
+            location: project.location,
+            fullLocation: project.fullLocation,
+            priceRange: project.priceRange,
+            status: project.status,
+            description: project.description,
+            thumbnailUrl: project.thumbnailUrl,
+            amenities
         })
 
         revalidatePath('/admin/projects')

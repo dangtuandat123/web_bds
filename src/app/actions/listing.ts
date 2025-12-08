@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getSession } from './auth'
+import { embedListing } from '@/lib/ai/auto-embed'
 
 type ListingFormData = {
     title: string
@@ -47,6 +48,30 @@ export async function createListing(data: ListingFormData) {
                     })),
                 },
             },
+            include: {
+                listingamenity: {
+                    include: { amenity: true }
+                }
+            }
+        })
+
+        // Auto-embed for chatbot
+        const amenities = listing.listingamenity.map(la => la.amenity.name)
+        await embedListing({
+            id: listing.id,
+            title: listing.title,
+            slug: listing.slug,
+            type: listing.type,
+            price: listing.price,
+            area: listing.area,
+            bedrooms: listing.bedrooms,
+            bathrooms: listing.bathrooms,
+            direction: listing.direction,
+            location: listing.location,
+            fullLocation: listing.fullLocation,
+            description: listing.description,
+            thumbnailUrl: listing.thumbnailUrl,
+            amenities
         })
 
         revalidatePath('/admin/listings')
@@ -86,6 +111,30 @@ export async function updateListing(id: number, data: ListingFormData) {
                     })),
                 },
             },
+            include: {
+                listingamenity: {
+                    include: { amenity: true }
+                }
+            }
+        })
+
+        // Auto-embed for chatbot
+        const amenities = listing.listingamenity.map(la => la.amenity.name)
+        await embedListing({
+            id: listing.id,
+            title: listing.title,
+            slug: listing.slug,
+            type: listing.type,
+            price: listing.price,
+            area: listing.area,
+            bedrooms: listing.bedrooms,
+            bathrooms: listing.bathrooms,
+            direction: listing.direction,
+            location: listing.location,
+            fullLocation: listing.fullLocation,
+            description: listing.description,
+            thumbnailUrl: listing.thumbnailUrl,
+            amenities
         })
 
         revalidatePath('/admin/listings')

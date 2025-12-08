@@ -1,15 +1,18 @@
 'use client'
 
 import Image from 'next/image'
+import { MapPin, Ruler, BedDouble, Bath, Home } from 'lucide-react'
 
 export interface ChatProperty {
     title: string
-    price: string
-    area?: string
+    price: string | number
+    area?: number | string
     location?: string
     url: string
     thumbnailUrl?: string
     type?: string
+    bedrooms?: number
+    bathrooms?: number
 }
 
 interface ChatPropertyCardProps {
@@ -35,61 +38,104 @@ export default function ChatPropertyCard({ property }: ChatPropertyCardProps) {
 
     const href = normalizeHref(property.url || '/')
 
+    // Format price
+    const formatPrice = (price: string | number) => {
+        if (typeof price === 'number') {
+            if (price >= 1000000000) {
+                return `${(price / 1000000000).toFixed(1)} tỷ`
+            } else if (price >= 1000000) {
+                return `${(price / 1000000).toFixed(0)} triệu`
+            }
+            return price.toLocaleString('vi-VN') + ' VNĐ'
+        }
+        return price
+    }
+
     // Generate a placeholder image based on property type
     const placeholderImage = property.type === 'Dự án'
-        ? 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=200&fit=crop'
-        : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=200&fit=crop'
+        ? 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop'
+        : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+
+    const typeColor = property.type === 'Dự án'
+        ? 'bg-gradient-to-r from-blue-500 to-blue-600'
+        : 'bg-gradient-to-r from-amber-500 to-orange-500'
 
     return (
         <a
             href={href}
-            className="flex gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-200 group"
+            className="block w-full rounded-xl border border-slate-200 bg-white hover:border-amber-400 hover:shadow-lg transition-all duration-300 overflow-hidden group"
             target="_blank"
             rel="noopener noreferrer"
         >
-            {/* Thumbnail */}
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-amber-100 to-amber-50">
+            {/* Image - Full width */}
+            <div className="relative w-full h-32 bg-gradient-to-br from-slate-100 to-slate-200">
                 <Image
                     src={property.thumbnailUrl || placeholderImage}
                     alt={property.title}
                     fill
-                    className="object-cover"
-                    sizes="80px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 400px) 100vw, 350px"
                 />
+                {/* Type Badge */}
                 {property.type && (
-                    <span className="absolute bottom-1 left-1 rounded bg-amber-500 text-white text-[9px] font-bold px-1 py-0.5 shadow">
+                    <span className={`absolute top-2 left-2 ${typeColor} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg`}>
                         {property.type}
                     </span>
                 )}
+                {/* Price Badge */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                    <span className="text-white font-bold text-lg drop-shadow-lg">
+                        {formatPrice(property.price)}
+                    </span>
+                </div>
             </div>
 
-            {/* Content - NO line clamp, show all info */}
-            <div className="flex-1 min-w-0 flex flex-col justify-start gap-1">
-                <h4 className="text-sm font-bold text-slate-800 leading-snug group-hover:text-amber-700 transition-colors">
+            {/* Content */}
+            <div className="p-3 space-y-2">
+                {/* Title */}
+                <h4 className="font-bold text-slate-800 leading-tight group-hover:text-amber-600 transition-colors line-clamp-2">
                     {property.title}
                 </h4>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-amber-600 font-bold">{property.price}</span>
+                {/* Property Details */}
+                <div className="flex flex-wrap gap-2 text-xs">
                     {property.area && (
-                        <span className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {property.area}
+                        <span className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-full">
+                            <Ruler size={12} />
+                            {typeof property.area === 'number' ? `${property.area} m²` : property.area}
+                        </span>
+                    )}
+                    {property.bedrooms !== undefined && property.bedrooms > 0 && (
+                        <span className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-full">
+                            <BedDouble size={12} />
+                            {property.bedrooms} PN
+                        </span>
+                    )}
+                    {property.bathrooms !== undefined && property.bathrooms > 0 && (
+                        <span className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-full">
+                            <Bath size={12} />
+                            {property.bathrooms} WC
                         </span>
                     )}
                 </div>
 
+                {/* Location */}
                 {property.location && (
-                    <p className="text-xs text-slate-500">
-                        📍 {property.location}
+                    <p className="flex items-start gap-1.5 text-xs text-slate-600">
+                        <MapPin size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{property.location}</span>
                     </p>
                 )}
-            </div>
 
-            {/* Arrow indicator */}
-            <div className="flex items-center text-slate-300 group-hover:text-amber-500 transition-colors flex-shrink-0">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                {/* CTA */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                    <span className="text-xs text-slate-400">Xem chi tiết</span>
+                    <div className="flex items-center text-amber-500 group-hover:translate-x-1 transition-transform">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </div>
             </div>
         </a>
     )
