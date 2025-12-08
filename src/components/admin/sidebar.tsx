@@ -36,7 +36,10 @@ export default function AdminSidebar() {
             {/* Navigation */}
             <nav className="flex-1 space-y-1 px-3 py-4">
                 {navigation.map((item) => {
-                    const isActive = pathname === item.href
+                    // For dashboard, exact match; for others, startsWith to match child routes
+                    const isActive = item.href === '/admin'
+                        ? pathname === '/admin'
+                        : pathname.startsWith(item.href)
                     return (
                         <Link
                             key={item.name}
