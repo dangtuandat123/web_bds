@@ -217,3 +217,15 @@ enum listing_type {
   LAND
   RENT
 }
+
+model setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @db.LongText
+  type      String   @default("text")
+  groupName String   @default("general") @map("group_name")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([groupName], map: "Setting_group_idx")
+}
