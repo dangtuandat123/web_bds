@@ -81,10 +81,22 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
     const project = await getProject(slug)
 
-    // Parse images from JSON
-    const images = Array.isArray(project.images)
-        ? project.images as string[]
-        : [project.thumbnailUrl]
+    // Parse images from JSON string
+    let images: string[] = []
+    try {
+        if (typeof project.images === 'string') {
+            images = JSON.parse(project.images)
+        } else if (Array.isArray(project.images)) {
+            images = project.images as string[]
+        }
+    } catch {
+        images = []
+    }
+
+    // Fallback to thumbnailUrl if no images
+    if (images.length === 0 && project.thumbnailUrl) {
+        images = [project.thumbnailUrl]
+    }
 
     // Transform amenities
     const amenities = project.projectamenity.map((pa) => pa.amenity)

@@ -115,10 +115,22 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     const listing = await getListing(slug)
     const relatedListings = await getRelatedListings(listing)
 
-    // Parse images from JSON
-    const images = Array.isArray(listing.images)
-        ? listing.images as string[]
-        : [listing.thumbnailUrl]
+    // Parse images from JSON string
+    let images: string[] = []
+    try {
+        if (typeof listing.images === 'string') {
+            images = JSON.parse(listing.images)
+        } else if (Array.isArray(listing.images)) {
+            images = listing.images as string[]
+        }
+    } catch {
+        images = []
+    }
+
+    // Fallback to thumbnailUrl if no images
+    if (images.length === 0 && listing.thumbnailUrl) {
+        images = [listing.thumbnailUrl]
+    }
 
     // Transform amenities
     const amenities = listing.listingamenity.map((la: any) => la.amenity)
