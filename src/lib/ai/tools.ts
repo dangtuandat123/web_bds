@@ -70,7 +70,9 @@ export async function saveCustomerInfo(
     phone: string,
     name?: string,
     email?: string,
-    message?: string
+    interest?: string,
+    message?: string,
+    sessionId?: string
 ): Promise<string> {
     try {
         // Validate phone
@@ -81,12 +83,20 @@ export async function saveCustomerInfo(
             })
         }
 
+        // Build message with interest info
+        const fullMessage = [
+            interest ? `Quan tâm: ${interest}` : null,
+            message || null,
+            'Khách hàng từ Chatbot'
+        ].filter(Boolean).join(' | ')
+
         const lead = await prisma.lead.create({
             data: {
                 name: name || 'Khách từ Chatbot',
                 phone: phone.replace(/\s/g, ''),
                 email: email || null,
-                message: message || 'Khách hàng để lại thông tin qua Chatbot',
+                message: fullMessage,
+                sessionId: sessionId || null,
                 source: 'CHATBOT',
                 status: 'NEW',
                 updatedAt: new Date(),
@@ -152,7 +162,7 @@ export async function getProjectDetail(slug: string): Promise<string> {
 }
 
 // ============ Tool Executor ============
-export async function executeTool(toolName: string, args: Record<string, any>): Promise<string> {
+export async function executeTool(toolName: string, args: Record<string, any>, sessionId?: string): Promise<string> {
     console.log(`[Agent] Executing tool: ${toolName}`, args)
 
     switch (toolName) {
@@ -160,7 +170,7 @@ export async function executeTool(toolName: string, args: Record<string, any>): 
             return await searchProperties(args.query, args.limit || 5)
 
         case 'save_customer_info':
-            return await saveCustomerInfo(args.phone, args.name, args.email, args.message)
+            return await saveCustomerInfo(args.phone, args.name, args.email, args.interest, args.message, sessionId)
 
         case 'get_project_detail':
             return await getProjectDetail(args.slug)

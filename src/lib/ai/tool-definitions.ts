@@ -43,9 +43,13 @@ export const toolDefinitions = [
                         type: "string",
                         description: "Email khách hàng (không bắt buộc)"
                     },
+                    interest: {
+                        type: "string",
+                        description: "Khách đang quan tâm đến BĐS nào, ví dụ: 'căn hộ 2PN quận 2', 'dự án Vinhomes', 'nhà phố Thủ Đức'. Lấy từ ngữ cảnh cuộc hội thoại."
+                    },
                     message: {
                         type: "string",
-                        description: "Ghi chú về nhu cầu của khách"
+                        description: "Ghi chú thêm về nhu cầu của khách"
                     }
                 },
                 required: ["phone"]

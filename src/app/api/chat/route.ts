@@ -152,7 +152,7 @@ VÍ DỤ NHẬN DIỆN SĐT:
                         console.error("[Agent] Failed to parse tool args:", e);
                     }
 
-                    const toolResult = await executeTool(toolName, toolArgs);
+                    const toolResult = await executeTool(toolName, toolArgs, sessionId);
                     console.log(`[Agent] Tool ${toolName} result:`, toolResult.substring(0, 200));
 
                     // Extract properties from search_properties tool result

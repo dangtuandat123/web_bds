@@ -42,12 +42,14 @@ model lead {
   phone     String
   email     String?
   message   String?     @db.Text
+  sessionId String?     // Link to chat session for chatbot leads
   source    lead_source @default(FORM)
   status    lead_status @default(NEW)
   createdAt DateTime    @default(now())
   updatedAt DateTime
 
   @@index([createdAt], map: "Lead_createdAt_idx")
+  @@index([sessionId], map: "Lead_sessionId_idx")
   @@index([source], map: "Lead_source_idx")
   @@index([status], map: "Lead_status_idx")
 }
