@@ -1,3 +1,4 @@
+import { Metadata } from 'next'
 import prisma from '@/lib/prisma'
 import { getSiteSettings } from '@/lib/settings'
 import Hero from '@/components/modules/home/hero'
@@ -6,6 +7,14 @@ import ProjectCard from '@/components/modules/project-card'
 import ListingCard from '@/components/modules/listing-card'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+
+export async function generateMetadata(): Promise<Metadata> {
+    const settings = await getSiteSettings()
+    return {
+        title: `${settings.siteName} | ${settings.siteDescription}`,
+        description: settings.siteDescription,
+    }
+}
 
 async function getLocations() {
     const locations = await prisma.location.findMany({
