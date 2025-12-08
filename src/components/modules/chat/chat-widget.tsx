@@ -59,10 +59,20 @@ export default function ChatWidget() {
 
     return (
         <>
+            {/* Greeting Bubble */}
+            {!isOpen && (
+                <div className="fixed bottom-[88px] right-24 z-40 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-lg px-4 py-2 text-sm text-slate-700 border border-slate-100 max-w-[180px]">
+                        <p>Xin chào! 👋 Bạn cần tư vấn gì?</p>
+                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-l-8 border-transparent border-l-white"></div>
+                    </div>
+                </div>
+            )}
+
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group ${isOpen ? 'scale-0' : 'scale-100'
+                className={`fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group ${isOpen ? 'scale-0' : 'scale-100'
                     }`}
                 aria-label="Mở chat"
             >
