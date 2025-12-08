@@ -16,7 +16,7 @@ async function getLocations() {
 }
 
 async function getFeaturedData() {
-    const [projects, listings] = await Promise.all([
+    const [projects, listings, news] = await Promise.all([
         // Get 3 recent projects
         prisma.project.findMany({
             take: 3,
@@ -53,9 +53,23 @@ async function getFeaturedData() {
                 type: true,
             },
         }),
+        // Get 3 recent news
+        prisma.news.findMany({
+            take: 3,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                summary: true,
+                category: true,
+                thumbnailUrl: true,
+                createdAt: true,
+            },
+        }),
     ])
 
-    return { projects, listings }
+    return { projects, listings, news }
 }
 
 // Category mapping from DB to Vietnamese
@@ -63,11 +77,18 @@ const categoryMap: Record<string, string> = {
     APARTMENT: 'Căn hộ chung cư',
     HOUSE: 'Nhà phố - Biệt thự',
     LAND: 'Đất nền dự án',
-    VILLA: 'Biệt  thự',
+    VILLA: 'Biệt thự',
+}
+
+// News category mapping
+const newsCategoryMap: Record<string, string> = {
+    MARKET: 'Thị trường',
+    FENG_SHUI: 'Phong thủy',
+    LEGAL: 'Pháp lý',
 }
 
 export default async function HomePage() {
-    const [{ projects, listings }, locations] = await Promise.all([
+    const [{ projects, listings, news }, locations] = await Promise.all([
         getFeaturedData(),
         getLocations(),
     ])
@@ -170,6 +191,72 @@ export default async function HomePage() {
 
                     <div className="text-center mt-12 md:hidden">
                         <Link href="/listings">
+                            <button className="bg-slate-100 text-slate-800 px-8 py-3 rounded-full font-bold text-sm">
+                                Xem tất cả
+                            </button>
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* News Section */}
+            <section className="py-20 bg-slate-50/50">
+                <div className="container mx-auto px-4">
+                    <div className="flex justify-between items-end mb-12">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">
+                                Tin Tức Bất Động Sản
+                            </h2>
+                            <p className="text-slate-500 text-lg">
+                                Cập nhật thông tin mới nhất về thị trường bất động sản
+                            </p>
+                        </div>
+                        <Link
+                            href="/tin-tuc"
+                            className="hidden md:flex items-center text-amber-600 font-bold hover:text-amber-700 transition-colors"
+                        >
+                            Xem tất cả <ArrowRight size={20} className="ml-2" />
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {news.map((item) => (
+                            <Link key={item.id} href={`/tin-tuc/${item.slug}`}>
+                                <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                                    <div className="relative h-48 overflow-hidden">
+                                        <img
+                                            src={item.thumbnailUrl}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                        <div className="absolute top-3 left-3">
+                                            <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                                {newsCategoryMap[item.category]}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-amber-600 transition-colors">
+                                            {item.title}
+                                        </h3>
+                                        <p className="text-slate-500 text-sm line-clamp-2">
+                                            {item.summary}
+                                        </p>
+                                        <div className="text-slate-400 text-xs mt-3">
+                                            {new Intl.DateTimeFormat('vi-VN', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                            }).format(new Date(item.createdAt))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-12 md:hidden">
+                        <Link href="/tin-tuc">
                             <button className="bg-slate-100 text-slate-800 px-8 py-3 rounded-full font-bold text-sm">
                                 Xem tất cả
                             </button>

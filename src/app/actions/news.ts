@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
-import { NewsCategory } from '@prisma/client'
+import { news_category } from '@prisma/client'
 
 // Helper function to generate slug
 function generateSlug(title: string): string {
@@ -20,11 +20,13 @@ function generateSlug(title: string): string {
 // Create News
 export async function createNews(data: {
     title: string
-    category: NewsCategory
+    category: news_category
     summary: string
     content: string
     thumbnailUrl: string
     author?: string
+    isFeatured: boolean
+    isActive: boolean
 }) {
     try {
         const slug = generateSlug(data.title)
@@ -44,6 +46,9 @@ export async function createNews(data: {
                 content: data.content,
                 thumbnailUrl: data.thumbnailUrl,
                 author: data.author || 'Admin',
+                isFeatured: data.isFeatured,
+                isActive: data.isActive,
+                updatedAt: new Date(),
             },
         })
 
@@ -62,11 +67,13 @@ export async function updateNews(
     id: number,
     data: {
         title: string
-        category: NewsCategory
+        category: news_category
         summary: string
         content: string
         thumbnailUrl: string
         author?: string
+        isFeatured: boolean
+        isActive: boolean
     }
 ) {
     try {
@@ -90,6 +97,8 @@ export async function updateNews(
                 content: data.content,
                 thumbnailUrl: data.thumbnailUrl,
                 author: data.author || 'Admin',
+                isFeatured: data.isFeatured,
+                isActive: data.isActive,
             },
         })
 

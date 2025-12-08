@@ -35,7 +35,10 @@ import { Button } from '@/components/ui/button'
 import { deleteNews } from '@/app/actions/news'
 
 interface NewsTableProps {
-    news: news[]
+    news: (news & {
+        isFeatured?: boolean
+        isActive?: boolean
+    })[]
 }
 
 const categoryConfig: Record<string, { label: string; color: string }> = {
@@ -80,6 +83,7 @@ export default function NewsTable({ news }: NewsTableProps) {
                             <TableHead className="w-[80px]">Ảnh</TableHead>
                             <TableHead>Tiêu đề</TableHead>
                             <TableHead>Danh mục</TableHead>
+                            <TableHead>Trạng thái</TableHead>
                             <TableHead>Lượt xem</TableHead>
                             <TableHead>Ngày tạo</TableHead>
                             <TableHead className="w-[80px]">Thao tác</TableHead>
@@ -106,6 +110,13 @@ export default function NewsTable({ news }: NewsTableProps) {
                                     <Badge className={categoryConfig[item.category].color}>
                                         {categoryConfig[item.category].label}
                                     </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    {item.isActive ? (
+                                        <Badge variant="default" className="bg-green-500">Hoạt động</Badge>
+                                    ) : (
+                                        <Badge variant="secondary">Ẩn</Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-slate-500">
                                     {item.views} lượt
