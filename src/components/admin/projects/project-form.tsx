@@ -10,6 +10,7 @@ import { X, Plus } from 'lucide-react'
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -25,6 +26,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import RichTextEditor from './rich-text-editor'
@@ -44,6 +46,8 @@ const projectSchema = z.object({
     status: z.enum(['UPCOMING', 'SELLING', 'SOLD_OUT']),
     images: z.array(z.string().min(1, 'Ảnh không được trống')).min(1, 'Cần ít nhất 1 ảnh'),
     amenityIds: z.array(z.number()),
+    isFeatured: z.boolean(),
+    isActive: z.boolean(),
 })
 
 type ProjectFormData = z.infer<typeof projectSchema>
@@ -55,7 +59,11 @@ interface Amenity {
 }
 
 interface ProjectFormProps {
-    initialData?: project & { projectamenity: { amenityId: number }[] }
+    initialData?: project & { 
+        projectamenity: { amenityId: number }[]
+        isFeatured?: boolean
+        isActive?: boolean
+    }
     amenities: Amenity[]
     locations: string[]
 }
@@ -106,6 +114,8 @@ export default function ProjectForm({ initialData, amenities, locations }: Proje
             status: initialData?.status || 'SELLING',
             images: defaultImages,
             amenityIds: initialData?.projectamenity?.map((a: { amenityId: number }) => a.amenityId) || [],
+            isFeatured: initialData?.isFeatured || false,
+            isActive: initialData?.isActive ?? true,
         },
     })
 
@@ -424,6 +434,53 @@ export default function ProjectForm({ initialData, amenities, locations }: Proje
                                     ))}
                                 </div>
                                 <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
+                {/* Settings */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Cài đặt</h3>
+
+                    <FormField
+                        control={form.control}
+                        name="isFeatured"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Nổi bật</FormLabel>
+                                    <FormDescription>
+                                        Hiển thị dự án này ở vị trí nổi bật
+                                    </FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="isActive"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Hoạt động</FormLabel>
+                                    <FormDescription>
+                                        Dự án này hiển thị công khai
+                                    </FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
                             </FormItem>
                         )}
                     />

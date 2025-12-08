@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -25,6 +26,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import RichTextEditor from '../projects/rich-text-editor'
 import ImageUpload from '../image-upload'
 import { createNews, updateNews } from '@/app/actions/news'
@@ -37,6 +39,8 @@ const newsSchema = z.object({
     content: z.string().min(1, 'Nội dung là bắt buộc'),
     thumbnailUrl: z.string().min(1, 'Ảnh đại diện là bắt buộc'),
     author: z.string().optional(),
+    isFeatured: z.boolean(),
+    isActive: z.boolean(),
 })
 
 type NewsFormData = z.infer<typeof newsSchema>
@@ -48,7 +52,10 @@ interface Category {
 }
 
 interface NewsFormProps {
-    initialData?: news
+    initialData?: news & {
+        isFeatured?: boolean
+        isActive?: boolean
+    }
     categories?: Category[]
 }
 
@@ -66,6 +73,8 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
             content: initialData?.content || '',
             thumbnailUrl: initialData?.thumbnailUrl || '',
             author: initialData?.author || 'Admin',
+            isFeatured: initialData?.isFeatured || false,
+            isActive: initialData?.isActive ?? true,
         },
     })
 
@@ -205,18 +214,69 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
                     )}
                 />
 
+                {/* Settings */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Cài đặt</h3>
+
+                    <FormField
+                        control={form.control}
+                        name="isFeatured"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Nổi bật</FormLabel>
+                                    <FormDescription>
+                                        Hiển thị tin tức này ở vị trí nổi bật
+                                    </FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="isActive"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Hoạt động</FormLabel>
+                                    <FormDescription>
+                                        Tin tức này hiển thị công khai
+                                    </FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
                 {/* Submit Button */}
-                <div className="flex justify-end gap-4">
+                <div className="flex gap-4">
+                    <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="bg-gradient-to-r from-amber-500 to-amber-600"
+                    >
+                        {isLoading ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo tin tức'}
+                    </Button>
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => router.push('/admin/news')}
+                        onClick={() => router.back()}
                         disabled={isLoading}
                     >
                         Hủy
-                    </Button>
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo mới'}
                     </Button>
                 </div>
             </form>

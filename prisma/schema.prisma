@@ -117,6 +117,8 @@ model news {
   thumbnailUrl   String
   author         String?        @default("Admin")
   views          Int            @default(0)
+  isFeatured     Boolean        @default(false)
+  isActive       Boolean        @default(true)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime
 
@@ -139,6 +141,8 @@ model project {
   status         project_status   @default(SELLING)
   images         String           @db.LongText
   thumbnailUrl   String
+  isFeatured     Boolean          @default(false)
+  isActive       Boolean          @default(true)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime
   listing        listing[]

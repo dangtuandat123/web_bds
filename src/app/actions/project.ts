@@ -38,6 +38,8 @@ interface ProjectData {
     status: 'UPCOMING' | 'SELLING' | 'SOLD_OUT'
     images: string[]
     amenityIds: number[]
+    isFeatured: boolean
+    isActive: boolean
 }
 
 export async function createProject(data: ProjectData) {
