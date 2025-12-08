@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Save, Settings, Phone, Globe, Key, Image, FileText } from 'lucide-react'
+import { Save, Settings, Phone, Globe, Key, Image as ImageIcon, FileText } from 'lucide-react'
+import ImageUpload from '@/components/admin/image-upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,7 +71,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                         API
                     </TabsTrigger>
                     <TabsTrigger value="background" className="gap-2">
-                        <Image className="h-4 w-4" />
+                        <ImageIcon className="h-4 w-4" />
                         Hình nền
                     </TabsTrigger>
                     <TabsTrigger value="legal" className="gap-2">
@@ -96,16 +97,13 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="site_logo">Logo URL</Label>
-                            <Input
-                                id="site_logo"
-                                value={settings.site_logo || ''}
-                                onChange={e => handleChange('site_logo', e.target.value)}
-                                placeholder="/logo.png hoặc https://..."
-                            />
-                            {settings.site_logo && (
-                                <img src={settings.site_logo} alt="Logo preview" className="h-12 mt-2" />
-                            )}
+                            <Label className="block mb-2">Logo website</Label>
+                            <div className="mt-2">
+                                <ImageUpload
+                                    value={settings.site_logo || ''}
+                                    onChange={(url) => handleChange('site_logo', url)}
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -238,42 +236,27 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
 
                     <div className="grid gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="bg_home">Trang chủ</Label>
-                            <Input
-                                id="bg_home"
+                            <Label>Hình nền trang chủ</Label>
+                            <ImageUpload
                                 value={settings.bg_home || ''}
-                                onChange={e => handleChange('bg_home', e.target.value)}
-                                placeholder="URL hình nền trang chủ"
+                                onChange={(url) => handleChange('bg_home', url)}
                             />
-                            {settings.bg_home && (
-                                <img src={settings.bg_home} alt="Home BG" className="h-24 w-full object-cover rounded mt-2" />
-                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="bg_projects">Trang dự án</Label>
-                            <Input
-                                id="bg_projects"
+                            <Label>Hình nền trang dự án</Label>
+                            <ImageUpload
                                 value={settings.bg_projects || ''}
-                                onChange={e => handleChange('bg_projects', e.target.value)}
-                                placeholder="URL hình nền trang dự án"
+                                onChange={(url) => handleChange('bg_projects', url)}
                             />
-                            {settings.bg_projects && (
-                                <img src={settings.bg_projects} alt="Projects BG" className="h-24 w-full object-cover rounded mt-2" />
-                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="bg_listings">Trang sàn giao dịch</Label>
-                            <Input
-                                id="bg_listings"
+                            <Label>Hình nền trang sàn giao dịch</Label>
+                            <ImageUpload
                                 value={settings.bg_listings || ''}
-                                onChange={e => handleChange('bg_listings', e.target.value)}
-                                placeholder="URL hình nền trang sàn giao dịch"
+                                onChange={(url) => handleChange('bg_listings', url)}
                             />
-                            {settings.bg_listings && (
-                                <img src={settings.bg_listings} alt="Listings BG" className="h-24 w-full object-cover rounded mt-2" />
-                            )}
                         </div>
                     </div>
                 </TabsContent>
