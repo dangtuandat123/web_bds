@@ -1,9 +1,17 @@
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { searchVectorDB } from "@/lib/ai/tools";
+import { executeTool } from "@/lib/ai/tools";
+import { toolDefinitions, ToolCall } from "@/lib/ai/tool-definitions";
 import { getSetting } from "@/app/actions/settings";
 
 export const maxDuration = 60;
+
+interface Message {
+    role: "system" | "user" | "assistant" | "tool";
+    content: string;
+    tool_call_id?: string;
+    tool_calls?: ToolCall[];
+}
 
 interface PropertyResult {
     title: string;
@@ -22,8 +30,8 @@ export async function POST(req: Request) {
         const host = req.headers.get("host") || "happyland.me";
         const date = new Date().toLocaleDateString("vi-VN");
 
-        // Convert UI messages to proper format
-        let processedMessages = uiMessages.map((m: any) => {
+        // Convert UI messages
+        let processedMessages: Message[] = uiMessages.map((m: any) => {
             if (m.parts && Array.isArray(m.parts)) {
                 const textContent = m.parts
                     .filter((p: any) => p.type === 'text')
@@ -37,136 +45,151 @@ export async function POST(req: Request) {
             return m;
         });
 
-        // Filter empty messages
-        processedMessages = processedMessages.filter((m: any) => m.content && m.content.trim());
-        const firstUserIndex = processedMessages.findIndex((m: any) => m.role === 'user');
-        const messages = firstUserIndex >= 0 ? processedMessages.slice(firstUserIndex) : processedMessages;
+        processedMessages = processedMessages.filter((m) => m.content && m.content.trim());
+        const firstUserIndex = processedMessages.findIndex((m) => m.role === 'user');
+        const messages: Message[] = firstUserIndex >= 0 ? processedMessages.slice(firstUserIndex) : processedMessages;
 
-        // Get latest user message for RAG
-        const lastUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
-        const userQuery = lastUserMessage?.content || '';
-
-        console.log("[Chat API] User query:", userQuery);
-
-        // RAG: Search vector database
-        let ragContext = '';
-        let properties: PropertyResult[] = [];
-
-        // Known locations in our database
-        const knownLocations = ['thủ đức', 'thu duc', 'tp thủ đức', 'quận 2', 'district 2', 'an phú', 'thảo điền'];
-
-        // Locations that indicate specific but unavailable areas
-        const queryLower = userQuery.toLowerCase();
-        const unavailableLocations = ['gia lai', 'đà nẵng', 'hà nội', 'hải phòng', 'cần thơ', 'bình dương', 'đồng nai', 'long an', 'bà rịa', 'vũng tàu'];
-
-        // Check if user is asking for a specific unavailable location
-        const isAskingUnavailableLocation = unavailableLocations.some(loc => queryLower.includes(loc));
-
-        if (userQuery && !isAskingUnavailableLocation) {
-            try {
-                const searchResults = await searchVectorDB(userQuery, 5);
-                console.log("[Chat API] RAG results:", searchResults);
-
-                if (typeof searchResults === 'string' && searchResults.startsWith('[')) {
-                    const parsed = JSON.parse(searchResults);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        // Transform for UI cards
-                        properties = parsed.map((p: any) => ({
-                            title: p.title || 'Bất động sản',
-                            price: typeof p.price === 'number' ? `${p.price} tỷ` : (p.price || 'Liên hệ'),
-                            area: p.area,
-                            location: p.location,
-                            url: p.url || '/',
-                            thumbnailUrl: p.thumbnailUrl,
-                            type: p.type === 'PROJECT' ? 'Dự án' : (p.type === 'LISTING' ? 'Tin đăng' : p.type),
-                        }));
-
-                        // Context for AI
-                        ragContext = `\n\n🏠 DỮ LIỆU BẤT ĐỘNG SẢN TÌM ĐƯỢC:\n`;
-                        properties.forEach((p, i) => {
-                            ragContext += `${i + 1}. ${p.title} - Giá: ${p.price}${p.area ? `, ${p.area}m²` : ''}${p.location ? `, ${p.location}` : ''}\n`;
-                        });
-                    }
-                }
-            } catch (ragError) {
-                console.error("[Chat API] RAG Error:", ragError);
-            }
-        } else if (isAskingUnavailableLocation) {
-            console.log("[Chat API] User asking for unavailable location, skipping RAG");
-        }
-
-        const hasRelevantData = properties.length > 0;
-
-        const systemMessage = {
-            role: "system",
-            content: `BẠN LÀ: Trợ lý AI tư vấn Bất Động Sản của Happy Land (${host}).
-THỜI GIAN: ${date}
-
-TÍNH CÁCH:
-- Xưng hô: "em" với khách, gọi khách là "anh/chị"
-- Thân thiện, nhiệt tình, chuyên nghiệp
-- Ngắn gọn, tối đa 80 từ mỗi câu trả lời
-
-CÁCH TRẢ LỜI:
-1. CÂU CHÀO/HỎI THĂM → Chào lại lịch sự, hỏi "Anh/chị đang quan tâm đến loại BĐS nào ạ?"
-2. TÌM KIẾM BĐS:
-   - ${hasRelevantData ? 'CÓ dữ liệu phù hợp → Giới thiệu TÊN, GIÁ, DIỆN TÍCH, VỊ TRÍ từ danh sách bên dưới.' : 'KHÔNG có dữ liệu phù hợp → Nói "Hiện tại Happy Land chưa có BĐS phù hợp với yêu cầu của anh/chị."'}
-   - KHÔNG bịa đặt, KHÔNG đề xuất BĐS khác vị trí nếu khách hỏi vị trí cụ thể.
-3. YÊU CẦU GIÁ/NGÂN SÁCH → Hỏi rõ ngân sách, vị trí mong muốn.
-4. CÂU HỎI KHÁC → Trả lời nếu biết, hoặc "Em sẽ chuyển cho bộ phận chuyên môn."
-5. LUÔN gợi ý: "Anh/chị để lại SĐT để em tư vấn chi tiết nhé!"
-
-${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.'}`
-        };
-
-        console.log("[Chat API] Found", properties.length, "properties");
-
-        const requestBody = {
-            model: "google/gemini-2.5-flash",
-            messages: [systemMessage, ...messages],
-            stream: true,
-            max_tokens: 300,
-        };
-
-        // Get API key from database settings
         const OPENROUTER_API_KEY = await getSetting('api_openrouter') || process.env.OPENROUTER_API_KEY;
-
         if (!OPENROUTER_API_KEY) {
-            console.error("[Chat API] No OpenRouter API key configured");
             return new Response(JSON.stringify({ error: "API key not configured" }), {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
             });
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "Happy Land Chatbot",
-            },
-            body: JSON.stringify(requestBody),
-        });
+        const systemMessage: Message = {
+            role: "system",
+            content: `BẠN LÀ: Trợ lý AI Agent tư vấn Bất Động Sản của Happy Land (${host}).
+THỜI GIAN: ${date}
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[Chat API] OpenRouter error:", errorText);
-            return new Response(JSON.stringify({ error: "API Error" }), {
-                status: response.status,
-                headers: { "Content-Type": "application/json" },
+TÍNH CÁCH:
+- Xưng hô: "em" với khách, gọi khách là "anh/chị"
+- Thân thiện, nhiệt tình, chuyên nghiệp
+- Ngắn gọn, tối đa 100 từ mỗi câu trả lời
+
+BẠN CÓ CÁC CÔNG CỤ (TOOLS):
+1. search_properties: Tìm kiếm BĐS khi khách hỏi về căn hộ, dự án, nhà đất
+2. save_customer_info: Lưu thông tin khi khách để lại SĐT/tên
+3. get_project_detail: Lấy chi tiết dự án cụ thể
+
+CÁCH LÀM VIỆC:
+- Khi khách hỏi về BĐS → GỌI TOOL search_properties để tìm
+- Khi khách để lại SĐT → GỌI TOOL save_customer_info để lưu
+- Dựa trên kết quả tool để trả lời khách CHÍNH XÁC
+- KHÔNG bịa thông tin, chỉ dùng dữ liệu từ tools
+- Sau khi tư vấn, gợi ý khách để lại SĐT
+
+VÍ DỤ:
+- Khách: "Tìm căn hộ 2PN quận 2" → Gọi search_properties(query="căn hộ 2PN quận 2")
+- Khách: "SĐT em là 0909123456" → Gọi save_customer_info(phone="0909123456")`
+        };
+
+        // Agent Loop - Max 3 iterations
+        const MAX_ITERATIONS = 3;
+        let agentMessages: Message[] = [systemMessage, ...messages];
+        let finalResponse = '';
+        let iteration = 0;
+        let properties: PropertyResult[] = []; // Collect properties from tool results
+
+        while (iteration < MAX_ITERATIONS) {
+            iteration++;
+            console.log(`[Agent] Iteration ${iteration}`);
+
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": `https://${host}`,
+                    "X-Title": "Happy Land AI Agent",
+                },
+                body: JSON.stringify({
+                    model: "google/gemini-2.0-flash-001",
+                    messages: agentMessages,
+                    tools: toolDefinitions,
+                    tool_choice: "auto",
+                    max_tokens: 500,
+                }),
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("[Agent] API Error:", errorText);
+                break;
+            }
+
+            const data = await response.json();
+            const choice = data.choices?.[0];
+            const assistantMessage = choice?.message;
+
+            if (!assistantMessage) break;
+
+            // Check for tool calls
+            if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+                console.log("[Agent] Tool calls detected:", assistantMessage.tool_calls.length);
+
+                // Add assistant message with tool calls
+                agentMessages.push({
+                    role: "assistant",
+                    content: assistantMessage.content || "",
+                    tool_calls: assistantMessage.tool_calls
+                });
+
+                // Execute each tool and add results
+                for (const toolCall of assistantMessage.tool_calls) {
+                    const toolName = toolCall.function.name;
+                    let toolArgs = {};
+
+                    try {
+                        toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+                    } catch (e) {
+                        console.error("[Agent] Failed to parse tool args:", e);
+                    }
+
+                    const toolResult = await executeTool(toolName, toolArgs);
+                    console.log(`[Agent] Tool ${toolName} result:`, toolResult.substring(0, 200));
+
+                    // Extract properties from search_properties tool result
+                    if (toolName === 'search_properties') {
+                        try {
+                            const parsed = JSON.parse(toolResult);
+                            if (parsed.success && parsed.properties && parsed.properties.length > 0) {
+                                properties = parsed.properties.map((p: any) => ({
+                                    title: p.title || 'Bất động sản',
+                                    price: p.price || 'Liên hệ',
+                                    area: p.area,
+                                    location: p.location,
+                                    url: p.url || '/',
+                                    thumbnailUrl: p.thumbnailUrl,
+                                    type: p.type,
+                                }));
+                                console.log(`[Agent] Extracted ${properties.length} properties for cards`);
+                            }
+                        } catch (e) {
+                            console.error("[Agent] Failed to parse properties:", e);
+                        }
+                    }
+
+                    agentMessages.push({
+                        role: "tool",
+                        tool_call_id: toolCall.id,
+                        content: toolResult
+                    });
+                }
+
+                // Continue loop to get AI's response after tool execution
+                continue;
+            }
+
+            // No tool calls - this is the final response
+            finalResponse = assistantMessage.content || '';
+            break;
         }
 
+        // Stream the final response
         const messageId = `msg_${randomUUID()}`;
         const textId = `text_${randomUUID()}`;
         const encoder = new TextEncoder();
-        const decoder = new TextDecoder();
-
-        let buffer = '';
-        let startSent = false;
-        let fullResponse = ''; // Collect full AI response
 
         // Prepare property marker to append after AI response
         const propertyMarker = properties.length > 0
@@ -175,83 +198,42 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
 
         const stream = new ReadableStream({
             async start(controller) {
-                const reader = response.body!.getReader();
-
                 try {
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
+                    controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${messageId}"}\n\n`));
+                    controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${textId}"}\n\n`));
 
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop() || '';
-
-                        for (const line of lines) {
-                            if (!line.startsWith('data: ')) continue;
-                            const data = line.slice(6).trim();
-
-                            if (data === '[DONE]') {
-                                // Append property marker before finish
-                                if (propertyMarker) {
-                                    const escaped = JSON.stringify(propertyMarker);
-                                    controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
-                                    fullResponse += propertyMarker;
-                                }
-                                controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
-                                controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
-                                continue;
-                            }
-
-                            try {
-                                const parsed = JSON.parse(data);
-                                const content = parsed.choices?.[0]?.delta?.content;
-
-                                if (content) {
-                                    fullResponse += content; // Collect response content
-                                    if (!startSent) {
-                                        controller.enqueue(encoder.encode(`data: {"type":"start","messageId":"${messageId}"}\n\n`));
-                                        controller.enqueue(encoder.encode(`data: {"type":"text-start","id":"${textId}"}\n\n`));
-                                        startSent = true;
-                                    }
-                                    const escaped = JSON.stringify(content);
-                                    controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
-                                }
-                            } catch (e) {
-                                // Skip invalid JSON
-                            }
-                        }
+                    // Stream response word by word for better UX
+                    const words = finalResponse.split(' ');
+                    for (const word of words) {
+                        const chunk = word + ' ';
+                        const escaped = JSON.stringify(chunk);
+                        controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
+                        await new Promise(r => setTimeout(r, 20)); // Small delay for typing effect
                     }
 
-                    // Ensure stream ends properly
-                    if (startSent) {
-                        if (propertyMarker) {
-                            const escaped = JSON.stringify(propertyMarker);
-                            controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escaped}}\n\n`));
-                        }
-                        controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
-                        controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
+                    // Append property marker at the end
+                    if (propertyMarker) {
+                        const escapedMarker = JSON.stringify(propertyMarker);
+                        controller.enqueue(encoder.encode(`data: {"type":"text-delta","id":"${textId}","delta":${escapedMarker}}\n\n`));
                     }
+
+                    controller.enqueue(encoder.encode(`data: {"type":"text-end","id":"${textId}"}\n\n`));
+                    controller.enqueue(encoder.encode(`data: {"type":"finish","messageId":"${messageId}","finishReason":"stop"}\n\n`));
+
                 } catch (error) {
-                    console.error("[Chat API] Stream error:", error);
+                    console.error("[Agent] Stream error:", error);
                 } finally {
-                    // Save session with full conversation AFTER stream ends
+                    // Save session
                     const messagesWithResponse = [
                         ...messages,
-                        { role: 'assistant', content: fullResponse || 'Xin chào! Tôi có thể giúp gì cho bạn?' }
+                        { role: 'assistant', content: finalResponse + propertyMarker }
                     ];
 
                     prisma.chatsession.upsert({
                         where: { sessionId },
-                        update: {
-                            messages: JSON.stringify(messagesWithResponse),
-                            updatedAt: new Date()
-                        },
-                        create: {
-                            sessionId,
-                            messages: JSON.stringify(messagesWithResponse),
-                            updatedAt: new Date()
-                        }
-                    }).catch((e: any) => console.error("[Chat API] DB Error:", e));
+                        update: { messages: JSON.stringify(messagesWithResponse), updatedAt: new Date() },
+                        create: { sessionId, messages: JSON.stringify(messagesWithResponse), updatedAt: new Date() }
+                    }).catch((e: any) => console.error("[Agent] DB Error:", e));
 
                     controller.close();
                 }
@@ -267,7 +249,7 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
         });
 
     } catch (error) {
-        console.error("[Chat API] Error:", error);
+        console.error("[Agent] Error:", error);
         return new Response(JSON.stringify({ error: "Internal Server Error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },

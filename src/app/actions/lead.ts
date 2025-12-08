@@ -80,3 +80,37 @@ export async function deleteLead(leadId: number) {
         return { success: false, message: 'Không thể xóa. Vui lòng thử lại.' }
     }
 }
+
+// Create Lead from FormData (for contact form)
+export async function createLead(formData: FormData) {
+    const name = formData.get('name') as string
+    const phone = formData.get('phone') as string
+    const email = formData.get('email') as string | undefined
+    const message = formData.get('message') as string | undefined
+    const source = (formData.get('source') as string) || 'FORM'
+
+    try {
+        if (!phone || phone.trim().length < 8) {
+            return { success: false, error: 'Số điện thoại không hợp lệ' }
+        }
+
+        await prisma.lead.create({
+            data: {
+                name: name?.trim() || 'Khách hàng',
+                phone: phone.trim(),
+                email: email?.trim() || null,
+                message: message?.trim() || null,
+                source: source === 'CONTACT_PAGE' ? 'FORM' : 'FORM',
+                status: 'NEW',
+                updatedAt: new Date(),
+            },
+        })
+
+        revalidatePath('/admin/leads')
+        return { success: true, message: 'Đã lưu thông tin thành công!' }
+    } catch (error) {
+        console.error('Error creating lead:', error)
+        return { success: false, error: 'Có lỗi xảy ra. Vui lòng thử lại.' }
+    }
+}
+
