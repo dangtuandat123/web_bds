@@ -33,18 +33,18 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { updateLeadStatus, deleteLead } from '@/app/actions/lead'
-import { LeadStatus } from '@prisma/client'
+import { lead_status } from '@prisma/client'
 
 interface LeadTableProps {
     leads: Lead[]
 }
 
-const statusConfig: Record<LeadStatus, { label: string; color: string }> = {
-    NEW: { label: 'Mới', color: 'bg-blue-100 text-blue-700' },
-    CONTACTED: { label: 'Đã liên hệ', color: 'bg-yellow-100 text-yellow-700' },
-    QUALIFIED: { label: 'Tiềm năng', color: 'bg-green-100 text-green-700' },
-    CONVERTED: { label: 'Đã chốt', color: 'bg-purple-100 text-purple-700' },
-    LOST: { label: 'Thất bại', color: 'bg-gray-100 text-gray-700' },
+const statusConfig: Record<lead_status, { label: string; color: string }> = {
+    NEW: { label: 'Mới', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800' },
+    CONTACTED: { label: 'Đã liên hệ', color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800' },
+    QUALIFIED: { label: 'Tiềm năng', color: 'bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800' },
+    CONVERTED: { label: 'Đã chốt', color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 hover:text-purple-800' },
+    LOST: { label: 'Thất bại', color: 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-800' },
 }
 
 const sourceConfig: Record<string, string> = {
@@ -57,7 +57,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
     const [deleteId, setDeleteId] = useState<number | null>(null)
     const [isPending, startTransition] = useTransition()
 
-    const handleStatusChange = (leadId: number, newStatus: LeadStatus) => {
+    const handleStatusChange = (leadId: number, newStatus: lead_status) => {
         startTransition(async () => {
             const result = await updateLeadStatus(leadId, newStatus)
             if (result.success) {
@@ -136,7 +136,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
                                             {Object.entries(statusConfig).map(([key, value]) => (
                                                 <DropdownMenuItem
                                                     key={key}
-                                                    onClick={() => handleStatusChange(lead.id, key as LeadStatus)}
+                                                    onClick={() => handleStatusChange(lead.id, key as lead_status)}
                                                     disabled={isPending || lead.status === key}
                                                 >
                                                     <Badge className={`${value.color} mr-2`}>

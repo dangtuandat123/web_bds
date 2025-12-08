@@ -38,9 +38,9 @@ interface ProjectTableProps {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-    UPCOMING: { label: 'Sắp mở bán', color: 'bg-blue-100 text-blue-700' },
-    SELLING: { label: 'Đang bán', color: 'bg-green-100 text-green-700' },
-    SOLD_OUT: { label: 'Đã bán hết', color: 'bg-red-100 text-red-700' },
+    UPCOMING: { label: 'Sắp mở bán', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800' },
+    SELLING: { label: 'Đang bán', color: 'bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800' },
+    SOLD_OUT: { label: 'Đã bán hết', color: 'bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800' },
 }
 
 const categoryConfig: Record<string, string> = {
