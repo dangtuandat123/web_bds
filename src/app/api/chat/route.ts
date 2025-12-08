@@ -1,10 +1,9 @@
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { searchVectorDB } from "@/lib/ai/tools";
+import { getSetting } from "@/app/actions/settings";
 
 export const maxDuration = 60;
-
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 interface PropertyResult {
     title: string;
@@ -128,6 +127,17 @@ ${ragContext || '📋 KHÔNG CÓ DỮ LIỆU BĐS PHÙ HỢP trong hệ thống.
             stream: true,
             max_tokens: 300,
         };
+
+        // Get API key from database settings
+        const OPENROUTER_API_KEY = await getSetting('api_openrouter') || process.env.OPENROUTER_API_KEY;
+
+        if (!OPENROUTER_API_KEY) {
+            console.error("[Chat API] No OpenRouter API key configured");
+            return new Response(JSON.stringify({ error: "API key not configured" }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",

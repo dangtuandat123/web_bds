@@ -1,13 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { Building, MapPin, Phone, Mail, Facebook, Instagram, Youtube } from 'lucide-react'
+import Image from 'next/image'
+import { Building, MapPin, Phone, Mail, Facebook, Youtube } from 'lucide-react'
+import { SiteSettings } from '@/lib/settings'
 
 interface FooterProps {
+    settings: SiteSettings
     onRegister?: () => void
 }
 
-export default function Footer({ onRegister }: FooterProps) {
+export default function Footer({ settings, onRegister }: FooterProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (onRegister) onRegister()
@@ -22,25 +25,47 @@ export default function Footer({ onRegister }: FooterProps) {
                 {/* Company Info */}
                 <div className="md:col-span-1">
                     <div className="flex flex-col text-white font-bold mb-6">
-                        <div className="flex items-center text-2xl">
-                            <Building className="text-amber-500 mr-2" /> HAPPY LAND
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-500 tracking-[0.3em] ml-8 uppercase mt-1">
-                            Real Estate
-                        </span>
+                        {settings.siteLogo ? (
+                            <Image
+                                src={settings.siteLogo}
+                                alt={settings.siteName}
+                                width={160}
+                                height={50}
+                                className="h-12 w-auto object-contain"
+                            />
+                        ) : (
+                            <>
+                                <div className="flex items-center text-2xl">
+                                    <Building className="text-amber-500 mr-2" /> {settings.siteName.toUpperCase()}
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500 tracking-[0.3em] ml-8 uppercase mt-1">
+                                    Real Estate
+                                </span>
+                            </>
+                        )}
                     </div>
                     <p className="mb-8 text-sm leading-relaxed text-slate-400 font-light">
-                        Đối tác tin cậy cho mọi nhu cầu đầu tư và an cư. Chúng tôi cam kết mang đến những sản phẩm giá trị thực.
+                        {settings.siteDescription}
                     </p>
                     <div className="flex space-x-3">
-                        {[Facebook, Instagram, Youtube].map((Icon, idx) => (
-                            <div
-                                key={idx}
-                                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all cursor-pointer transform hover:-translate-y-1"
-                            >
-                                <Icon size={18} />
-                            </div>
-                        ))}
+                        {settings.socialFacebook && (
+                            <a href={settings.socialFacebook} target="_blank" rel="noopener noreferrer"
+                                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all cursor-pointer transform hover:-translate-y-1">
+                                <Facebook size={18} />
+                            </a>
+                        )}
+                        {settings.socialZalo && (
+                            <a href={settings.socialZalo.startsWith('http') ? settings.socialZalo : `https://zalo.me/${settings.socialZalo}`} target="_blank" rel="noopener noreferrer"
+                                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all cursor-pointer transform hover:-translate-y-1">
+                                <span className="text-xs font-bold">Zalo</span>
+                            </a>
+                        )}
+                        {settings.socialYoutube && (
+                            <a href={settings.socialYoutube} target="_blank" rel="noopener noreferrer"
+                                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all cursor-pointer transform hover:-translate-y-1">
+                                <Youtube size={18} />
+                            </a>
+                        )}
                     </div>
                 </div>
 
@@ -56,7 +81,7 @@ export default function Footer({ onRegister }: FooterProps) {
                                 <MapPin size={16} className="text-amber-500 group-hover:text-white transition-colors" />
                             </div>
                             <span className="mt-1.5 text-slate-400 group-hover:text-slate-200 transition-colors">
-                                Số 123 Đường Nguyễn Duy Trinh, P. Bình Trưng Tây, TP. Thủ Đức, TP.HCM
+                                {settings.contactAddress}
                             </span>
                         </li>
                         <li className="flex items-center group">
@@ -64,7 +89,7 @@ export default function Footer({ onRegister }: FooterProps) {
                                 <Phone size={16} className="text-amber-500 group-hover:text-white transition-colors" />
                             </div>
                             <span className="font-bold text-white text-xl group-hover:text-amber-500 transition-colors">
-                                0912 345 678
+                                {settings.contactPhone}
                             </span>
                         </li>
                         <li className="flex items-center group">
@@ -72,7 +97,7 @@ export default function Footer({ onRegister }: FooterProps) {
                                 <Mail size={16} className="text-amber-500 group-hover:text-white transition-colors" />
                             </div>
                             <span className="text-slate-400 group-hover:text-white transition-colors">
-                                info@happyland.net.vn
+                                {settings.contactEmail}
                             </span>
                         </li>
                     </ul>
@@ -106,10 +131,10 @@ export default function Footer({ onRegister }: FooterProps) {
 
             {/* Bottom Bar */}
             <div className="border-t border-slate-800 pt-8 text-center text-xs text-slate-600 flex flex-col md:flex-row justify-between container mx-auto px-4">
-                <span>© 2023 Happy Land Real Estate. All rights reserved.</span>
+                <span>© {new Date().getFullYear()} {settings.siteName}. All rights reserved.</span>
                 <div className="space-x-4 mt-2 md:mt-0">
-                    <span className="hover:text-white cursor-pointer">Điều khoản sử dụng</span>
-                    <span className="hover:text-white cursor-pointer">Chính sách bảo mật</span>
+                    <Link href="/dieu-khoan-su-dung" className="hover:text-white cursor-pointer">Điều khoản sử dụng</Link>
+                    <Link href="/chinh-sach-bao-mat" className="hover:text-white cursor-pointer">Chính sách bảo mật</Link>
                 </div>
             </div>
         </footer>

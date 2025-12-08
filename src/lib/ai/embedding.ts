@@ -1,9 +1,14 @@
 import { OpenAI } from 'openai'
+import { getSetting } from '@/app/actions/settings'
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY || '',
-    baseURL: 'https://openrouter.ai/api/v1',
-})
+// Create OpenAI client with dynamic API key
+async function getOpenAIClient(): Promise<OpenAI> {
+    const apiKey = await getSetting('api_openrouter') || process.env.OPENROUTER_API_KEY || ''
+    return new OpenAI({
+        apiKey,
+        baseURL: 'https://openrouter.ai/api/v1',
+    })
+}
 
 // Simple text-based embedding fallback using character codes
 function simpleEmbedding(text: string): number[] {
@@ -23,6 +28,7 @@ function simpleEmbedding(text: string): number[] {
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
+        const openai = await getOpenAIClient()
         const response = await openai.embeddings.create({
             model: 'google/gemini-embedding-001',
             input: text,
