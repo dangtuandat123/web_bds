@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import 'react-quill-new/dist/quill.snow.css'
 
 // Dynamic import to avoid SSR issues
@@ -18,6 +18,85 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    // Setup custom image handler after component mounts
+    useEffect(() => {
+        const setupImageHandler = () => {
+            const container = containerRef.current
+            if (!container) return
+
+            // Find the image button in toolbar
+            const imageButton = container.querySelector('.ql-image')
+            if (!imageButton) {
+                // Retry if button not found yet
+                setTimeout(setupImageHandler, 100)
+                return
+            }
+
+            // Replace existing click handler
+            const newImageButton = imageButton.cloneNode(true) as HTMLElement
+            imageButton.parentNode?.replaceChild(newImageButton, imageButton)
+
+            newImageButton.addEventListener('click', (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+
+                const input = document.createElement('input')
+                input.setAttribute('type', 'file')
+                input.setAttribute('accept', 'image/*')
+                input.click()
+
+                input.onchange = async () => {
+                    const file = input.files?.[0]
+                    if (!file) return
+
+                    try {
+                        // Upload image to server
+                        const formData = new FormData()
+                        formData.append('file', file)
+
+                        const response = await fetch('/api/upload', {
+                            method: 'POST',
+                            body: formData,
+                        })
+
+                        const data = await response.json()
+
+                        if (response.ok && data.url) {
+                            // Get Quill editor instance from DOM
+                            const editorContainer = container.querySelector('.ql-editor')
+                            if (editorContainer) {
+                                // Insert image at the end or at cursor
+                                const img = document.createElement('img')
+                                img.src = data.url
+                                img.style.maxWidth = '100%'
+                                editorContainer.appendChild(img)
+
+                                // Trigger onChange to update form value
+                                const event = new Event('input', { bubbles: true })
+                                editorContainer.dispatchEvent(event)
+
+                                // Update the value through onChange
+                                const htmlContent = editorContainer.innerHTML
+                                onChange(htmlContent)
+                            }
+                        } else {
+                            alert('Lỗi upload ảnh: ' + (data.error || 'Không xác định'))
+                        }
+                    } catch (error) {
+                        console.error('Image upload error:', error)
+                        alert('Lỗi upload ảnh. Vui lòng thử lại.')
+                    }
+                }
+            })
+        }
+
+        // Delay to ensure Quill is mounted
+        const timer = setTimeout(setupImageHandler, 500)
+        return () => clearTimeout(timer)
+    }, [onChange])
+
     // Full-featured Quill modules configuration
     const modules = useMemo(() => ({
         toolbar: [
@@ -64,7 +143,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
     ]
 
     return (
-        <div className="rich-text-editor">
+        <div className="rich-text-editor" ref={containerRef}>
             <ReactQuill
                 theme="snow"
                 value={value}
@@ -93,6 +172,8 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
                 .rich-text-editor .ql-editor img {
                     max-width: 100%;
                     height: auto;
+                    border-radius: 8px;
+                    margin: 8px 0;
                 }
                 .rich-text-editor .ql-snow .ql-picker {
                     color: #374151;
