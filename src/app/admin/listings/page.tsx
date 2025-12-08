@@ -2,13 +2,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs'
-import ListingTable from '@/components/admin/listings/listing-table'
+import ListingsTabsWithSearch from '@/components/admin/listings/listings-with-search'
 
 async function getListings(type?: string) {
     const where = type ? { type: type as any } : {}
@@ -57,45 +51,14 @@ export default async function ListingsPage() {
                 </Button>
             </div>
 
-            <Tabs defaultValue="all" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="all">
-                        Tất cả ({all.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="apartment">
-                        Căn hộ ({apartments.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="house">
-                        Nhà riêng ({houses.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="land">
-                        Đất nền ({lands.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="rent">
-                        Cho thuê ({rents.length})
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="all">
-                    <ListingTable listings={all} />
-                </TabsContent>
-
-                <TabsContent value="apartment">
-                    <ListingTable listings={apartments} />
-                </TabsContent>
-
-                <TabsContent value="house">
-                    <ListingTable listings={houses} />
-                </TabsContent>
-
-                <TabsContent value="land">
-                    <ListingTable listings={lands} />
-                </TabsContent>
-
-                <TabsContent value="rent">
-                    <ListingTable listings={rents} />
-                </TabsContent>
-            </Tabs>
+            <ListingsTabsWithSearch
+                all={all}
+                apartments={apartments}
+                houses={houses}
+                lands={lands}
+                rents={rents}
+            />
         </div>
     )
 }
+

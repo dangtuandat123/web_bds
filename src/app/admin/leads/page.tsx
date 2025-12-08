@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import prisma from '@/lib/prisma'
-import LeadTable from '@/components/admin/leads/lead-table'
+import LeadsWithSearch from '@/components/admin/leads/leads-with-search'
 
 export const metadata: Metadata = {
     title: 'Quản lý Khách hàng | Admin',
@@ -56,8 +56,9 @@ export default async function LeadsPage() {
                 </div>
             </div>
 
-            {/* Table */}
-            <LeadTable leads={leads} />
+            {/* Table with Search */}
+            <LeadsWithSearch leads={leads} />
         </div>
     )
 }
+

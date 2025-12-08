@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
-import ProjectTable from '@/components/admin/projects/project-table'
+import ProjectsWithSearch from '@/components/admin/projects/projects-with-search'
 
 async function getProjects() {
     const projects = await prisma.project.findMany({
@@ -34,8 +34,9 @@ export default async function ProjectsPage() {
                 </Button>
             </div>
 
-            {/* Projects Table */}
-            <ProjectTable projects={projects} />
+            {/* Projects Table with Search */}
+            <ProjectsWithSearch projects={projects} />
         </div>
     )
 }
+

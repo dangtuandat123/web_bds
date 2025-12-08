@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
-import NewsTable from '@/components/admin/news/news-table'
+import NewsWithSearch from '@/components/admin/news/news-with-search'
 import NewsCategoryManager from '@/components/admin/news/news-category-manager'
 
 export const metadata: Metadata = {
@@ -47,8 +47,9 @@ export default async function AdminNewsPage() {
             {/* Category Manager */}
             <NewsCategoryManager categories={categories} />
 
-            {/* News Table */}
-            <NewsTable news={news} />
+            {/* News Table with Search */}
+            <NewsWithSearch news={news} />
         </div>
     )
 }
+
