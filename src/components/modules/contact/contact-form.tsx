@@ -15,6 +15,7 @@ interface ContactFormProps {
         contactPhone: string
         contactEmail: string
         contactAddress: string
+        contactWorkingHours?: string
         socialFacebook?: string
         socialZalo?: string
     }
@@ -127,7 +128,7 @@ export default function ContactForm({ settings }: ContactFormProps) {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-slate-800">Giờ làm việc</h3>
-                                    <p className="text-slate-600">Thứ 2 - Chủ nhật: 8:00 - 21:00</p>
+                                    <p className="text-slate-600">{settings.contactWorkingHours || 'Thứ 2 - Chủ nhật: 8:00 - 21:00'}</p>
                                     <p className="text-sm text-slate-500">Hỗ trợ online 24/7</p>
                                 </div>
                             </div>

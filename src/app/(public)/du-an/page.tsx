@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { getSiteSettings } from '@/lib/settings'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ProjectCard from '@/components/modules/project-card'
 import PagePagination from '@/components/modules/page-pagination'
@@ -77,9 +78,10 @@ const categoryMap: Record<string, string> = {
 
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
     const resolvedParams = await searchParams
-    const [{ projects, total, page, perPage }, locations] = await Promise.all([
+    const [{ projects, total, page, perPage }, locations, settings] = await Promise.all([
         getProjects(resolvedParams),
         getLocations(),
+        getSiteSettings(),
     ])
     const totalPages = Math.ceil(total / perPage)
 
@@ -94,7 +96,10 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         <div className="bg-slate-50 min-h-screen pb-20 animate-fade-in">
             {/* Hero Header - Dark with Background Image (Reference Design) */}
             <div className="bg-slate-900 py-20 pb-32 px-4 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-20"></div>
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-20"
+                    style={{ backgroundImage: `url('${settings.bgProjects || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000'}')` }}
+                ></div>
                 <div className="relative z-10">
                     <h1 className="text-4xl font-black text-white mb-4">Dự Án Phân Phối</h1>
                     <p className="text-slate-300 text-lg max-w-2xl mx-auto">

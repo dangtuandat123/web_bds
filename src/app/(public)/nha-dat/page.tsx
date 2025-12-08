@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { getSiteSettings } from '@/lib/settings'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ListingCard from '@/components/modules/listing-card'
 import PagePagination from '@/components/modules/page-pagination'
@@ -92,9 +93,10 @@ async function getListings(params: SearchParams) {
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
     const resolvedParams = await searchParams
-    const [{ listings, total, page, perPage }, locations] = await Promise.all([
+    const [{ listings, total, page, perPage }, locations, settings] = await Promise.all([
         getListings(resolvedParams),
         getLocations(),
+        getSiteSettings(),
     ])
     const totalPages = Math.ceil(total / perPage)
 
@@ -118,7 +120,10 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         <div className="bg-white min-h-screen pb-20 animate-fade-in">
             {/* Hero Header - Dark with Background Image (Reference Design) */}
             <div className="bg-slate-900 py-20 pb-32 px-4 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-20"></div>
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-20"
+                    style={{ backgroundImage: `url('${settings.bgListings || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=2000'}')` }}
+                ></div>
                 <div className="relative z-10">
                     <h1 className="text-4xl font-black text-white mb-4">Sàn Giao Dịch</h1>
                     <p className="text-slate-300 text-lg max-w-2xl mx-auto">

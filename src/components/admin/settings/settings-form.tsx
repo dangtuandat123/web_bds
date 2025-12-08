@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { updateSettings } from '@/app/actions/settings'
+import RichTextEditor from '@/components/admin/projects/rich-text-editor'
 
 interface SettingsFormProps {
     initialSettings: Record<string, string>
@@ -156,6 +157,16 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 rows={2}
                             />
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="contact_working_hours">Giờ làm việc</Label>
+                            <Input
+                                id="contact_working_hours"
+                                value={settings.contact_working_hours || ''}
+                                onChange={e => handleChange('contact_working_hours', e.target.value)}
+                                placeholder="Thứ 2 - Chủ nhật: 8:00 - 21:00"
+                            />
+                        </div>
                     </div>
                 </TabsContent>
 
@@ -234,29 +245,35 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                     <h3 className="text-lg font-semibold text-slate-800">Hình nền trang</h3>
                     <Separator />
 
-                    <div className="grid gap-6">
-                        <div className="space-y-2">
-                            <Label>Hình nền trang chủ</Label>
-                            <ImageUpload
-                                value={settings.bg_home || ''}
-                                onChange={(url) => handleChange('bg_home', url)}
-                            />
+                    <div className="grid gap-8">
+                        <div className="space-y-3">
+                            <Label className="block text-base font-medium">Hình nền trang chủ</Label>
+                            <div className="flex justify-start">
+                                <ImageUpload
+                                    value={settings.bg_home || ''}
+                                    onChange={(url) => handleChange('bg_home', url)}
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Hình nền trang dự án</Label>
-                            <ImageUpload
-                                value={settings.bg_projects || ''}
-                                onChange={(url) => handleChange('bg_projects', url)}
-                            />
+                        <div className="space-y-3">
+                            <Label className="block text-base font-medium">Hình nền trang dự án</Label>
+                            <div className="flex justify-start">
+                                <ImageUpload
+                                    value={settings.bg_projects || ''}
+                                    onChange={(url) => handleChange('bg_projects', url)}
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Hình nền trang sàn giao dịch</Label>
-                            <ImageUpload
-                                value={settings.bg_listings || ''}
-                                onChange={(url) => handleChange('bg_listings', url)}
-                            />
+                        <div className="space-y-3">
+                            <Label className="block text-base font-medium">Hình nền trang sàn giao dịch</Label>
+                            <div className="flex justify-start">
+                                <ImageUpload
+                                    value={settings.bg_listings || ''}
+                                    onChange={(url) => handleChange('bg_listings', url)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </TabsContent>
@@ -268,26 +285,18 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
 
                     <div className="grid gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="terms_of_use">Điều khoản sử dụng (HTML)</Label>
-                            <Textarea
-                                id="terms_of_use"
+                            <Label>Điều khoản sử dụng</Label>
+                            <RichTextEditor
                                 value={settings.terms_of_use || ''}
-                                onChange={e => handleChange('terms_of_use', e.target.value)}
-                                placeholder="<h1>Điều khoản sử dụng</h1>..."
-                                rows={10}
-                                className="font-mono text-sm"
+                                onChange={(html) => handleChange('terms_of_use', html)}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="privacy_policy">Chính sách bảo mật (HTML)</Label>
-                            <Textarea
-                                id="privacy_policy"
+                            <Label>Chính sách bảo mật</Label>
+                            <RichTextEditor
                                 value={settings.privacy_policy || ''}
-                                onChange={e => handleChange('privacy_policy', e.target.value)}
-                                placeholder="<h1>Chính sách bảo mật</h1>..."
-                                rows={10}
-                                className="font-mono text-sm"
+                                onChange={(html) => handleChange('privacy_policy', html)}
                             />
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { getSiteSettings } from '@/lib/settings'
 import Hero from '@/components/modules/home/hero'
 import AdvancedSearch from '@/components/modules/search/advanced-search'
 import ProjectCard from '@/components/modules/project-card'
@@ -88,9 +89,10 @@ const newsCategoryMap: Record<string, string> = {
 }
 
 export default async function HomePage() {
-    const [{ projects, listings, news }, locations] = await Promise.all([
+    const [{ projects, listings, news }, locations, settings] = await Promise.all([
         getFeaturedData(),
         getLocations(),
+        getSiteSettings(),
     ])
 
     // Generate tags for listings based on type
@@ -106,7 +108,7 @@ export default async function HomePage() {
     return (
         <div className="animate-fade-in">
             {/* Hero Section */}
-            <Hero />
+            <Hero backgroundUrl={settings.bgHome} />
 
             {/* Advanced Search Box */}
             <div className="container mx-auto px-4 relative z-20">
