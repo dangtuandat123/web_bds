@@ -26,7 +26,7 @@ export default async function ProjectsPage() {
                         Quản lý các dự án bất động sản của bạn
                     </p>
                 </div>
-                <Button asChild>
+                <Button asChild className="bg-gradient-to-r from-amber-500 to-amber-600">
                     <Link href="/admin/projects/new">
                         <Plus className="mr-2 h-4 w-4" />
                         Thêm dự án
