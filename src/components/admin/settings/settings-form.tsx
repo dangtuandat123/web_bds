@@ -117,6 +117,50 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 rows={3}
                             />
                         </div>
+
+                        <Separator className="my-4" />
+                        <h4 className="font-medium text-slate-700">Nội dung trang chủ (Hero)</h4>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero_badge">Badge (dòng nhỏ trên cùng)</Label>
+                            <Input
+                                id="hero_badge"
+                                value={settings.hero_badge || ''}
+                                onChange={e => handleChange('hero_badge', e.target.value)}
+                                placeholder="Happy Land Real Estate"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero_title1">Tiêu đề dòng 1</Label>
+                            <Input
+                                id="hero_title1"
+                                value={settings.hero_title1 || ''}
+                                onChange={e => handleChange('hero_title1', e.target.value)}
+                                placeholder="Kiến Tạo Giá Trị"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero_title2">Tiêu đề dòng 2</Label>
+                            <Input
+                                id="hero_title2"
+                                value={settings.hero_title2 || ''}
+                                onChange={e => handleChange('hero_title2', e.target.value)}
+                                placeholder="Vun Đắp Tương Lai"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero_subtitle">Mô tả ngắn</Label>
+                            <Textarea
+                                id="hero_subtitle"
+                                value={settings.hero_subtitle || ''}
+                                onChange={e => handleChange('hero_subtitle', e.target.value)}
+                                placeholder="Hệ thống phân phối và giao dịch bất động sản..."
+                                rows={2}
+                            />
+                        </div>
                     </div>
                 </TabsContent>
 

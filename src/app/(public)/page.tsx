@@ -117,7 +117,13 @@ export default async function HomePage() {
     return (
         <div className="animate-fade-in">
             {/* Hero Section */}
-            <Hero backgroundUrl={settings.bgHome} />
+            <Hero
+                backgroundUrl={settings.bgHome}
+                badge={settings.heroBadge}
+                title1={settings.heroTitle1}
+                title2={settings.heroTitle2}
+                subtitle={settings.heroSubtitle}
+            />
 
             {/* Advanced Search Box */}
             <div className="container mx-auto px-4 relative z-20">

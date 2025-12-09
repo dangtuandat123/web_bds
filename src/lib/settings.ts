@@ -5,6 +5,11 @@ export interface SiteSettings {
     siteName: string
     siteLogo: string
     siteDescription: string
+    // Hero
+    heroBadge: string
+    heroTitle1: string
+    heroTitle2: string
+    heroSubtitle: string
     // Contact
     contactPhone: string
     contactEmail: string
@@ -30,6 +35,10 @@ const defaultSettings: SiteSettings = {
     siteName: 'Happy Land Real Estate',
     siteLogo: '',
     siteDescription: 'Nền tảng bất động sản hàng đầu Việt Nam',
+    heroBadge: 'Happy Land Real Estate',
+    heroTitle1: 'Kiến Tạo Giá Trị',
+    heroTitle2: 'Vun Đắp Tương Lai',
+    heroSubtitle: 'Hệ thống phân phối và giao dịch bất động sản uy tín hàng đầu tại TP. Thủ Đức. Nơi trao gửi niềm tin trọn vẹn.',
     contactPhone: '0912 345 678',
     contactEmail: 'contact@happyland.vn',
     contactAddress: '123 Nguyễn Văn Linh, Quận 7, TP.HCM',
@@ -57,6 +66,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 case 'site_name': result.siteName = s.value || defaultSettings.siteName; break
                 case 'site_logo': result.siteLogo = s.value; break
                 case 'site_description': result.siteDescription = s.value || defaultSettings.siteDescription; break
+                case 'hero_badge': result.heroBadge = s.value || defaultSettings.heroBadge; break
+                case 'hero_title1': result.heroTitle1 = s.value || defaultSettings.heroTitle1; break
+                case 'hero_title2': result.heroTitle2 = s.value || defaultSettings.heroTitle2; break
+                case 'hero_subtitle': result.heroSubtitle = s.value || defaultSettings.heroSubtitle; break
                 case 'contact_phone': result.contactPhone = s.value || defaultSettings.contactPhone; break
                 case 'contact_email': result.contactEmail = s.value || defaultSettings.contactEmail; break
                 case 'contact_address': result.contactAddress = s.value || defaultSettings.contactAddress; break
