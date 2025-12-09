@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getSession } from './auth'
-import { embedProject } from '@/lib/ai/auto-embed'
+import { embedProject, deleteProjectEmbedding } from '@/lib/ai/auto-embed'
 
 export async function deleteProject(id: number) {
     // Validate session
@@ -17,6 +17,9 @@ export async function deleteProject(id: number) {
         await prisma.project.delete({
             where: { id },
         })
+
+        // Delete embedding
+        await deleteProjectEmbedding(id)
 
         revalidatePath('/admin/projects')
 

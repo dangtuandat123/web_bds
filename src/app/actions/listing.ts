@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getSession } from './auth'
-import { embedListing } from '@/lib/ai/auto-embed'
+import { embedListing, deleteListingEmbedding } from '@/lib/ai/auto-embed'
 
 type ListingFormData = {
     title: string
@@ -162,6 +162,9 @@ export async function deleteListing(id: number) {
         await prisma.listing.delete({
             where: { id },
         })
+
+        // Delete embedding
+        await deleteListingEmbedding(id)
 
         revalidatePath('/admin/listings')
         return { success: true, message: 'Xóa listing thành công!' }

@@ -1,9 +1,10 @@
-import Database from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 import * as math from 'mathjs'
 import { generateEmbedding } from './embedding'
+import * as fs from 'fs'
+import * as path from 'path'
 
-const DB_FILE = 'embeddings.db'
+const DB_FILE = path.join(process.cwd(), 'embeddings.db')
 
 export interface Document {
     id: string
@@ -13,33 +14,49 @@ export interface Document {
     similarity?: number
 }
 
-export class VectorStore {
-    private db: Database.Database
+// In-memory storage as fallback when sql.js fails
+let memoryStore: Map<string, { content: string; metadata: string; embedding: string }> = new Map()
+let dbLoaded = false
 
-    constructor() {
-        try {
-            this.db = new Database(DB_FILE)
-            this.init()
-        } catch (error) {
-            console.error('Failed to initialize VectorStore:', error)
-            throw error
+// Try to load existing data from file
+function loadFromFile() {
+    if (dbLoaded) return
+    dbLoaded = true
+
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            // Try to read as JSON backup
+            const jsonFile = DB_FILE + '.json'
+            if (fs.existsSync(jsonFile)) {
+                const data = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'))
+                for (const [id, doc] of Object.entries(data)) {
+                    memoryStore.set(id, doc as any)
+                }
+                console.log(`[VectorStore] Loaded ${memoryStore.size} documents from JSON backup`)
+            }
         }
+    } catch (error) {
+        console.warn('[VectorStore] Could not load existing data:', error)
     }
+}
 
-    private init() {
-        try {
-            this.db.exec(`
-                CREATE TABLE IF NOT EXISTS document_embeddings (
-                    id TEXT PRIMARY KEY,
-                    content TEXT,
-                    metadata TEXT,
-                    embedding TEXT
-                )
-            `)
-        } catch (error) {
-            console.error('Failed to create tables:', error)
-            throw error
+// Save to JSON file
+function saveToFile() {
+    try {
+        const jsonFile = DB_FILE + '.json'
+        const data: Record<string, any> = {}
+        for (const [id, doc] of memoryStore.entries()) {
+            data[id] = doc
         }
+        fs.writeFileSync(jsonFile, JSON.stringify(data, null, 2))
+    } catch (error) {
+        console.error('[VectorStore] Failed to save:', error)
+    }
+}
+
+export class VectorStore {
+    constructor() {
+        loadFromFile()
     }
 
     async addDocument(content: string, metadata: Record<string, any> = {}) {
@@ -47,12 +64,13 @@ export class VectorStore {
             const embedding = await generateEmbedding(content)
             const id = uuidv4()
 
-            const stmt = this.db.prepare(`
-                INSERT INTO document_embeddings (id, content, metadata, embedding)
-                VALUES (?, ?, ?, ?)
-            `)
+            memoryStore.set(id, {
+                content,
+                metadata: JSON.stringify(metadata),
+                embedding: JSON.stringify(embedding)
+            })
 
-            stmt.run(id, content, JSON.stringify(metadata), JSON.stringify(embedding))
+            saveToFile()
             return id
         } catch (error) {
             console.error('Failed to add document:', error)
@@ -62,27 +80,27 @@ export class VectorStore {
 
     async similaritySearch(query: string, limit: number = 5): Promise<Document[]> {
         try {
+            loadFromFile()
+
             const queryEmbedding = await generateEmbedding(query)
 
-            const stmt = this.db.prepare('SELECT * FROM document_embeddings')
-            const rows = stmt.all() as any[]
+            const results: Document[] = []
 
-            const results = rows.map((row): Document | null => {
+            for (const [id, doc] of memoryStore.entries()) {
                 try {
-                    const embedding = JSON.parse(row.embedding)
+                    const embedding = JSON.parse(doc.embedding)
                     const similarity = this.cosineSimilarity(queryEmbedding, embedding)
-                    return {
-                        id: row.id,
-                        content: row.content,
-                        metadata: JSON.parse(row.metadata),
+                    results.push({
+                        id,
+                        content: doc.content,
+                        metadata: JSON.parse(doc.metadata),
                         embedding,
                         similarity
-                    }
+                    })
                 } catch (parseError) {
-                    console.warn(`Failed to parse row ${row.id}:`, parseError)
-                    return null
+                    console.warn(`Failed to parse document ${id}:`, parseError)
                 }
-            }).filter((item): item is Document => item !== null)
+            }
 
             results.sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0))
             return results.slice(0, limit)
@@ -102,6 +120,36 @@ export class VectorStore {
         } catch (error) {
             console.error('Cosine similarity calculation failed:', error)
             return 0
+        }
+    }
+
+    async deleteByMetadata(type: string, id: number): Promise<boolean> {
+        try {
+            loadFromFile()
+
+            const idsToDelete: string[] = []
+
+            for (const [docId, doc] of memoryStore.entries()) {
+                try {
+                    const metadata = JSON.parse(doc.metadata)
+                    if (metadata.type === type && metadata.id === id) {
+                        idsToDelete.push(docId)
+                    }
+                } catch (e) {
+                    // Skip invalid
+                }
+            }
+
+            for (const docId of idsToDelete) {
+                memoryStore.delete(docId)
+            }
+
+            saveToFile()
+            console.log(`[Embedding] Deleted ${idsToDelete.length} documents for ${type} id=${id}`)
+            return true
+        } catch (error) {
+            console.error('Failed to delete documents by metadata:', error)
+            return false
         }
     }
 }

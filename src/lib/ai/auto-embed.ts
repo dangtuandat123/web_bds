@@ -96,3 +96,31 @@ Mô tả: ${listing.description}`
         return false
     }
 }
+
+/**
+ * Delete project embedding when project is deleted
+ */
+export async function deleteProjectEmbedding(projectId: number) {
+    try {
+        await vectorStore.deleteByMetadata('PROJECT', projectId)
+        console.log(`[Embedding] Project embedding deleted: ${projectId}`)
+        return true
+    } catch (error) {
+        console.error(`[Embedding] Failed to delete project embedding ${projectId}:`, error)
+        return false
+    }
+}
+
+/**
+ * Delete listing embedding when listing is deleted
+ */
+export async function deleteListingEmbedding(listingId: number) {
+    try {
+        await vectorStore.deleteByMetadata('LISTING', listingId)
+        console.log(`[Embedding] Listing embedding deleted: ${listingId}`)
+        return true
+    } catch (error) {
+        console.error(`[Embedding] Failed to delete listing embedding ${listingId}:`, error)
+        return false
+    }
+}
