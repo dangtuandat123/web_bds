@@ -49,7 +49,6 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
         if (priceRange.min) params.set('priceMin', priceRange.min.toString())
         if (priceRange.max) params.set('priceMax', priceRange.max.toString())
 
-        // Only send area params for listings (not projects)
         if (!isProjectSearch) {
             const areaRange = AREA_RANGES[areaIndex]
             if (areaRange.min) params.set('areaMin', areaRange.min.toString())
@@ -75,11 +74,17 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
         router.push(targetPage)
     }
 
+    // Consistent styling classes
+    const labelClass = "block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-wider"
+    const inputClass = "w-full h-11 px-4 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm transition-all placeholder:text-slate-400"
+    const selectTriggerClass = "h-11 border-slate-200 bg-white hover:bg-slate-50 focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+
     return (
-        <div className="bg-white/90 backdrop-blur-lg p-4 md:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/50 relative z-20 mx-auto -mt-8 md:-mt-16 lg:-mt-24 max-w-6xl animate-fade-in-up">
+        <div className="bg-white/95 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-200/50 relative z-20 mx-auto -mt-8 md:-mt-16 lg:-mt-24 max-w-6xl">
+            {/* Header */}
             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                 <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
-                    <span className="bg-amber-100 text-amber-600 p-1.5 rounded mr-2">
+                    <span className="bg-amber-100 text-amber-600 p-2 rounded-lg mr-3">
                         <Search size={16} />
                     </span>
                     Tìm kiếm {isProjectSearch ? 'dự án' : 'bất động sản'}
@@ -87,41 +92,40 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                 <button
                     type="button"
                     onClick={handleReset}
-                    className="text-xs text-slate-400 hover:text-amber-600 font-medium transition-colors flex items-center gap-1 group"
+                    className="text-xs text-slate-400 hover:text-amber-600 font-medium transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-amber-50"
                 >
-                    <X size={14} className="group-hover:rotate-90 transition-transform duration-200" />
-                    <span className="hidden sm:inline">Xóa bộ lọc</span>
+                    <X size={14} />
+                    <span>Xóa bộ lọc</span>
                 </button>
             </div>
 
             <form onSubmit={handleSearch}>
                 {/* Row 1: Keyword, Type, Location */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    {/* Keyword Input */}
                     <div className="lg:col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                            Từ khóa
-                        </label>
+                        <label className={labelClass}>Từ khóa</label>
                         <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
                                 type="text"
                                 placeholder={isProjectSearch ? "Nhập tên dự án..." : "Nhập tên dự án, địa điểm..."}
-                                className="w-full h-10 pl-10 pr-3 border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm transition-all"
+                                className={`${inputClass} pl-11`}
                                 value={keyword}
                                 onChange={(e) => setKeyword(e.target.value)}
                             />
-                            <Search className="absolute left-3 top-3 text-slate-400" size={16} />
                         </div>
                     </div>
 
                     {/* Type Select */}
                     <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                            Loại hình
-                        </label>
+                        <label className={labelClass}>Loại hình</label>
                         <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="w-full">
-                                <Home size={14} className="mr-2 text-slate-400" />
-                                <SelectValue placeholder="Chọn loại hình" />
+                            <SelectTrigger className={selectTriggerClass}>
+                                <div className="flex items-center gap-2">
+                                    <Home size={14} className="text-slate-400 flex-shrink-0" />
+                                    <SelectValue placeholder="Chọn loại hình" />
+                                </div>
                             </SelectTrigger>
                             <SelectContent>
                                 {typeOptions.map((opt) => (
@@ -135,13 +139,13 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
 
                     {/* Location Select */}
                     <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                            Khu vực
-                        </label>
+                        <label className={labelClass}>Khu vực</label>
                         <Select value={location} onValueChange={setLocation}>
-                            <SelectTrigger className="w-full">
-                                <MapPin size={14} className="mr-2 text-slate-400" />
-                                <SelectValue placeholder="Chọn khu vực" />
+                            <SelectTrigger className={selectTriggerClass}>
+                                <div className="flex items-center gap-2">
+                                    <MapPin size={14} className="text-slate-400 flex-shrink-0" />
+                                    <SelectValue placeholder="Chọn khu vực" />
+                                </div>
                             </SelectTrigger>
                             <SelectContent>
                                 {allLocations.map((loc) => (
@@ -154,17 +158,15 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                     </div>
                 </div>
 
-                {/* Row 2: Price, Area, Beds, Direction, Buttons */}
-                <div className={`grid gap-x-4 gap-y-4 items-end ${isProjectSearch ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
+                {/* Row 2: Additional filters */}
+                <div className={`grid gap-4 items-end ${isProjectSearch ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'}`}>
                     {!isProjectSearch && (
                         <>
                             {/* Price Select */}
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                                    Mức giá
-                                </label>
+                            <div>
+                                <label className={labelClass}>Mức giá</label>
                                 <Select value={priceIndex.toString()} onValueChange={(v) => setPriceIndex(Number(v))}>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className={selectTriggerClass}>
                                         <SelectValue placeholder="Chọn mức giá" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -178,12 +180,10 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                             </div>
 
                             {/* Area Select */}
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                                    Diện tích
-                                </label>
+                            <div>
+                                <label className={labelClass}>Diện tích</label>
                                 <Select value={areaIndex.toString()} onValueChange={(v) => setAreaIndex(Number(v))}>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className={selectTriggerClass}>
                                         <SelectValue placeholder="Chọn diện tích" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -197,14 +197,14 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                             </div>
 
                             {/* Bedrooms Select */}
-                            <div className="col-span-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                                    Phòng ngủ
-                                </label>
+                            <div>
+                                <label className={labelClass}>Phòng ngủ</label>
                                 <Select value={bedrooms} onValueChange={setBedrooms}>
-                                    <SelectTrigger className="w-full">
-                                        <Bed size={14} className="mr-2 text-slate-400" />
-                                        <SelectValue placeholder="Số phòng" />
+                                    <SelectTrigger className={selectTriggerClass}>
+                                        <div className="flex items-center gap-2">
+                                            <Bed size={14} className="text-slate-400 flex-shrink-0" />
+                                            <SelectValue placeholder="Số phòng" />
+                                        </div>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {BEDROOM_OPTIONS.map((opt) => (
@@ -217,14 +217,14 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                             </div>
 
                             {/* Direction Select */}
-                            <div className="col-span-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
-                                    Hướng
-                                </label>
+                            <div>
+                                <label className={labelClass}>Hướng</label>
                                 <Select value={direction} onValueChange={setDirection}>
-                                    <SelectTrigger className="w-full">
-                                        <Compass size={14} className="mr-2 text-slate-400" />
-                                        <SelectValue placeholder="Chọn hướng" />
+                                    <SelectTrigger className={selectTriggerClass}>
+                                        <div className="flex items-center gap-2">
+                                            <Compass size={14} className="text-slate-400 flex-shrink-0" />
+                                            <SelectValue placeholder="Chọn hướng" />
+                                        </div>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {DIRECTION_OPTIONS.map((opt) => (
@@ -237,11 +237,15 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                             </div>
                         </>
                     )}
-                    <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1' : 'md:col-span-4 lg:col-span-1'}`}>
+
+                    {/* Search Button */}
+                    <div className={isProjectSearch ? '' : ''}>
+                        <label className={`${labelClass} invisible`}>Button</label>
                         <button
                             type="submit"
-                            className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-md font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                            className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                         >
+                            <Search size={16} />
                             Tìm Kiếm
                         </button>
                     </div>
