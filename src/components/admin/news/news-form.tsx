@@ -33,8 +33,7 @@ import { createNews, updateNews } from '@/app/actions/news'
 
 const newsSchema = z.object({
     title: z.string().min(1, 'Tiêu đề là bắt buộc'),
-    category: z.enum(['MARKET', 'FENG_SHUI', 'LEGAL']),
-    categoryId: z.number().optional().nullable(),
+    categoryId: z.number().min(1, 'Vui lòng chọn danh mục'),
     summary: z.string().min(1, 'Tóm tắt là bắt buộc'),
     content: z.string().min(1, 'Nội dung là bắt buộc'),
     thumbnailUrl: z.string().min(1, 'Ảnh đại diện là bắt buộc'),
@@ -55,6 +54,7 @@ interface NewsFormProps {
     initialData?: news & {
         isFeatured?: boolean
         isActive?: boolean
+        categoryId?: number | null
     }
     categories?: Category[]
 }
@@ -68,7 +68,7 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
         resolver: zodResolver(newsSchema),
         defaultValues: {
             title: initialData?.title || '',
-            category: initialData?.category || 'MARKET',
+            categoryId: initialData?.categoryId || (categories.length > 0 ? categories[0].id : 0),
             summary: initialData?.summary || '',
             content: initialData?.content || '',
             thumbnailUrl: initialData?.thumbnailUrl || '',
@@ -125,20 +125,25 @@ export default function NewsForm({ initialData, categories = [] }: NewsFormProps
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                         control={form.control}
-                        name="category"
+                        name="categoryId"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Danh mục</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select
+                                    onValueChange={(val) => field.onChange(val ? parseInt(val) : null)}
+                                    defaultValue={field.value?.toString() || ''}
+                                >
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Chọn danh mục" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="MARKET">Thị trường</SelectItem>
-                                        <SelectItem value="FENG_SHUI">Phong thủy</SelectItem>
-                                        <SelectItem value="LEGAL">Pháp lý</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

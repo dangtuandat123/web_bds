@@ -9,27 +9,32 @@ export const metadata: Metadata = {
     description: 'Cập nhật tin tức thị trường, phong thủy, và pháp lý bất động sản',
 }
 
-const categoryConfig: Record<string, string> = {
-    MARKET: 'Thị trường',
-    FENG_SHUI: 'Phong thủy',
-    LEGAL: 'Pháp lý',
-}
-
 interface PageProps {
     searchParams: Promise<{ category?: string; q?: string; page?: string }>
 }
 
 export default async function NewsPage({ searchParams }: PageProps) {
     const resolvedSearchParams = await searchParams
-    const category = resolvedSearchParams.category || 'all'
+    const categorySlug = resolvedSearchParams.category || 'all'
     const searchQuery = resolvedSearchParams.q || ''
     const page = parseInt(resolvedSearchParams.page || '1')
     const perPage = 6
 
+    // Fetch categories from database
+    const dbCategories = await prisma.newscategory.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+    })
+
+    // Find selected category
+    const selectedCategory = categorySlug !== 'all'
+        ? dbCategories.find(c => c.slug === categorySlug)
+        : null
+
     // Build where clause
-    const where: any = {}
-    if (category !== 'all') {
-        where.category = category
+    const where: any = { isActive: true }
+    if (selectedCategory) {
+        where.categoryId = selectedCategory.id
     }
     if (searchQuery) {
         where.OR = [
@@ -44,6 +49,9 @@ export default async function NewsPage({ searchParams }: PageProps) {
             orderBy: { createdAt: 'desc' },
             take: perPage,
             skip: (page - 1) * perPage,
+            include: {
+                newsCategory: true
+            }
         }),
         prisma.news.count({ where })
     ])
@@ -52,14 +60,13 @@ export default async function NewsPage({ searchParams }: PageProps) {
 
     // Build searchParams object for pagination
     const paginationParams: Record<string, string> = {}
-    if (category !== 'all') paginationParams.category = category
+    if (categorySlug !== 'all') paginationParams.category = categorySlug
     if (searchQuery) paginationParams.q = searchQuery
 
+    // Build categories list for filter
     const categories = [
-        { id: 'all', label: 'Tất cả' },
-        { id: 'MARKET', label: 'Thị trường' },
-        { id: 'FENG_SHUI', label: 'Phong thủy' },
-        { id: 'LEGAL', label: 'Pháp lý' },
+        { slug: 'all', label: 'Tất cả' },
+        ...dbCategories.map(c => ({ slug: c.slug, label: c.name }))
     ]
 
     return (
@@ -123,11 +130,11 @@ export default async function NewsPage({ searchParams }: PageProps) {
                                 </label>
                                 <select
                                     name="category"
-                                    defaultValue={category}
+                                    defaultValue={categorySlug}
                                     className="w-full h-11 px-3 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm font-medium transition-all cursor-pointer"
                                 >
                                     {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
+                                        <option key={cat.slug} value={cat.slug}>
                                             {cat.label}
                                         </option>
                                     ))}
@@ -162,17 +169,17 @@ export default async function NewsPage({ searchParams }: PageProps) {
                     </form>
 
                     {/* Active Filters Display */}
-                    {(searchQuery || category !== 'all') && (
+                    {(searchQuery || categorySlug !== 'all') && (
                         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-sm">
                             <span className="text-slate-500 font-medium">Lọc theo:</span>
                             {searchQuery && (
                                 <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">
-                                    "{searchQuery}"
+                                    &quot;{searchQuery}&quot;
                                 </span>
                             )}
-                            {category !== 'all' && (
+                            {categorySlug !== 'all' && (
                                 <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
-                                    {categories.find((c) => c.id === category)?.label}
+                                    {categories.find((c) => c.slug === categorySlug)?.label}
                                 </span>
                             )}
                             <a
@@ -202,8 +209,8 @@ export default async function NewsPage({ searchParams }: PageProps) {
                                     key={item.id}
                                     id={item.id}
                                     title={item.title}
-                                    category={item.category}
-                                    categoryLabel={categoryConfig[item.category]}
+                                    category={item.newsCategory?.slug || 'general'}
+                                    categoryLabel={item.newsCategory?.name || 'Tin tức'}
                                     summary={item.summary}
                                     image={item.thumbnailUrl}
                                     slug={item.slug}

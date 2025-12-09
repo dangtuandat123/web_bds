@@ -4,16 +4,9 @@ import Image from 'next/image'
 import { Calendar, User, Eye } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { incrementNewsViews } from '@/app/actions/news'
-import NewsCard from '@/components/modules/news-card'
 
 interface PageProps {
     params: Promise<{ slug: string }>
-}
-
-const categoryConfig: Record<string, string> = {
-    MARKET: 'Thị trường',
-    FENG_SHUI: 'Phong thủy',
-    LEGAL: 'Pháp lý',
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -38,6 +31,9 @@ export default async function NewsDetailPage({ params }: PageProps) {
 
     const news = await prisma.news.findUnique({
         where: { slug },
+        include: {
+            newsCategory: true
+        }
     })
 
     if (!news) {
@@ -47,14 +43,18 @@ export default async function NewsDetailPage({ params }: PageProps) {
     // Increment views (async, don't await)
     incrementNewsViews(slug)
 
-    // Related news
+    // Related news - by same category
     const relatedNews = await prisma.news.findMany({
         where: {
-            category: news.category,
+            categoryId: news.categoryId,
             NOT: { id: news.id },
+            isActive: true,
         },
         orderBy: { createdAt: 'desc' },
         take: 3,
+        include: {
+            newsCategory: true
+        }
     })
 
     return (
@@ -79,7 +79,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                             {/* Category Badge */}
                             <div className="mb-4">
                                 <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">
-                                    {categoryConfig[news.category]}
+                                    {news.newsCategory?.name || 'Tin tức'}
                                 </span>
                             </div>
 

@@ -38,13 +38,11 @@ interface NewsTableProps {
     news: (news & {
         isFeatured?: boolean
         isActive?: boolean
+        newsCategory?: {
+            id: number
+            name: string
+        } | null
     })[]
-}
-
-const categoryConfig: Record<string, { label: string; color: string }> = {
-    MARKET: { label: 'Thị trường', color: 'bg-blue-100 text-blue-700' },
-    FENG_SHUI: { label: 'Phong thủy', color: 'bg-green-100 text-green-700' },
-    LEGAL: { label: 'Pháp lý', color: 'bg-purple-100 text-purple-700' },
 }
 
 export default function NewsTable({ news }: NewsTableProps) {
@@ -114,9 +112,13 @@ export default function NewsTable({ news }: NewsTableProps) {
                                     </Link>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge className={categoryConfig[item.category].color}>
-                                        {categoryConfig[item.category].label}
-                                    </Badge>
+                                    {item.newsCategory ? (
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                            {item.newsCategory.name}
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="secondary">Chưa phân loại</Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell>
                                     {item.isActive ? (

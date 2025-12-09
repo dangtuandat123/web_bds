@@ -15,6 +15,11 @@ export default async function AdminNewsPage() {
     const [news, categories] = await Promise.all([
         prisma.news.findMany({
             orderBy: { createdAt: 'desc' },
+            include: {
+                newsCategory: {
+                    select: { id: true, name: true }
+                }
+            }
         }),
         prisma.newscategory.findMany({
             orderBy: { sortOrder: 'asc' },
