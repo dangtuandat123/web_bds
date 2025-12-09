@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { getSession } from './auth'
 
 // Get all amenities
 export async function getAmenities() {
@@ -35,6 +36,12 @@ export async function getAmenities() {
 
 // Create amenity
 export async function createAmenity(data: { name: string; icon: string }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         const amenity = await prisma.amenity.create({
             data: {
@@ -55,6 +62,12 @@ export async function createAmenity(data: { name: string; icon: string }) {
 
 // Update amenity
 export async function updateAmenity(id: number, data: { name: string; icon: string }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         const amenity = await prisma.amenity.update({
             where: { id },
@@ -76,6 +89,12 @@ export async function updateAmenity(id: number, data: { name: string; icon: stri
 
 // Delete amenity
 export async function deleteAmenity(id: number) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         await prisma.amenity.delete({
             where: { id }

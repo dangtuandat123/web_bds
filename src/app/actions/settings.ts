@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
+import { getSession } from './auth'
 
 // Get all settings
 export async function getSettings() {
@@ -57,6 +58,12 @@ export async function getSettingsByGroup(groupName: string) {
 
 // Update or create a single setting
 export async function upsertSetting(key: string, value: string, type: string = 'text', groupName: string = 'general') {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         await prisma.setting.upsert({
             where: { key },
@@ -76,6 +83,12 @@ export async function upsertSetting(key: string, value: string, type: string = '
 
 // Bulk update settings
 export async function updateSettings(settings: Array<{ key: string; value: string; type?: string; groupName?: string }>) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         // Use transaction to update all settings
         await prisma.$transaction(

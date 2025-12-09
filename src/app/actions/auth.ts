@@ -6,9 +6,11 @@ import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-)
+// SECURITY: JWT_SECRET must be set in environment variables
+if (!process.env.JWT_SECRET) {
+    throw new Error('CRITICAL: JWT_SECRET environment variable is not set. Please configure it in .env file.')
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 type SessionPayload = { userId: number; email: string; role: string }
 

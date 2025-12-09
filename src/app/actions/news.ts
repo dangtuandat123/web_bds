@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
+import { getSession } from './auth'
 
 // Helper function to generate slug
 function generateSlug(title: string): string {
@@ -27,6 +28,12 @@ export async function createNews(data: {
     isFeatured: boolean
     isActive: boolean
 }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         const slug = generateSlug(data.title)
 
@@ -76,6 +83,12 @@ export async function updateNews(
         isActive: boolean
     }
 ) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         const slug = generateSlug(data.title)
 
@@ -115,6 +128,12 @@ export async function updateNews(
 
 // Delete News
 export async function deleteNews(id: number) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         await prisma.news.delete({ where: { id } })
 

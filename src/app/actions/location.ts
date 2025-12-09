@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { getSession } from './auth'
 
 // Get all locations
 export async function getLocations() {
@@ -32,8 +33,13 @@ export async function getActiveLocations() {
 
 // Create location
 export async function createLocation(data: { name: string }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
-        // Get max sortOrder
         const maxOrder = await prisma.location.findFirst({
             orderBy: { sortOrder: 'desc' },
             select: { sortOrder: true }
@@ -58,6 +64,12 @@ export async function createLocation(data: { name: string }) {
 
 // Update location
 export async function updateLocation(id: number, data: { name: string; isActive: boolean }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         const location = await prisma.location.update({
             where: { id },
@@ -79,6 +91,12 @@ export async function updateLocation(id: number, data: { name: string; isActive:
 
 // Delete location
 export async function deleteLocation(id: number) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         await prisma.location.delete({
             where: { id }

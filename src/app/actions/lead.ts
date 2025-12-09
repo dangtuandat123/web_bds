@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { lead_status } from '@prisma/client'
+import { getSession } from './auth'
 
 // Submit Lead from Contact Form
 export async function submitLead(data: {
@@ -52,6 +53,12 @@ export async function submitLead(data: {
 
 // Update Lead Status (Admin only)
 export async function updateLeadStatus(leadId: number, newStatus: lead_status) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         await prisma.lead.update({
             where: { id: leadId },
@@ -69,6 +76,12 @@ export async function updateLeadStatus(leadId: number, newStatus: lead_status) {
 
 // Delete Lead (Admin only)
 export async function deleteLead(leadId: number) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, message: 'Unauthorized' }
+    }
+
     try {
         await prisma.lead.delete({
             where: { id: leadId },

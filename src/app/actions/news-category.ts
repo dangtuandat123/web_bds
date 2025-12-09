@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { getSession } from './auth'
 
 // Helper function to generate slug
 function generateSlug(name: string): string {
@@ -52,6 +53,12 @@ export async function getActiveNewsCategories() {
 
 // Create news category
 export async function createNewsCategory(data: { name: string }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         const slug = generateSlug(data.name)
 
@@ -82,6 +89,12 @@ export async function createNewsCategory(data: { name: string }) {
 
 // Update news category
 export async function updateNewsCategory(id: number, data: { name: string; isActive?: boolean }) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         const slug = generateSlug(data.name)
 
@@ -107,6 +120,12 @@ export async function updateNewsCategory(id: number, data: { name: string; isAct
 
 // Delete news category
 export async function deleteNewsCategory(id: number) {
+    // Authorization check
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         // Check if category has news
         const newsCount = await prisma.news.count({
