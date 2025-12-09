@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react'
+import { Search, Home, MapPin, Bed, Compass, X } from 'lucide-react'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import {
     PRICE_RANGES,
     AREA_RANGES,
@@ -68,32 +75,6 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
         router.push(targetPage)
     }
 
-    const SelectBox = ({ label, value, onChange, options, icon: Icon }: any) => (
-        <div className="group">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider group-focus-within:text-amber-500 transition-colors">
-                {label}
-            </label>
-            <div className="relative">
-                <select
-                    className="w-full h-11 pl-3 pr-8 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 appearance-none text-sm font-medium transition-all cursor-pointer text-slate-700"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                >
-                    {options.map((opt: any, idx: number) => (
-                        <option key={idx} value={opt.value !== undefined ? opt.value : (opt.id || opt)}>
-                            {opt.label || opt.name || opt}
-                        </option>
-                    ))}
-                </select>
-                {Icon ? (
-                    <Icon size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
-                ) : (
-                    <ChevronDown size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
-                )}
-            </div>
-        </div>
-    )
-
     return (
         <div className="bg-white/90 backdrop-blur-lg p-4 md:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/50 relative z-20 mx-auto -mt-8 md:-mt-16 lg:-mt-24 max-w-6xl animate-fade-in-up">
             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
@@ -117,80 +98,149 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
                 {/* Row 1: Keyword, Type, Location */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-4">
                     <div className="lg:col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
                             Từ khóa
                         </label>
                         <div className="relative">
                             <input
                                 type="text"
                                 placeholder={isProjectSearch ? "Nhập tên dự án..." : "Nhập tên dự án, địa điểm..."}
-                                className="w-full h-11 pl-10 pr-3 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm transition-all"
+                                className="w-full h-10 pl-10 pr-3 border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm transition-all"
                                 value={keyword}
                                 onChange={(e) => setKeyword(e.target.value)}
                             />
-                            <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                            <Search className="absolute left-3 top-3 text-slate-400" size={16} />
                         </div>
                     </div>
-                    <SelectBox
-                        label="Loại hình"
-                        value={type}
-                        onChange={setType}
-                        options={typeOptions}
-                        icon={Home}
-                    />
-                    <SelectBox
-                        label="Khu vực"
-                        value={location}
-                        onChange={setLocation}
-                        options={allLocations}
-                        icon={MapPin}
-                    />
+
+                    {/* Type Select */}
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            Loại hình
+                        </label>
+                        <Select value={type} onValueChange={setType}>
+                            <SelectTrigger className="w-full">
+                                <Home size={14} className="mr-2 text-slate-400" />
+                                <SelectValue placeholder="Chọn loại hình" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {typeOptions.map((opt) => (
+                                    <SelectItem key={opt.id} value={opt.id}>
+                                        {opt.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Location Select */}
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            Khu vực
+                        </label>
+                        <Select value={location} onValueChange={setLocation}>
+                            <SelectTrigger className="w-full">
+                                <MapPin size={14} className="mr-2 text-slate-400" />
+                                <SelectValue placeholder="Chọn khu vực" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {allLocations.map((loc) => (
+                                    <SelectItem key={loc} value={loc}>
+                                        {loc}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
-                {/* Row 2: Price (listing only), Area (listing only), Beds, Direction, Buttons */}
+                {/* Row 2: Price, Area, Beds, Direction, Buttons */}
                 <div className={`grid gap-x-4 gap-y-4 items-end ${isProjectSearch ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
                     {!isProjectSearch && (
                         <>
+                            {/* Price Select */}
                             <div className="col-span-2 md:col-span-1">
-                                <SelectBox
-                                    label="Mức giá"
-                                    value={priceIndex}
-                                    onChange={(v: string) => setPriceIndex(Number(v))}
-                                    options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-                                />
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                                    Mức giá
+                                </label>
+                                <Select value={priceIndex.toString()} onValueChange={(v) => setPriceIndex(Number(v))}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Chọn mức giá" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {PRICE_RANGES.map((r, i) => (
+                                            <SelectItem key={i} value={i.toString()}>
+                                                {r.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
+
+                            {/* Area Select */}
                             <div className="col-span-2 md:col-span-1">
-                                <SelectBox
-                                    label="Diện tích"
-                                    value={areaIndex}
-                                    onChange={(v: string) => setAreaIndex(Number(v))}
-                                    options={AREA_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-                                />
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                                    Diện tích
+                                </label>
+                                <Select value={areaIndex.toString()} onValueChange={(v) => setAreaIndex(Number(v))}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Chọn diện tích" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {AREA_RANGES.map((r, i) => (
+                                            <SelectItem key={i} value={i.toString()}>
+                                                {r.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
+
+                            {/* Bedrooms Select */}
                             <div className="col-span-1">
-                                <SelectBox
-                                    label="Phòng ngủ"
-                                    value={bedrooms}
-                                    onChange={setBedrooms}
-                                    options={BEDROOM_OPTIONS}
-                                    icon={Bed}
-                                />
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                                    Phòng ngủ
+                                </label>
+                                <Select value={bedrooms} onValueChange={setBedrooms}>
+                                    <SelectTrigger className="w-full">
+                                        <Bed size={14} className="mr-2 text-slate-400" />
+                                        <SelectValue placeholder="Số phòng" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {BEDROOM_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
+
+                            {/* Direction Select */}
                             <div className="col-span-1">
-                                <SelectBox
-                                    label="Hướng"
-                                    value={direction}
-                                    onChange={setDirection}
-                                    options={DIRECTION_OPTIONS}
-                                    icon={Compass}
-                                />
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                                    Hướng
+                                </label>
+                                <Select value={direction} onValueChange={setDirection}>
+                                    <SelectTrigger className="w-full">
+                                        <Compass size={14} className="mr-2 text-slate-400" />
+                                        <SelectValue placeholder="Chọn hướng" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {DIRECTION_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </>
                     )}
                     <div className={`col-span-2 ${isProjectSearch ? 'md:col-span-1' : 'md:col-span-4 lg:col-span-1'}`}>
                         <button
                             type="submit"
-                            className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                            className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-md font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
                         >
                             Tìm Kiếm
                         </button>

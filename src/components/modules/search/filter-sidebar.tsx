@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, Home, MapPin, Bed, Compass, ChevronDown, X } from 'lucide-react'
+import { Search, Home, MapPin, Bed, Compass, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import {
     PRICE_RANGES,
     AREA_RANGES,
@@ -77,34 +84,8 @@ export default function FilterSidebar({ type, locations }: FilterSidebarProps) {
         typeFilter !== (type === 'project' ? PROJECT_CATEGORIES[0].id : LISTING_TYPES[0].id) ||
         bedrooms !== BEDROOM_OPTIONS[0].value || direction !== DIRECTION_OPTIONS[0].value || status !== 'all'
 
-    const SelectBox = ({ label, value, onChange, options, icon: Icon }: any) => (
-        <div className="group">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider group-focus-within:text-amber-500 transition-colors">
-                {label}
-            </label>
-            <div className="relative">
-                <select
-                    className="w-full h-11 pl-3 pr-8 border border-slate-200 rounded-lg bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 appearance-none text-sm font-medium transition-all cursor-pointer text-slate-700"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                >
-                    {options.map((opt: any, idx: number) => (
-                        <option key={idx} value={opt.value !== undefined ? opt.value : (opt.id || opt)}>
-                            {opt.label || opt.name || opt}
-                        </option>
-                    ))}
-                </select>
-                {Icon ? (
-                    <Icon size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
-                ) : (
-                    <ChevronDown size={14} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
-                )}
-            </div>
-        </div>
-    )
-
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-6">
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-5">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
@@ -127,7 +108,7 @@ export default function FilterSidebar({ type, locations }: FilterSidebarProps) {
 
             {/* Keyword */}
             <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
                     Từ khóa
                 </label>
                 <div className="relative">
@@ -135,78 +116,149 @@ export default function FilterSidebar({ type, locations }: FilterSidebarProps) {
                         placeholder={type === 'project' ? "Nhập tên dự án..." : "Nhập từ khóa..."}
                         value={keyword}
                         onChange={(e) => setKeyword(e.target.value)}
-                        className="pl-10 border-slate-200 focus:border-amber-500 focus:ring-amber-500"
+                        className="pl-10 border-slate-200"
                     />
-                    <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                    <Search className="absolute left-3 top-3 text-slate-400" size={16} />
                 </div>
             </div>
 
             {/* Type */}
-            <SelectBox
-                label="Loại hình"
-                value={typeFilter}
-                onChange={setTypeFilter}
-                options={typeOptions}
-                icon={Home}
-            />
+            <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                    Loại hình
+                </label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="w-full">
+                        <Home size={14} className="mr-2 text-slate-400" />
+                        <SelectValue placeholder="Chọn loại hình" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {typeOptions.map((opt) => (
+                            <SelectItem key={opt.id} value={opt.id}>
+                                {opt.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
             {/* Location */}
-            <SelectBox
-                label="Khu vực"
-                value={location}
-                onChange={setLocation}
-                options={allLocations}
-                icon={MapPin}
-            />
+            <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                    Khu vực
+                </label>
+                <Select value={location} onValueChange={setLocation}>
+                    <SelectTrigger className="w-full">
+                        <MapPin size={14} className="mr-2 text-slate-400" />
+                        <SelectValue placeholder="Chọn khu vực" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {allLocations.map((loc) => (
+                            <SelectItem key={loc} value={loc}>
+                                {loc}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
             {/* Price */}
-            <SelectBox
-                label="Mức giá"
-                value={priceIndex}
-                onChange={(v: string) => setPriceIndex(Number(v))}
-                options={PRICE_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-            />
+            <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                    Mức giá
+                </label>
+                <Select value={priceIndex.toString()} onValueChange={(v) => setPriceIndex(Number(v))}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn mức giá" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {PRICE_RANGES.map((r, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                                {r.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
             {/* Area */}
-            <SelectBox
-                label="Diện tích"
-                value={areaIndex}
-                onChange={(v: string) => setAreaIndex(Number(v))}
-                options={AREA_RANGES.map((r, i) => ({ value: i, label: r.label }))}
-            />
+            <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                    Diện tích
+                </label>
+                <Select value={areaIndex.toString()} onValueChange={(v) => setAreaIndex(Number(v))}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn diện tích" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {AREA_RANGES.map((r, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                                {r.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
             {/* Beds & Direction for Listings */}
             {type === 'listing' && (
                 <>
-                    <SelectBox
-                        label="Phòng ngủ"
-                        value={bedrooms}
-                        onChange={setBedrooms}
-                        options={BEDROOM_OPTIONS}
-                        icon={Bed}
-                    />
-                    <SelectBox
-                        label="Hướng"
-                        value={direction}
-                        onChange={setDirection}
-                        options={DIRECTION_OPTIONS}
-                        icon={Compass}
-                    />
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            Phòng ngủ
+                        </label>
+                        <Select value={bedrooms} onValueChange={setBedrooms}>
+                            <SelectTrigger className="w-full">
+                                <Bed size={14} className="mr-2 text-slate-400" />
+                                <SelectValue placeholder="Số phòng" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {BEDROOM_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            Hướng
+                        </label>
+                        <Select value={direction} onValueChange={setDirection}>
+                            <SelectTrigger className="w-full">
+                                <Compass size={14} className="mr-2 text-slate-400" />
+                                <SelectValue placeholder="Chọn hướng" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {DIRECTION_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </>
             )}
 
             {/* Status for Projects */}
             {type === 'project' && (
-                <SelectBox
-                    label="Trạng thái"
-                    value={status}
-                    onChange={setStatus}
-                    options={[
-                        { value: 'all', label: 'Tất cả' },
-                        { value: 'SELLING', label: 'Đang mở bán' },
-                        { value: 'UPCOMING', label: 'Sắp mở bán' },
-                    ]}
-                />
+                <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                        Trạng thái
+                    </label>
+                    <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            <SelectItem value="SELLING">Đang mở bán</SelectItem>
+                            <SelectItem value="UPCOMING">Sắp mở bán</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             )}
 
             {/* Apply Button */}
