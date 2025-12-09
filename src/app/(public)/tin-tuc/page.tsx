@@ -5,7 +5,7 @@ import NewsCard from '@/components/modules/news-card'
 import PagePagination from '@/components/modules/page-pagination'
 
 export const metadata: Metadata = {
-    title: 'Tin tức & Pháp lý | HAPPY LAND',
+    title: 'Tin tức & Pháp lý | Bất Động Sản',
     description: 'Cập nhật tin tức thị trường, phong thủy, và pháp lý bất động sản',
 }
 

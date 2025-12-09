@@ -3,8 +3,8 @@ import { getSiteSettings } from '@/lib/settings'
 import ContactForm from '@/components/modules/contact/contact-form'
 
 export const metadata: Metadata = {
-    title: 'Liên hệ tư vấn | Happy Land Real Estate',
-    description: 'Liên hệ với đội ngũ tư vấn bất động sản chuyên nghiệp của Happy Land',
+    title: 'Liên hệ tư vấn | Bất Động Sản',
+    description: 'Liên hệ với đội ngũ tư vấn bất động sản chuyên nghiệp',
 }
 
 export default async function ContactPage() {

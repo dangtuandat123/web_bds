@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import ChatWidget from "@/components/modules/chat/chat-widget";
+import ChatWidgetWrapper from "@/components/modules/chat/chat-widget-wrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Happy Land Real Estate - Bất Động Sản TP. Thủ Đức",
-    description: "Hệ thống phân phối và giao dịch bất động sản uy tín hàng đầu tại TP. Thủ Đức",
+    title: "Bất Động Sản - Hệ thống giao dịch BĐS",
+    description: "Hệ thống phân phối và giao dịch bất động sản uy tín",
 };
 
 export default function RootLayout({
@@ -31,8 +31,9 @@ export default function RootLayout({
             >
                 {children}
                 <Toaster position="top-right" richColors />
-                <ChatWidget />
+                <ChatWidgetWrapper />
             </body>
         </html>
     );
 }
+

@@ -11,10 +11,10 @@ interface HeroProps {
 
 export default function Hero({
     backgroundUrl,
-    badge = 'Happy Land Real Estate',
+    badge = 'Bất Động Sản',
     title1 = 'Kiến Tạo Giá Trị',
     title2 = 'Vun Đắp Tương Lai',
-    subtitle = 'Hệ thống phân phối và giao dịch bất động sản uy tín hàng đầu tại TP. Thủ Đức. Nơi trao gửi niềm tin trọn vẹn.'
+    subtitle = 'Hệ thống phân phối và giao dịch bất động sản uy tín. Nơi trao gửi niềm tin trọn vẹn.'
 }: HeroProps) {
     const bgImage = backgroundUrl || 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=2000'
 

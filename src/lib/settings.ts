@@ -32,16 +32,16 @@ export interface SiteSettings {
 }
 
 const defaultSettings: SiteSettings = {
-    siteName: 'Happy Land Real Estate',
+    siteName: 'Bất Động Sản',
     siteLogo: '',
-    siteDescription: 'Nền tảng bất động sản hàng đầu Việt Nam',
-    heroBadge: 'Happy Land Real Estate',
+    siteDescription: 'Nền tảng bất động sản uy tín',
+    heroBadge: 'Bất Động Sản',
     heroTitle1: 'Kiến Tạo Giá Trị',
     heroTitle2: 'Vun Đắp Tương Lai',
-    heroSubtitle: 'Hệ thống phân phối và giao dịch bất động sản uy tín hàng đầu tại TP. Thủ Đức. Nơi trao gửi niềm tin trọn vẹn.',
+    heroSubtitle: 'Hệ thống phân phối và giao dịch bất ᄑộng sản uy tín. Nơi trao gửi niềm tin trọn vẹn.',
     contactPhone: '0912 345 678',
-    contactEmail: 'contact@happyland.vn',
-    contactAddress: '123 Nguyễn Văn Linh, Quận 7, TP.HCM',
+    contactEmail: 'contact@example.com',
+    contactAddress: 'TP. Hồ Chí Minh',
     contactWorkingHours: 'Thứ 2 - Chủ nhật: 8:00 - 21:00',
     socialFacebook: '',
     socialZalo: '',

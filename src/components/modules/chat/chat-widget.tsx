@@ -7,7 +7,11 @@ import ChatMessage from './chat-message'
 import ChatInput from './chat-input'
 import ChatSuggestionChips from './chat-suggestion-chips'
 
-export default function ChatWidget() {
+interface ChatWidgetProps {
+    siteName?: string
+}
+
+export default function ChatWidget({ siteName = 'Bất Động Sản' }: ChatWidgetProps) {
     const [isOpen, setIsOpen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -18,7 +22,7 @@ export default function ChatWidget() {
                 role: 'assistant',
                 parts: [{
                     type: 'text',
-                    text: 'Xin chào! 👋 Tôi là trợ lý ảo của Happy Land. Tôi có thể giúp bạn tìm hiểu về các dự án bất động sản, giá cả, vị trí và pháp lý. Bạn quan tâm đến loại hình nào? 🏠',
+                    text: `Xin chào! 👋 Tôi là trợ lý ảo của ${siteName}. Tôi có thể giúp bạn tìm hiểu về các dự án bất động sản, giá cả, vị trí và pháp lý. Bạn quan tâm đến loại hình nào? 🏠`,
                 }],
             },
         ],
@@ -101,7 +105,7 @@ export default function ChatWidget() {
                                 <MessageCircle className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-lg">Happy Land AI</h3>
+                                <h3 className="text-white font-bold text-lg">{siteName} AI</h3>
                                 <p className="text-amber-100 text-xs">Trợ lý ảo tư vấn BĐS</p>
                             </div>
                         </div>

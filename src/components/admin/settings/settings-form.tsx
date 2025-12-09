@@ -138,7 +138,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 id="site_name"
                                 value={settings.site_name || ''}
                                 onChange={e => handleChange('site_name', e.target.value)}
-                                placeholder="Happy Land Real Estate"
+                                placeholder="Tên website của bạn"
                             />
                         </div>
 
@@ -172,7 +172,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 id="hero_badge"
                                 value={settings.hero_badge || ''}
                                 onChange={e => handleChange('hero_badge', e.target.value)}
-                                placeholder="Happy Land Real Estate"
+                                placeholder="Tên website của bạn"
                             />
                         </div>
 

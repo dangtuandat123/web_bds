@@ -27,8 +27,11 @@ export async function POST(req: Request) {
     try {
         const { messages: uiMessages, sessionId: clientSessionId } = await req.json();
         const sessionId = clientSessionId || randomUUID();
-        const host = req.headers.get("host") || "happyland.me";
+        const host = req.headers.get("host") || "example.com";
         const date = new Date().toLocaleDateString("vi-VN");
+
+        // Get site name from settings
+        const siteName = await getSetting('site_name') || 'Bất Động Sản';
 
         // Convert UI messages
         let processedMessages: Message[] = uiMessages.map((m: any) => {
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
 
         const systemMessage: Message = {
             role: "system",
-            content: `BẠN LÀ: Trợ lý AI Agent tư vấn Bất Động Sản của Happy Land (${host}).
+            content: `BẠN LÀ: Trợ lý AI Agent tư vấn Bất Động Sản của ${siteName} (${host}).
 THỜI GIAN: ${date}
 
 TÍNH CÁCH:
@@ -107,7 +110,7 @@ VÍ DỤ NHẬN DIỆN SĐT:
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json",
                     "HTTP-Referer": `https://${host}`,
-                    "X-Title": "Happy Land AI Agent",
+                    "X-Title": `${siteName} AI Agent`,
                 },
                 body: JSON.stringify({
                     model: "google/gemini-2.0-flash-001",

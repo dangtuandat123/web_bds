@@ -117,14 +117,14 @@ export async function updateSettings(settings: Array<{ key: string; value: strin
 export async function initializeDefaultSettings() {
     const defaults = [
         // General
-        { key: 'site_name', value: 'Happy Land Real Estate', type: 'text', groupName: 'general' },
+        { key: 'site_name', value: 'Bất Động Sản', type: 'text', groupName: 'general' },
         { key: 'site_logo', value: '/logo.png', type: 'image', groupName: 'general' },
-        { key: 'site_description', value: 'Nền tảng bất động sản hàng đầu Việt Nam', type: 'text', groupName: 'general' },
+        { key: 'site_description', value: 'Nền tảng bất động sản uy tín', type: 'text', groupName: 'general' },
 
         // Contact
         { key: 'contact_phone', value: '0912 345 678', type: 'text', groupName: 'contact' },
-        { key: 'contact_email', value: 'contact@happyland.vn', type: 'text', groupName: 'contact' },
-        { key: 'contact_address', value: '123 Nguyễn Văn Linh, Quận 7, TP.HCM', type: 'text', groupName: 'contact' },
+        { key: 'contact_email', value: 'contact@example.com', type: 'text', groupName: 'contact' },
+        { key: 'contact_address', value: 'TP. Hồ Chí Minh', type: 'text', groupName: 'contact' },
 
         // Social
         { key: 'social_facebook', value: '', type: 'text', groupName: 'social' },

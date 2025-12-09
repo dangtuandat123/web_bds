@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     return {
-        title: `${news.title} | HAPPY LAND`,
+        title: `${news.title} | Tin tức`,
         description: news.summary,
     }
 }

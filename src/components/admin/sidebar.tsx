@@ -21,7 +21,7 @@ interface AdminSidebarProps {
     siteName?: string
 }
 
-export default function AdminSidebar({ siteName = 'Happy Land' }: AdminSidebarProps) {
+export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarProps) {
     const pathname = usePathname()
 
     return (
@@ -66,8 +66,8 @@ export default function AdminSidebar({ siteName = 'Happy Land' }: AdminSidebarPr
                 <Link
                     href="/admin/change-password"
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${pathname === '/admin/change-password'
-                            ? 'bg-amber-500 text-white shadow-lg'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-amber-500 text-white shadow-lg'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         }`}
                 >
                     <KeyRound size={18} />

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${listing.title} - Happy Land Real Estate`,
+        title: `${listing.title} | Bất Động Sản`,
         description: `${listing.description} - Giá: ${formatPrice(listing.price)}, Diện tích: ${formatArea(listing.area)}`,
         openGraph: {
             title: listing.title,

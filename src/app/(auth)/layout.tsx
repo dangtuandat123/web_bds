@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Đăng nhập - Happy Land',
-  description: 'Đăng nhập vào hệ thống quản trị Happy Land',
+  title: 'Đăng nhập - Admin Panel',
+  description: 'Đăng nhập vào hệ thống quản trị',
 }
 
 export default function AuthLayout({

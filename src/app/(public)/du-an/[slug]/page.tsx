@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${project.name} - Happy Land Real Estate`,
+        title: `${project.name} | Dự Án Bất Động Sản`,
         description: project.description,
         openGraph: {
             title: project.name,

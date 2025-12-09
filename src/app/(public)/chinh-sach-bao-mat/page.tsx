@@ -3,8 +3,8 @@ import { getSiteSettings } from '@/lib/settings'
 import { Shield, Lock, Eye, Database, UserCheck, AlertCircle } from 'lucide-react'
 
 export const metadata: Metadata = {
-    title: 'Chính sách bảo mật | Happy Land Real Estate',
-    description: 'Chính sách bảo mật và quyền riêng tư của Happy Land Real Estate',
+    title: 'Chính sách bảo mật | Bất Động Sản',
+    description: 'Chính sách bảo mật và quyền riêng tư',
 }
 
 export default async function PrivacyPolicyPage() {
