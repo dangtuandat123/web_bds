@@ -145,6 +145,15 @@ export default function Header({ settings }: HeaderProps) {
                                     <ArrowRight size={16} className="opacity-50" />
                                 </Link>
                             ))}
+                            {/* Contact Button for Mobile */}
+                            <Link
+                                href="/lien-he"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="mt-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl font-bold text-center transition-all hover:shadow-xl flex items-center justify-center gap-2"
+                            >
+                                <Phone size={18} />
+                                Liên hệ tư vấn
+                            </Link>
                         </div>
                     </div>
                 )}
