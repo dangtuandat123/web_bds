@@ -216,12 +216,12 @@ export default async function AdminDashboard({
         : 'Tất cả thời gian'
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Tổng quan</h1>
-                    <p className="text-slate-600 mt-2">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Tổng quan</h1>
+                    <p className="text-sm md:text-base text-slate-600 mt-1 md:mt-2">
                         Xin chào, <span className="font-semibold">{session?.email}</span>
                         {filterLabel !== 'Tất cả thời gian' && (
                             <span className="ml-2 text-amber-600">• {filterLabel}</span>
@@ -232,13 +232,13 @@ export default async function AdminDashboard({
                     <DashboardFilter />
                 </div>
             </div>
-            <div className="text-right text-sm text-slate-500">
+            <div className="text-right text-xs md:text-sm text-slate-500">
                 <Clock size={14} className="inline mr-1" />
                 Cập nhật: {formatDate(new Date())}
             </div>
 
-            {/* Main Stats Cards - 5 columns */}
-            <div className="grid gap-4 md:grid-cols-5">
+            {/* Main Stats Cards - Responsive grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                         <div>

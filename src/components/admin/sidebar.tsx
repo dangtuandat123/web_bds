@@ -1,8 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin, MessageSquare, KeyRound } from 'lucide-react'
+import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin, MessageSquare, KeyRound, Menu, X } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth'
 
 const navigation = [
@@ -23,24 +24,40 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarProps) {
     const pathname = usePathname()
+    const [isOpen, setIsOpen] = useState(false)
 
-    return (
-        <div className="sticky top-0 h-screen w-64 flex-col bg-slate-900 text-white overflow-y-auto">
+    // Close sidebar when route changes on mobile
+    useEffect(() => {
+        setIsOpen(false)
+    }, [pathname])
+
+    // Close sidebar when clicking outside on mobile
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setIsOpen(false)
+            }
+        }
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    const SidebarContent = () => (
+        <>
             {/* Logo */}
             <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex-shrink-0">
                     <Building size={20} />
                 </div>
-                <div className="flex flex-col">
-                    <span className="text-sm font-bold">{siteName}</span>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold truncate">{siteName}</span>
                     <span className="text-[10px] text-slate-400">Admin Panel</span>
                 </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-1 px-3 py-4">
+            <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                 {navigation.map((item) => {
-                    // For dashboard, exact match; for others, startsWith to match child routes
                     const isActive = item.href === '/admin'
                         ? pathname === '/admin'
                         : pathname.startsWith(item.href)
@@ -53,8 +70,8 @@ export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarP
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
-                            <item.icon size={18} />
-                            {item.name}
+                            <item.icon size={18} className="flex-shrink-0" />
+                            <span className="truncate">{item.name}</span>
                         </Link>
                     )
                 })}
@@ -70,8 +87,8 @@ export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarP
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         }`}
                 >
-                    <KeyRound size={18} />
-                    Đổi mật khẩu
+                    <KeyRound size={18} className="flex-shrink-0" />
+                    <span className="truncate">Đổi mật khẩu</span>
                 </Link>
 
                 {/* Logout */}
@@ -80,11 +97,56 @@ export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarP
                         type="submit"
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-slate-800 hover:text-white"
                     >
-                        <LogOut size={18} />
-                        Đăng xuất
+                        <LogOut size={18} className="flex-shrink-0" />
+                        <span className="truncate">Đăng xuất</span>
                     </button>
                 </form>
             </div>
-        </div>
+        </>
+    )
+
+    return (
+        <>
+            {/* Mobile Header */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-slate-900 border-b border-slate-800">
+                <div className="flex items-center justify-between px-4 h-14">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600">
+                            <Building size={16} />
+                        </div>
+                        <span className="text-white text-sm font-bold truncate max-w-[150px]">{siteName}</span>
+                    </div>
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="p-2 text-white hover:bg-slate-800 rounded-lg transition-colors"
+                        aria-label={isOpen ? 'Đóng menu' : 'Mở menu'}
+                    >
+                        {isOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            {/* Mobile Sidebar */}
+            <div className={`
+                lg:hidden fixed top-14 left-0 bottom-0 z-40 w-64 bg-slate-900 text-white
+                transform transition-transform duration-300 ease-in-out overflow-y-auto
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                <SidebarContent />
+            </div>
+
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:flex sticky top-0 h-screen w-64 flex-col bg-slate-900 text-white">
+                <SidebarContent />
+            </div>
+        </>
     )
 }

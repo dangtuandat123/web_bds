@@ -19,14 +19,14 @@ export default async function ProjectsPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Quản lý dự án</h1>
-                    <p className="text-slate-600 mt-2">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Quản lý dự án</h1>
+                    <p className="text-sm md:text-base text-slate-600 mt-1 md:mt-2">
                         Quản lý các dự án bất động sản của bạn
                     </p>
                 </div>
-                <Button asChild className="bg-gradient-to-r from-amber-500 to-amber-600">
+                <Button asChild className="bg-gradient-to-r from-amber-500 to-amber-600 w-full sm:w-auto">
                     <Link href="/admin/projects/new">
                         <Plus className="mr-2 h-4 w-4" />
                         Thêm dự án

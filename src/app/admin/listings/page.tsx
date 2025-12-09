@@ -36,14 +36,14 @@ export default async function ListingsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Quản lý Listings</h1>
-                    <p className="text-slate-600 mt-2">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Quản lý Listings</h1>
+                    <p className="text-sm md:text-base text-slate-600 mt-1 md:mt-2">
                         Danh sách căn hộ, nhà đất đang giao dịch
                     </p>
                 </div>
-                <Button asChild className="bg-gradient-to-r from-amber-500 to-amber-600">
+                <Button asChild className="bg-gradient-to-r from-amber-500 to-amber-600 w-full sm:w-auto">
                     <Link href="/admin/listings/new">
                         <Plus className="h-4 w-4 mr-2" />
                         Thêm listing
