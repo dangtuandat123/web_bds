@@ -56,13 +56,21 @@ export default function ChatWidget() {
         'Dự án mới mở bán',
         'Tư vấn đầu tư BĐS',
     ]
+    const [showGreeting, setShowGreeting] = useState(true)
 
     return (
         <>
             {/* Greeting Bubble */}
-            {!isOpen && (
+            {!isOpen && showGreeting && (
                 <div className="fixed bottom-[88px] right-24 z-40 animate-fade-in">
-                    <div className="bg-white rounded-xl shadow-lg px-4 py-2 text-sm text-slate-700 border border-slate-100 max-w-[180px]">
+                    <div className="bg-white rounded-xl shadow-lg pl-4 pr-8 py-2 text-sm text-slate-700 border border-slate-100 max-w-[180px] relative">
+                        <button
+                            onClick={() => setShowGreeting(false)}
+                            className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                            aria-label="Đóng"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
                         <p>Xin chào! 👋 Bạn cần tư vấn gì?</p>
                         <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-l-8 border-transparent border-l-white"></div>
                     </div>

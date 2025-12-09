@@ -17,7 +17,6 @@ export default async function PrivacyPolicyPage() {
                 <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16">
                     <div className="container mx-auto px-4">
                         <h1 className="text-4xl font-bold">Chính sách bảo mật</h1>
-                        <p className="text-slate-300 mt-2">Cập nhật lần cuối: {new Date().toLocaleDateString('vi-VN')}</p>
                     </div>
                 </div>
                 <div className="container mx-auto px-4 py-12">
@@ -34,11 +33,10 @@ export default async function PrivacyPolicyPage() {
             {/* Header */}
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16">
                 <div className="container mx-auto px-4">
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-3">
                         <Shield className="h-10 w-10 text-amber-500" />
                         <h1 className="text-4xl font-bold">Chính sách bảo mật</h1>
                     </div>
-                    <p className="text-slate-300">Cập nhật lần cuối: {new Date().toLocaleDateString('vi-VN')}</p>
                 </div>
             </div>
 
