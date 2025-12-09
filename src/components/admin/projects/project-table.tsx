@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
-import type { Project } from '@prisma/client'
+import type { project } from '@prisma/client'
 import {
     Table,
     TableBody,
@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button'
 import { deleteProject } from '@/app/actions/project'
 
 interface ProjectTableProps {
-    projects: Project[]
+    projects: project[]
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {

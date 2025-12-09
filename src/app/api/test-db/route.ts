@@ -15,7 +15,7 @@ export async function GET() {
         // Get sample project data
         const sampleProject = await prisma.project.findFirst({
             include: {
-                amenities: {
+                projectamenity: {
                     include: {
                         amenity: true
                     }
