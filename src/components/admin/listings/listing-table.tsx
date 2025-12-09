@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Listing } from '@prisma/client'
+import type { listing } from '@prisma/client'
 import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -37,7 +37,7 @@ import { Badge } from '@/components/ui/badge'
 import { deleteListing } from '@/app/actions/listing'
 import { formatPrice, formatArea } from '@/lib/utils/format'
 
-type ListingWithProject = Listing & {
+type ListingWithProject = listing & {
     project: {
         id: number
         name: string
@@ -48,7 +48,7 @@ interface ListingTableProps {
     listings: ListingWithProject[]
 }
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     APARTMENT: 'Căn hộ',
     HOUSE: 'Nhà riêng',
     LAND: 'Đất nền',
