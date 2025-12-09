@@ -95,7 +95,7 @@ export default function AdvancedSearch({ isProjectSearch = false, locations }: A
     )
 
     return (
-        <div className="bg-white/90 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl border border-white/50 relative z-20 mx-auto -mt-24 max-w-6xl animate-fade-in-up">
+        <div className="bg-white/90 backdrop-blur-lg p-4 md:p-6 lg:p-8 rounded-2xl shadow-2xl border border-white/50 relative z-20 mx-auto -mt-8 md:-mt-16 lg:-mt-24 max-w-6xl animate-fade-in-up">
             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                 <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
                     <span className="bg-amber-100 text-amber-600 p-1.5 rounded mr-2">

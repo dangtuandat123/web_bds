@@ -20,7 +20,7 @@ export default function Hero({ backgroundUrl }: HeroProps) {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-transparent to-slate-900/90"></div>
 
             {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 pb-24 animate-fade-in-up">
+            <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 pt-20 sm:pt-0 pb-24 animate-fade-in-up">
                 {/* Badge */}
                 <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-amber-300 text-xs font-bold uppercase tracking-widest mb-6 animate-float">
                     Happy Land Real Estate
