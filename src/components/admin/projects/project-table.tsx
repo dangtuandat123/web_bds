@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import type { Project } from '@prisma/client'
 import {
     Table,
@@ -100,7 +100,16 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
                                         />
                                     </div>
                                 </TableCell>
-                                <TableCell className="font-medium">{project.name}</TableCell>
+                                <TableCell>
+                                    <Link
+                                        href={`/du-an/${project.slug}`}
+                                        target="_blank"
+                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                    >
+                                        {project.name}
+                                        <ExternalLink className="w-3 h-3" />
+                                    </Link>
+                                </TableCell>
                                 <TableCell>{categoryConfig[project.category]}</TableCell>
                                 <TableCell>{project.priceRange}</TableCell>
                                 <TableCell>

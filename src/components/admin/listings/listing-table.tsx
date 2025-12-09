@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Listing } from '@prisma/client'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     Table,
@@ -115,8 +115,15 @@ export default function ListingTable({ listings }: ListingTableProps) {
                                             />
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-medium">
-                                        {listing.title}
+                                    <TableCell>
+                                        <Link
+                                            href={`/nha-dat/${listing.slug}`}
+                                            target="_blank"
+                                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                        >
+                                            {listing.title}
+                                            <ExternalLink className="w-3 h-3" />
+                                        </Link>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline">{typeLabels[listing.type]}</Badge>

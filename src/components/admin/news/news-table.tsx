@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import type { news } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -103,8 +103,15 @@ export default function NewsTable({ news }: NewsTableProps) {
                                         />
                                     </div>
                                 </TableCell>
-                                <TableCell className="font-medium max-w-md">
-                                    <div className="line-clamp-2">{item.title}</div>
+                                <TableCell className="max-w-md">
+                                    <Link
+                                        href={`/tin-tuc/${item.slug}`}
+                                        target="_blank"
+                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                    >
+                                        <span className="line-clamp-2">{item.title}</span>
+                                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                    </Link>
                                 </TableCell>
                                 <TableCell>
                                     <Badge className={categoryConfig[item.category].color}>
