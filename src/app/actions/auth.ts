@@ -86,3 +86,58 @@ export async function getSession(): Promise<SessionPayload | null> {
         return null
     }
 }
+
+export async function changePasswordAction(formData: FormData) {
+    const session = await getSession()
+    if (!session) {
+        return { error: 'Bạn cần đăng nhập để thực hiện thao tác này' }
+    }
+
+    const currentPassword = formData.get('currentPassword') as string
+    const newPassword = formData.get('newPassword') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        return { error: 'Vui lòng điền đầy đủ các trường' }
+    }
+
+    if (newPassword.length < 6) {
+        return { error: 'Mật khẩu mới phải có ít nhất 6 ký tự' }
+    }
+
+    if (newPassword !== confirmPassword) {
+        return { error: 'Mật khẩu mới và xác nhận không khớp' }
+    }
+
+    try {
+        // Find user
+        const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+        })
+
+        if (!user) {
+            return { error: 'Không tìm thấy người dùng' }
+        }
+
+        // Verify current password
+        const isValid = await bcrypt.compare(currentPassword, user.password)
+        if (!isValid) {
+            return { error: 'Mật khẩu hiện tại không đúng' }
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        // Update password
+        await prisma.user.update({
+            where: { id: session.userId },
+            data: { password: hashedPassword },
+        })
+
+        return { success: true, message: 'Đổi mật khẩu thành công!' }
+    } catch (error) {
+        console.error('Change password error:', error)
+        return { error: 'Đã xảy ra lỗi, vui lòng thử lại' }
+    }
+}
+

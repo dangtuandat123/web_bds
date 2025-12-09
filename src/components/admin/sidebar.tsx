@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Building, Home, Users, Newspaper, Settings, LogOut, Sparkles, MapPin, MessageSquare, KeyRound } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth'
 
 const navigation = [
@@ -60,8 +60,21 @@ export default function AdminSidebar({ siteName = 'Happy Land' }: AdminSidebarPr
                 })}
             </nav>
 
-            {/* Logout */}
-            <div className="border-t border-slate-800 p-4">
+            {/* Bottom Actions */}
+            <div className="border-t border-slate-800 p-4 space-y-1">
+                {/* Change Password */}
+                <Link
+                    href="/admin/change-password"
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${pathname === '/admin/change-password'
+                            ? 'bg-amber-500 text-white shadow-lg'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                >
+                    <KeyRound size={18} />
+                    Đổi mật khẩu
+                </Link>
+
+                {/* Logout */}
                 <form action={logoutAction}>
                     <button
                         type="submit"
