@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Save, Settings, Phone, Globe, Key, Image as ImageIcon, FileText } from 'lucide-react'
+import { Save, Settings, Phone, Globe, Key, Image as ImageIcon, FileText, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import ImageUpload from '@/components/admin/image-upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -17,12 +17,57 @@ interface SettingsFormProps {
     initialSettings: Record<string, string>
 }
 
+interface ApiStatusInfo {
+    valid: boolean
+    error?: string
+    label?: string
+    usage?: number
+    limit?: number | null
+    isFreeTier?: boolean
+}
+
 export default function SettingsForm({ initialSettings }: SettingsFormProps) {
     const [isPending, startTransition] = useTransition()
     const [settings, setSettings] = useState(initialSettings)
+    const [isCheckingKey, setIsCheckingKey] = useState(false)
+    const [apiStatus, setApiStatus] = useState<ApiStatusInfo | null>(null)
 
     const handleChange = (key: string, value: string) => {
         setSettings(prev => ({ ...prev, [key]: value }))
+        // Clear API status when key changes
+        if (key === 'api_openrouter') {
+            setApiStatus(null)
+        }
+    }
+
+    const checkOpenRouterKey = async () => {
+        const apiKey = settings.api_openrouter
+        if (!apiKey) {
+            toast.error('Vui lòng nhập API key trước')
+            return
+        }
+
+        setIsCheckingKey(true)
+        try {
+            const response = await fetch('/api/admin/check-openrouter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey }),
+            })
+            const data = await response.json()
+            setApiStatus(data)
+
+            if (data.valid) {
+                toast.success('API Key hợp lệ!')
+            } else {
+                toast.error(data.error || 'API Key không hợp lệ')
+            }
+        } catch (error) {
+            toast.error('Không thể kiểm tra API key')
+            setApiStatus({ valid: false, error: 'Lỗi kết nối' })
+        } finally {
+            setIsCheckingKey(false)
+        }
     }
 
     const handleSubmit = () => {
@@ -270,16 +315,80 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                     <div className="grid gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="api_openrouter">OpenRouter API Key</Label>
-                            <Input
-                                id="api_openrouter"
-                                type="password"
-                                value={settings.api_openrouter || ''}
-                                onChange={e => handleChange('api_openrouter', e.target.value)}
-                                placeholder="sk-or-v1-..."
-                            />
+                            <div className="flex gap-2">
+                                <Input
+                                    id="api_openrouter"
+                                    type="password"
+                                    value={settings.api_openrouter || ''}
+                                    onChange={e => handleChange('api_openrouter', e.target.value)}
+                                    placeholder="sk-or-v1-..."
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={checkOpenRouterKey}
+                                    disabled={isCheckingKey}
+                                    className="shrink-0"
+                                >
+                                    {isCheckingKey ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="animate-spin rounded-full h-4 w-4 border-2 border-amber-500 border-t-transparent"></span>
+                                            Đang kiểm tra...
+                                        </span>
+                                    ) : (
+                                        'Kiểm tra'
+                                    )}
+                                </Button>
+                            </div>
                             <p className="text-xs text-slate-500">
                                 API key cho chatbot AI. Lấy từ openrouter.ai
                             </p>
+
+                            {/* API Status Display */}
+                            {apiStatus && (
+                                <div className={`mt-3 p-4 rounded-lg border ${apiStatus.valid
+                                    ? 'bg-green-50 border-green-200'
+                                    : 'bg-red-50 border-red-200'
+                                    }`}>
+                                    {apiStatus.valid ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                                <span className="font-medium text-green-800">API Key hợp lệ</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4 text-sm mt-3">
+                                                <div className="bg-white rounded-lg p-3 border border-green-100">
+                                                    <p className="text-slate-500 text-xs">Tên key</p>
+                                                    <p className="font-semibold text-slate-800">{apiStatus.label}</p>
+                                                </div>
+                                                <div className="bg-white rounded-lg p-3 border border-green-100">
+                                                    <p className="text-slate-500 text-xs">Credit đã dùng</p>
+                                                    <p className="font-semibold text-slate-800">
+                                                        ${apiStatus.usage?.toFixed(4) || '0.0000'}
+                                                        {apiStatus.limit && (
+                                                            <span className="text-slate-400 font-normal"> / ${apiStatus.limit}</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                {apiStatus.isFreeTier && (
+                                                    <div className="col-span-2 bg-amber-50 rounded-lg p-2 border border-amber-100">
+                                                        <p className="text-amber-700 text-xs flex items-center gap-1">
+                                                            <AlertCircle className="h-3 w-3" />
+                                                            Đang sử dụng Free Tier
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <XCircle className="h-5 w-5 text-red-600" />
+                                            <span className="font-medium text-red-800">{apiStatus.error}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </TabsContent>
