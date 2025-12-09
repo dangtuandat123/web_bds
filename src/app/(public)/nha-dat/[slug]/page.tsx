@@ -243,6 +243,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
                         <Separator />
 
+                        {/* Amenities - Move above description */}
+                        {amenities.length > 0 && (
+                            <>
+                                <AmenityList amenities={amenities} title="Tiện ích & Đặc điểm" />
+                                <Separator />
+                            </>
+                        )}
+
                         {/* Description */}
                         <div>
                             <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center">
@@ -261,14 +269,6 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                                 )}
                             </div>
                         </div>
-
-                        {/* Amenities */}
-                        {amenities.length > 0 && (
-                            <>
-                                <Separator />
-                                <AmenityList amenities={amenities} title="Tiện ích & Đặc điểm" />
-                            </>
-                        )}
 
                         {/* Related Listings */}
                         {relatedListings.length > 0 && (
