@@ -17,7 +17,11 @@ const navigation = [
     { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
 ]
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+    siteName?: string
+}
+
+export default function AdminSidebar({ siteName = 'Happy Land' }: AdminSidebarProps) {
     const pathname = usePathname()
 
     return (
@@ -28,7 +32,7 @@ export default function AdminSidebar() {
                     <Building size={20} />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-sm font-bold">Happy Land</span>
+                    <span className="text-sm font-bold">{siteName}</span>
                     <span className="text-[10px] text-slate-400">Admin Panel</span>
                 </div>
             </div>
