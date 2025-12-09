@@ -1,9 +1,34 @@
-import { Building, Home, Users, Newspaper, TrendingUp, Clock, Eye, MessageSquare, BarChart3, PieChart } from 'lucide-react'
+import { Building, Home, Users, Newspaper, TrendingUp, Clock, Eye, MessageSquare, BarChart3, PieChart, Activity } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { getSession } from '@/app/actions/auth'
 import Link from 'next/link'
+import DashboardFilter from '@/components/admin/dashboard-filter'
 
-async function getStats() {
+// Helper to get date range for month/year filter
+function getDateRange(month?: string, year?: string) {
+    if (!month && !year) return undefined
+
+    const now = new Date()
+    const filterYear = year ? parseInt(year) : now.getFullYear()
+    const filterMonth = month ? parseInt(month) - 1 : undefined // JS months are 0-indexed
+
+    if (filterMonth !== undefined) {
+        // Specific month
+        const startDate = new Date(filterYear, filterMonth, 1)
+        const endDate = new Date(filterYear, filterMonth + 1, 0, 23, 59, 59) // Last day of month
+        return { gte: startDate, lte: endDate }
+    } else {
+        // Entire year
+        const startDate = new Date(filterYear, 0, 1)
+        const endDate = new Date(filterYear, 11, 31, 23, 59, 59)
+        return { gte: startDate, lte: endDate }
+    }
+}
+
+async function getStats(month?: string, year?: string) {
+    const dateRange = getDateRange(month, year)
+    const dateFilter = dateRange ? { createdAt: dateRange } : {}
+
     const [
         projectCount,
         listingCount,
@@ -28,40 +53,77 @@ async function getStats() {
         sellingProjects,
         upcomingProjects,
         soldOutProjects,
+        // Top viewed news
+        topViewedNews,
+        // Leads last 7 days (or filtered period)
+        leadsLast7Days,
     ] = await Promise.all([
-        prisma.project.count(),
-        prisma.listing.count(),
-        prisma.lead.count(),
-        prisma.news.count(),
-        prisma.chatsession.count(),
+        prisma.project.count({ where: dateFilter }),
+        prisma.listing.count({ where: dateFilter }),
+        prisma.lead.count({ where: dateFilter }),
+        prisma.news.count({ where: dateFilter }),
+        prisma.chatsession.count({ where: dateFilter }),
         // Listing types
-        prisma.listing.count({ where: { type: 'APARTMENT' } }),
-        prisma.listing.count({ where: { type: 'HOUSE' } }),
-        prisma.listing.count({ where: { type: 'LAND' } }),
-        prisma.listing.count({ where: { type: 'RENT' } }),
+        prisma.listing.count({ where: { type: 'APARTMENT', ...dateFilter } }),
+        prisma.listing.count({ where: { type: 'HOUSE', ...dateFilter } }),
+        prisma.listing.count({ where: { type: 'LAND', ...dateFilter } }),
+        prisma.listing.count({ where: { type: 'RENT', ...dateFilter } }),
         // Lead status
-        prisma.lead.count({ where: { status: 'NEW' } }),
-        prisma.lead.count({ where: { status: 'CONTACTED' } }),
+        prisma.lead.count({ where: { status: 'NEW', ...dateFilter } }),
+        prisma.lead.count({ where: { status: 'CONTACTED', ...dateFilter } }),
         // Featured
-        prisma.project.count({ where: { isFeatured: true } }),
-        prisma.listing.count({ where: { isFeatured: true } }),
+        prisma.project.count({ where: { isFeatured: true, ...dateFilter } }),
+        prisma.listing.count({ where: { isFeatured: true, ...dateFilter } }),
         // Recent leads (last 5)
         prisma.lead.findMany({
             take: 5,
+            where: dateFilter,
             orderBy: { createdAt: 'desc' },
             select: { id: true, name: true, phone: true, source: true, status: true, createdAt: true }
         }),
         // Recent listings (last 5)
         prisma.listing.findMany({
             take: 5,
+            where: dateFilter,
             orderBy: { createdAt: 'desc' },
             select: { id: true, title: true, type: true, price: true, slug: true }
         }),
         // Project status
-        prisma.project.count({ where: { status: 'SELLING' } }),
-        prisma.project.count({ where: { status: 'UPCOMING' } }),
-        prisma.project.count({ where: { status: 'SOLD_OUT' } }),
+        prisma.project.count({ where: { status: 'SELLING', ...dateFilter } }),
+        prisma.project.count({ where: { status: 'UPCOMING', ...dateFilter } }),
+        prisma.project.count({ where: { status: 'SOLD_OUT', ...dateFilter } }),
+        // Top viewed news
+        prisma.news.findMany({
+            take: 5,
+            where: dateFilter,
+            orderBy: { views: 'desc' },
+            select: { id: true, title: true, slug: true, views: true }
+        }),
+        // Leads in last 7 days (for line chart) - use date range if filtered
+        prisma.lead.findMany({
+            where: dateRange
+                ? dateFilter
+                : { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+            select: { createdAt: true }
+        }),
     ])
+
+    // Group leads by day for line chart
+    const leadsByDay: Record<string, number> = {}
+    const last7Days = []
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const dateStr = date.toISOString().split('T')[0]
+        leadsByDay[dateStr] = 0
+        last7Days.push(dateStr)
+    }
+    leadsLast7Days.forEach(lead => {
+        const dateStr = new Date(lead.createdAt).toISOString().split('T')[0]
+        if (leadsByDay[dateStr] !== undefined) {
+            leadsByDay[dateStr]++
+        }
+    })
 
     return {
         projects: projectCount,
@@ -74,7 +136,9 @@ async function getStats() {
         featured: { projects: featuredProjects, listings: featuredListings },
         recentLeads,
         recentListings,
-        projectsByStatus: { selling: sellingProjects, upcoming: upcomingProjects, soldOut: soldOutProjects }
+        projectsByStatus: { selling: sellingProjects, upcoming: upcomingProjects, soldOut: soldOutProjects },
+        topViewedNews,
+        leadsByDay: last7Days.map(date => ({ date, count: leadsByDay[date] })),
     }
 }
 
@@ -121,9 +185,14 @@ const leadStatusLabels: Record<string, { label: string; color: string }> = {
     LOST: { label: 'Mất', color: 'bg-red-100 text-red-700' }
 }
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+    searchParams,
+}: {
+    searchParams: Promise<{ month?: string; year?: string }>
+}) {
+    const params = await searchParams
     const session = await getSession()
-    const stats = await getStats()
+    const stats = await getStats(params.month, params.year)
 
     // Calculate percentages for charts
     const totalListings = stats.listings || 1
@@ -141,20 +210,31 @@ export default async function AdminDashboard() {
         soldOut: Math.round((stats.projectsByStatus.soldOut / totalProjects) * 100),
     }
 
+    // Get filter label
+    const filterLabel = params.month || params.year
+        ? `${params.month ? `Tháng ${params.month}` : ''} ${params.year || ''}`.trim()
+        : 'Tất cả thời gian'
+
     return (
         <div className="space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Tổng quan</h1>
                     <p className="text-slate-600 mt-2">
                         Xin chào, <span className="font-semibold">{session?.email}</span>
+                        {filterLabel !== 'Tất cả thời gian' && (
+                            <span className="ml-2 text-amber-600">• {filterLabel}</span>
+                        )}
                     </p>
                 </div>
-                <div className="text-right text-sm text-slate-500">
-                    <Clock size={14} className="inline mr-1" />
-                    Cập nhật: {formatDate(new Date())}
+                <div className="flex items-center gap-4">
+                    <DashboardFilter />
                 </div>
+            </div>
+            <div className="text-right text-sm text-slate-500">
+                <Clock size={14} className="inline mr-1" />
+                Cập nhật: {formatDate(new Date())}
             </div>
 
             {/* Main Stats Cards - 5 columns */}
@@ -324,6 +404,86 @@ export default async function AdminDashboard() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Line Chart Row */}
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Leads Line Chart */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Activity className="text-slate-400" size={20} />
+                        <h3 className="font-semibold text-slate-900">Khách hàng 7 ngày qua</h3>
+                    </div>
+                    <div className="relative h-40">
+                        {/* Y-axis labels */}
+                        <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-slate-400">
+                            <span>{Math.max(...stats.leadsByDay.map(d => d.count), 5)}</span>
+                            <span>{Math.round(Math.max(...stats.leadsByDay.map(d => d.count), 5) / 2)}</span>
+                            <span>0</span>
+                        </div>
+                        {/* Chart area */}
+                        <div className="ml-6 h-full flex items-end justify-between gap-1">
+                            {stats.leadsByDay.map((day, i) => {
+                                const maxCount = Math.max(...stats.leadsByDay.map(d => d.count), 1)
+                                const height = (day.count / maxCount) * 100
+                                const dayLabel = new Date(day.date).toLocaleDateString('vi-VN', { weekday: 'short' })
+                                return (
+                                    <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                                        <div className="w-full flex items-end justify-center" style={{ height: '120px' }}>
+                                            <div
+                                                className="w-full max-w-8 bg-gradient-to-t from-amber-500 to-amber-400 rounded-t transition-all hover:from-amber-600 hover:to-amber-500"
+                                                style={{ height: `${Math.max(height, 5)}%` }}
+                                                title={`${day.count} khách hàng`}
+                                            >
+                                            </div>
+                                        </div>
+                                        <span className="text-xs text-slate-500">{dayLabel}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className="mt-2 text-center text-sm text-slate-500">
+                        Tổng: <span className="font-semibold text-amber-600">{stats.leadsByDay.reduce((sum, d) => sum + d.count, 0)}</span> khách hàng trong 7 ngày
+                    </div>
+                </div>
+
+                {/* Top Viewed News */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Eye className="text-slate-400" size={20} />
+                            <h3 className="font-semibold text-slate-900">Tin tức xem nhiều nhất</h3>
+                        </div>
+                        <Link href="/admin/news" className="text-sm text-amber-600 hover:underline">Xem tất cả →</Link>
+                    </div>
+                    {stats.topViewedNews.length > 0 ? (
+                        <div className="space-y-3">
+                            {stats.topViewedNews.map((news, index) => (
+                                <div key={news.id} className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+                                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-amber-100 text-amber-700' :
+                                        index === 1 ? 'bg-slate-200 text-slate-600' :
+                                            index === 2 ? 'bg-orange-100 text-orange-700' :
+                                                'bg-slate-100 text-slate-500'
+                                        }`}>
+                                        {index + 1}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <Link href={`/admin/news/${news.id}`} className="font-medium text-slate-900 hover:text-amber-600 truncate block">
+                                            {news.title}
+                                        </Link>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-slate-500">
+                                        <Eye size={14} />
+                                        <span className="text-sm font-medium">{news.views.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-slate-500 text-center py-4">Chưa có tin tức</p>
+                    )}
                 </div>
             </div>
 
