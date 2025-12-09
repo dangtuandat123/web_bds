@@ -37,16 +37,17 @@ model chatsession {
 }
 
 model lead {
-  id        Int         @id @default(autoincrement())
-  name      String
-  phone     String
-  email     String?
-  message   String?     @db.Text
-  sessionId String?     // Link to chat session for chatbot leads
-  source    lead_source @default(FORM)
-  status    lead_status @default(NEW)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime
+  id           Int         @id @default(autoincrement())
+  name         String
+  phone        String
+  email        String?
+  message      String?     @db.Text
+  sessionId    String?     // Link to chat session for chatbot leads
+  referenceUrl String?     // URL of the page where form was submitted
+  source       lead_source @default(FORM)
+  status       lead_status @default(NEW)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime
 
   @@index([createdAt], map: "Lead_createdAt_idx")
   @@index([sessionId], map: "Lead_sessionId_idx")

@@ -8,9 +8,10 @@ import { submitLead } from '@/app/actions/lead'
 interface ContactFormProps {
     title?: string
     price?: string
+    referenceUrl?: string
 }
 
-export default function ContactForm({ title, price }: ContactFormProps) {
+export default function ContactForm({ title, price, referenceUrl }: ContactFormProps) {
     const [isPending, startTransition] = useTransition()
     const [formData, setFormData] = useState({
         name: '',
@@ -22,7 +23,10 @@ export default function ContactForm({ title, price }: ContactFormProps) {
         e.preventDefault()
 
         startTransition(async () => {
-            const result = await submitLead(formData)
+            const result = await submitLead({
+                ...formData,
+                referenceUrl
+            })
 
             if (result.success) {
                 toast.success(result.message)

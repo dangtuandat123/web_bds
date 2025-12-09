@@ -9,6 +9,7 @@ export async function submitLead(data: {
     name: string
     phone: string
     message?: string
+    referenceUrl?: string
 }) {
     try {
         // Validation
@@ -32,6 +33,7 @@ export async function submitLead(data: {
                 name: data.name.trim(),
                 phone: data.phone.trim(),
                 message: data.message?.trim() || null,
+                referenceUrl: data.referenceUrl || null,
                 source: 'FORM',
                 status: 'NEW',
                 updatedAt: new Date(),

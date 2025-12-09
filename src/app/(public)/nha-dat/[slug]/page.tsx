@@ -305,7 +305,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
                     {/* Right Column - Contact Form */}
                     <div className="lg:col-span-1">
-                        <ContactForm title={listing.title} price={formatPrice(listing.price)} />
+                        <ContactForm title={listing.title} price={formatPrice(listing.price)} referenceUrl={`/nha-dat/${listing.slug}`} />
                     </div>
                 </div>
             </div>

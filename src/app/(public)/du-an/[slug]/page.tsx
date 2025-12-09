@@ -236,7 +236,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
                     {/* Right Column - Contact Form */}
                     <div className="lg:col-span-1">
-                        <ContactForm title={project.name} price={project.priceRange} />
+                        <ContactForm title={project.name} price={project.priceRange} referenceUrl={`/du-an/${project.slug}`} />
                     </div>
                 </div>
             </div>

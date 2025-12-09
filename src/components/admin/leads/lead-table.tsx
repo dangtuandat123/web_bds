@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { MoreHorizontal, Trash2, Eye, Phone, Mail, MessageSquare, Calendar, Bot, User, Loader2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, Eye, Phone, Mail, MessageSquare, Calendar, Bot, User, Loader2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     Table,
@@ -49,6 +49,7 @@ interface Lead {
     email: string | null
     message: string | null
     sessionId?: string | null
+    referenceUrl?: string | null
     source: lead_source
     status: lead_status
     createdAt: Date
@@ -368,6 +369,27 @@ export default function LeadTable({ leads }: LeadTableProps) {
                                             <p className="text-slate-700 whitespace-pre-wrap bg-amber-50 p-3 rounded-lg border border-amber-100">
                                                 {viewLead.message}
                                             </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reference URL for Form leads */}
+                            {viewLead.source === 'FORM' && viewLead.referenceUrl && (
+                                <div className="border-t pt-4">
+                                    <div className="flex items-start gap-3">
+                                        <ExternalLink className="w-5 h-5 text-slate-400 mt-0.5" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-slate-500 mb-1">Điền form từ trang</p>
+                                            <a
+                                                href={viewLead.referenceUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 p-3 rounded-lg border border-blue-100"
+                                            >
+                                                {viewLead.referenceUrl}
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
