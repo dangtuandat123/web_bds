@@ -1,0 +1,236 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.0.x", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl"]
+}
+
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model amenity {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique(map: "Amenity_name_key")
+  icon           String
+  createdAt      DateTime         @default(now())
+  listingamenity listingamenity[]
+  projectamenity projectamenity[]
+}
+
+model location {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique(map: "Location_name_key")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model chatsession {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique(map: "ChatSession_sessionId_key")
+  messages  String   @db.LongText
+  metadata  String?  @db.LongText
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([createdAt], map: "ChatSession_createdAt_idx")
+  @@index([sessionId], map: "ChatSession_sessionId_idx")
+}
+
+model lead {
+  id           Int         @id @default(autoincrement())
+  name         String
+  phone        String
+  email        String?
+  message      String?     @db.Text
+  sessionId    String?     // Link to chat session for chatbot leads
+  referenceUrl String?     // URL of the page where form was submitted
+  source       lead_source @default(FORM)
+  status       lead_status @default(NEW)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime
+
+  @@index([createdAt], map: "Lead_createdAt_idx")
+  @@index([sessionId], map: "Lead_sessionId_idx")
+  @@index([source], map: "Lead_source_idx")
+  @@index([status], map: "Lead_status_idx")
+}
+
+model listing {
+  id             Int              @id @default(autoincrement())
+  title          String
+  slug           String           @unique(map: "Listing_slug_key")
+  description    String           @db.Text
+  content        String?          @db.Text
+  price          Float
+  area           Float
+  bedrooms       Int              @default(0)
+  bathrooms      Int              @default(0)
+  direction      String?
+  location       String
+  fullLocation   String?
+  images         String           @db.LongText
+  thumbnailUrl   String
+  type           listing_type
+  tags           String?          @db.LongText
+  isFeatured     Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  projectId      Int?
+  project        project?         @relation(fields: [projectId], references: [id], map: "Listing_projectId_fkey")
+  listingamenity listingamenity[]
+
+  @@index([area], map: "Listing_area_idx")
+  @@index([location], map: "Listing_location_idx")
+  @@index([price], map: "Listing_price_idx")
+  @@index([projectId], map: "Listing_projectId_idx")
+  @@index([type], map: "Listing_type_idx")
+}
+
+model listingamenity {
+  listingId Int
+  amenityId Int
+  amenity   amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade, map: "ListingAmenity_amenityId_fkey")
+  listing   listing @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "ListingAmenity_listingId_fkey")
+
+  @@id([listingId, amenityId])
+  @@index([amenityId], map: "ListingAmenity_amenityId_idx")
+  @@index([listingId], map: "ListingAmenity_listingId_idx")
+}
+
+model newscategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique(map: "NewsCategory_name_key")
+  slug      String   @unique(map: "NewsCategory_slug_key")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  news      news[]
+}
+
+model news {
+  id             Int            @id @default(autoincrement())
+  title          String
+  slug           String         @unique(map: "News_slug_key")
+  category       news_category
+  categoryId     Int?
+  newsCategory   newscategory?  @relation(fields: [categoryId], references: [id])
+  summary        String         @db.Text
+  content        String         @db.Text
+  thumbnailUrl   String
+  author         String?        @default("Admin")
+  views          Int            @default(0)
+  isFeatured     Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+
+  @@index([category], map: "News_category_idx")
+  @@index([categoryId], map: "News_categoryId_idx")
+  @@index([createdAt], map: "News_createdAt_idx")
+  @@index([slug], map: "News_slug_idx")
+}
+
+model project {
+  id             Int              @id @default(autoincrement())
+  name           String
+  slug           String           @unique(map: "Project_slug_key")
+  category       project_category
+  location       String
+  fullLocation   String?
+  description    String           @db.Text
+  content        String?          @db.Text
+  priceRange     String
+  status         project_status   @default(SELLING)
+  images         String           @db.LongText
+  thumbnailUrl   String
+  isFeatured     Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  listing        listing[]
+  projectamenity projectamenity[]
+
+  @@index([category], map: "Project_category_idx")
+  @@index([location], map: "Project_location_idx")
+  @@index([status], map: "Project_status_idx")
+}
+
+model projectamenity {
+  projectId Int
+  amenityId Int
+  amenity   amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade, map: "ProjectAmenity_amenityId_fkey")
+  project   project @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "ProjectAmenity_projectId_fkey")
+
+  @@id([projectId, amenityId])
+  @@index([amenityId], map: "ProjectAmenity_amenityId_idx")
+  @@index([projectId], map: "ProjectAmenity_projectId_idx")
+}
+
+model user {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique(map: "User_email_key")
+  password  String
+  name      String
+  role      user_role @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+}
+
+enum news_category {
+  MARKET
+  FENG_SHUI
+  LEGAL
+}
+
+enum project_category {
+  APARTMENT
+  VILLA
+  LAND
+}
+
+enum user_role {
+  USER
+  ADMIN
+}
+
+enum lead_source {
+  FORM
+  CHATBOT
+  PHONE
+}
+
+enum lead_status {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum project_status {
+  UPCOMING
+  SELLING
+  SOLD_OUT
+}
+
+enum listing_type {
+  APARTMENT
+  HOUSE
+  LAND
+  RENT
+}
+
+model setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @db.LongText
+  type      String   @default("text")
+  groupName String   @default("general") @map("group_name")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([groupName], map: "Setting_group_idx")
+}

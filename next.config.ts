@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
                 hostname: 'picsum.photos',
             },
             {
+                protocol: 'https',
+                hostname: 'canhohanghieu.com',
+            },
+            {
                 protocol: 'http',
                 hostname: 'localhost',
             },

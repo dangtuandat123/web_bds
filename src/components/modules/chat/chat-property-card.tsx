@@ -22,7 +22,7 @@ export default function ChatPropertyCard({ property }: ChatPropertyCardProps) {
     const normalizeHref = (value: string) => {
         if (!value) return '/'
         try {
-            const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+            const base = typeof window !== 'undefined' ? window.location.origin : 'https://canhohanghieu.com'
             const url = new URL(value, base)
             if (value.startsWith('http') && url.origin === base) {
                 return url.pathname + url.search + url.hash
@@ -70,7 +70,7 @@ export default function ChatPropertyCard({ property }: ChatPropertyCardProps) {
             <div className="relative w-full h-32 bg-gradient-to-br from-slate-100 to-slate-200">
                 <img src={property.thumbnailUrl || placeholderImage}
                     alt={property.title}
-                    
+
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="(max-width: 400px) 100vw, 350px"
                 />

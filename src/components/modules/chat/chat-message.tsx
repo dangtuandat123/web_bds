@@ -124,7 +124,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     const normalizeHref = (href?: string) => {
         if (!href) return '#'
         try {
-            const url = new URL(href, href.startsWith('http') ? undefined : 'http://localhost')
+            const url = new URL(href, href.startsWith('http') ? undefined : 'https://canhohanghieu.com')
             // Strip host for any absolute URL to avoid wrong origin in chatbot
             if (href.startsWith('http')) {
                 return url.pathname + url.search + url.hash
