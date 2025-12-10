@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, ArrowRight, Heart } from 'lucide-react'
 
@@ -39,11 +38,10 @@ export default function ProjectCard({
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden border border-slate-100 h-full flex flex-col transform hover:-translate-y-2">
                 {/* Image Section - EXACT h-72 */}
                 <div className="relative h-72 overflow-hidden">
-                    <Image
-                        src={image}
+                    <img src={image}
                         alt={title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
 

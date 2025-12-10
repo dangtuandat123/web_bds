@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Building, MapPin, Phone, Mail, Facebook, Youtube } from 'lucide-react'
 import { SiteSettings } from '@/lib/settings'
 
@@ -26,8 +25,7 @@ export default function Footer({ settings, onRegister }: FooterProps) {
                 <div className="md:col-span-1">
                     <div className="flex flex-col text-white font-bold mb-6">
                         {settings.siteLogo ? (
-                            <Image
-                                src={settings.siteLogo}
+                            <img src={settings.siteLogo}
                                 alt={settings.siteName}
                                 width={160}
                                 height={50}

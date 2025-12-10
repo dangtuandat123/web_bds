@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { Home, Compass, MapPin, Bed } from 'lucide-react'
 import { formatPrice, formatArea } from '@/lib/utils/format'
@@ -28,11 +27,10 @@ export default function ListingCard({
             <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden flex flex-col h-full group">
                 {/* Image Section - EXACT h-56 (smaller than project) */}
                 <div className="relative h-56 overflow-hidden">
-                    <Image
-                        src={image}
+                    <img src={image}
                         alt={title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
 
                     {/* Area Badge - Bottom Left */}

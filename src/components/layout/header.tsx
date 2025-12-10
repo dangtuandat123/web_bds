@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Phone, Mail, Menu, X, Building, ArrowRight, Facebook, Youtube } from 'lucide-react'
 import { SiteSettings } from '@/lib/settings'
 
@@ -75,8 +74,7 @@ export default function Header({ settings }: HeaderProps) {
                         {/* Logo */}
                         <Link href="/" className="group flex items-center cursor-pointer">
                             {settings.siteLogo ? (
-                                <Image
-                                    src={settings.siteLogo}
+                                <img src={settings.siteLogo}
                                     alt={settings.siteName}
                                     width={160}
                                     height={50}

@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { MapPin, Ruler, BedDouble, Bath, Home } from 'lucide-react'
 
 export interface ChatProperty {
@@ -69,11 +68,10 @@ export default function ChatPropertyCard({ property }: ChatPropertyCardProps) {
         >
             {/* Image - Full width */}
             <div className="relative w-full h-32 bg-gradient-to-br from-slate-100 to-slate-200">
-                <Image
-                    src={property.thumbnailUrl || placeholderImage}
+                <img src={property.thumbnailUrl || placeholderImage}
                     alt={property.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="(max-width: 400px) 100vw, 350px"
                 />
                 {/* Type Badge */}

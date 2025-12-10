@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { listing } from '@prisma/client'
 import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
@@ -107,11 +106,10 @@ export default function ListingTable({ listings }: ListingTableProps) {
                                 <TableRow key={listing.id}>
                                     <TableCell>
                                         <div className="relative h-16 w-16 rounded overflow-hidden bg-slate-100">
-                                            <Image
-                                                src={listing.thumbnailUrl}
+                                            <img src={listing.thumbnailUrl}
                                                 alt={listing.title}
-                                                fill
-                                                className="object-cover"
+                                                
+                                                className="absolute inset-0 w-full h-full object-cover"
                                             />
                                         </div>
                                     </TableCell>

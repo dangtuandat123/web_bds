@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import type { news } from '@prisma/client'
-import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -92,11 +91,10 @@ export default function NewsTable({ news }: NewsTableProps) {
                             <TableRow key={item.id}>
                                 <TableCell>
                                     <div className="relative w-16 h-12 rounded-md overflow-hidden bg-slate-100">
-                                        <Image
-                                            src={item.thumbnailUrl}
+                                        <img src={item.thumbnailUrl}
                                             alt={item.title}
-                                            fill
-                                            className="object-cover"
+                                            
+                                            className="absolute inset-0 w-full h-full object-cover"
                                             sizes="64px"
                                         />
                                     </div>

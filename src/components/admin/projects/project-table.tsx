@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { MoreHorizontal, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import type { project } from '@prisma/client'
@@ -91,12 +90,11 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
                             <TableRow key={project.id}>
                                 <TableCell>
                                     <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                                        <Image
-                                            src={project.thumbnailUrl}
+                                        <img src={project.thumbnailUrl}
                                             alt={project.name}
-                                            fill
+                                            
                                             sizes="64px"
-                                            className="object-cover"
+                                            className="absolute inset-0 w-full h-full object-cover"
                                         />
                                     </div>
                                 </TableCell>

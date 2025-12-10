@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import Image from 'next/image'
 import { Upload, X, Loader2, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -94,11 +93,10 @@ export default function ImageUpload({
         return (
             <div className={`relative inline-block ${className}`}>
                 <div className="relative w-40 h-28 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
-                    <Image
-                        src={value}
+                    <img src={value}
                         alt="Uploaded image"
-                        fill
-                        className="object-cover"
+                        
+                        className="absolute inset-0 w-full h-full object-cover"
                         sizes="160px"
                     />
                     {!disabled && (

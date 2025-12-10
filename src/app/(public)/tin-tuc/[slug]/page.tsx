@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import Image from 'next/image'
 import { Calendar, User, Eye } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { incrementNewsViews } from '@/app/actions/news'
@@ -61,13 +60,10 @@ export default async function NewsDetailPage({ params }: PageProps) {
         <div className="min-h-screen bg-slate-50">
             {/* Hero Image */}
             <div className="relative h-[50vh] w-full">
-                <Image
-                    src={news.thumbnailUrl}
+                <img src={news.thumbnailUrl}
                     alt={news.title}
-                    fill
-                    className="object-cover"
-                    priority
-                />
+                    
+                    className="absolute inset-0 w-full h-full object-cover"/>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             </div>
 
@@ -141,11 +137,10 @@ export default async function NewsDetailPage({ params }: PageProps) {
                                         >
                                             <div className="flex gap-3">
                                                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                                                    <Image
-                                                        src={item.thumbnailUrl}
+                                                    <img src={item.thumbnailUrl}
                                                         alt={item.title}
-                                                        fill
-                                                        className="object-cover group-hover:scale-110 transition-transform"
+                                                        
+                                                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
                                                     />
                                                 </div>
                                                 <div className="flex-1">

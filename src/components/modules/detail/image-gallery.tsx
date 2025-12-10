@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'
 
 interface ImageGalleryProps {
@@ -72,14 +71,11 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
 
                 {/* Main Image */}
                 <div className="relative w-full h-full flex justify-center items-center">
-                    <Image
-                        src={images[lightboxIndex]}
+                    <img src={images[lightboxIndex]}
                         alt={`Gallery ${lightboxIndex + 1}`}
-                        fill
-                        className="object-contain shadow-2xl rounded-sm"
-                        sizes="100vw"
-                        priority
-                    />
+                        
+                        className="absolute inset-0 w-full h-full object-contain shadow-2xl rounded-sm"
+                        sizes="100vw"/>
                 </div>
 
                 {/* Next Button */}
@@ -107,11 +103,10 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                     className="relative h-[400px] lg:h-[500px] rounded-2xl overflow-hidden group cursor-pointer"
                     onClick={() => openLightbox(selectedIndex)}
                 >
-                    <Image
-                        src={images[selectedIndex]}
+                    <img src={images[selectedIndex]}
                         alt={`${title} - Image ${selectedIndex + 1}`}
-                        fill
-                        className="object-cover"
+                        
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
@@ -138,11 +133,10 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                                         : 'border-transparent opacity-70 hover:opacity-100 hover:border-slate-300'
                                     }`}
                             >
-                                <Image
-                                    src={img}
+                                <img src={img}
                                     alt={`Thumbnail ${idx + 1}`}
-                                    fill
-                                    className="object-cover"
+                                    
+                                    className="absolute inset-0 w-full h-full object-cover"
                                 />
                             </div>
                         ))}

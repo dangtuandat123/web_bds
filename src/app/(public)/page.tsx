@@ -8,6 +8,10 @@ import ListingCard from '@/components/modules/listing-card'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
+// Force dynamic rendering - no static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getSiteSettings()
     return {

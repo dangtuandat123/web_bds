@@ -1,5 +1,4 @@
 import { Building } from 'lucide-react'
-import Image from 'next/image'
 import { getSettings } from '@/app/actions/settings'
 import LoginForm from '@/components/auth/login-form'
 
@@ -71,8 +70,7 @@ export default async function LoginPage() {
                     <div className="text-center mb-10">
                         {siteLogo && !siteLogo.includes('logo.png') ? (
                             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-lg mb-6 overflow-hidden bg-white border border-slate-200">
-                                <Image
-                                    src={siteLogo}
+                                <img src={siteLogo}
                                     alt={siteName}
                                     width={80}
                                     height={80}
