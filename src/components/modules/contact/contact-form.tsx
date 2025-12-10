@@ -59,18 +59,17 @@ export default function ContactForm({ settings }: ContactFormProps) {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white py-20">
+            {/* Page Title */}
+            <div className="bg-white py-12 border-b border-slate-200">
                 <div className="container mx-auto px-4 text-center">
                     <div className="flex justify-center mb-4">
-                        <div className="p-4 bg-white/20 rounded-full">
-                            <MessageCircle className="h-12 w-12" />
+                        <div className="p-3 bg-amber-100 rounded-full">
+                            <MessageCircle className="h-10 w-10 text-amber-600" />
                         </div>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Liên hệ tư vấn</h1>
-                    <p className="text-amber-100 text-lg max-w-2xl mx-auto">
-                        Nhóm chuyên gia {settings.siteName} sẵn sàng tư vấn miễn phí 24/7.
-                        Hãy để lại thông tin, chúng tôi sẽ liên hệ ngay!
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-3">Liên hệ tư vấn</h1>
+                    <p className="text-slate-600 max-w-2xl mx-auto">
+                        Nhóm chuyên gia {settings.siteName} sẵn sàng tư vấn miễn phí 24/7
                     </p>
                 </div>
             </div>

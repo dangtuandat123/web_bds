@@ -1,10 +1,93 @@
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { executeTool } from "@/lib/ai/tools";
-import { toolDefinitions, ToolCall } from "@/lib/ai/tool-definitions";
 import { getSetting } from "@/app/actions/settings";
 
+// Inline tool definitions to prevent tree-shaking
+const toolDefinitions = [
+    {
+        type: "function" as const,
+        function: {
+            name: "search_properties",
+            description: "Tìm kiếm bất động sản (dự án, căn hộ, nhà đất) theo yêu cầu của khách hàng. Gọi tool này khi khách hỏi về BĐS, căn hộ, nhà, đất, dự án.",
+            parameters: {
+                type: "object",
+                properties: {
+                    query: {
+                        type: "string",
+                        description: "Câu truy vấn tìm kiếm, ví dụ: 'căn hộ 2PN quận 2', 'biệt thự Thảo Điền', 'dự án Vinhomes'"
+                    },
+                    limit: {
+                        type: "number",
+                        description: "Số lượng kết quả tối đa, mặc định 5"
+                    }
+                },
+                required: ["query"]
+            }
+        }
+    },
+    {
+        type: "function" as const,
+        function: {
+            name: "save_customer_info",
+            description: "Lưu thông tin liên hệ của khách hàng vào hệ thống. Gọi tool này khi khách để lại số điện thoại, email hoặc tên để được tư vấn.",
+            parameters: {
+                type: "object",
+                properties: {
+                    name: {
+                        type: "string",
+                        description: "Họ tên khách hàng"
+                    },
+                    phone: {
+                        type: "string",
+                        description: "Số điện thoại khách hàng"
+                    },
+                    email: {
+                        type: "string",
+                        description: "Email khách hàng (không bắt buộc)"
+                    },
+                    interest: {
+                        type: "string",
+                        description: "Khách đang quan tâm đến BĐS nào, ví dụ: 'căn hộ 2PN quận 2', 'dự án Vinhomes', 'nhà phố Thủ Đức'. Lấy từ ngữ cảnh cuộc hội thoại."
+                    },
+                    message: {
+                        type: "string",
+                        description: "Ghi chú thêm về nhu cầu của khách"
+                    }
+                },
+                required: ["phone"]
+            }
+        }
+    },
+    {
+        type: "function" as const,
+        function: {
+            name: "get_project_detail",
+            description: "Lấy thông tin chi tiết của một dự án cụ thể. Gọi tool này khi khách hỏi sâu về một dự án mà bạn đã tìm được.",
+            parameters: {
+                type: "object",
+                properties: {
+                    slug: {
+                        type: "string",
+                        description: "Slug của dự án, ví dụ: 'vinhomes-grand-park'"
+                    }
+                },
+                required: ["slug"]
+            }
+        }
+    }
+];
+
 export const maxDuration = 60;
+
+interface ToolCall {
+    id: string;
+    type: "function";
+    function: {
+        name: string;
+        arguments: string;
+    };
+}
 
 interface Message {
     role: "system" | "user" | "assistant" | "tool";
@@ -70,27 +153,49 @@ TÍNH CÁCH:
 - Thân thiện, nhiệt tình, chuyên nghiệp
 - Ngắn gọn, tối đa 80 từ
 
-BẠN CÓ CÁC CÔNG CỤ (TOOLS):
-1. search_properties: Tìm kiếm BĐS khi khách hỏi
+BẠN CÓ CÁC CÔNG CỤ (TOOLS) - BẮT BUỘC PHẢI DÙNG:
+1. search_properties: **BẮT BUỘC gọi khi khách hỏi về BĐS**
 2. save_customer_info: LƯU thông tin khách hàng (SĐT, tên)
 3. get_project_detail: Lấy chi tiết dự án cụ thể
 
-⚠️ QUY TẮC QUAN TRỌNG VỀ LƯU SĐT:
-- Khi khách NÓI số điện thoại (VD: "0909123456", "sđt 091...", "số em là...") → BẮT BUỘC gọi save_customer_info
-- Khi khách cho tên + SĐT → Gọi save_customer_info(phone="...", name="...")
-- Số điện thoại VN có 10 số, bắt đầu bằng 0 (03x, 05x, 07x, 08x, 09x)
-- KHÔNG ĐƯỢC bỏ qua khi khách cho SĐT, LUÔN LUÔN phải gọi tool để lưu
+⚠️ QUY TẮC BẮT BUỘC VỀ TÌM KIẾM:
+- Khi khách hỏi "tìm", "có", "căn hộ", "nhà", "dự án" → **LUÔN LUÔN** gọi search_properties
+- VÍ DỤ BẮT BUỘC phải search:
+  * "Tìm căn hộ" → search_properties(query="căn hộ")
+  * "Có dự án nào không?" → search_properties(query="dự án")
+  * "Giá 2 tỷ" → search_properties(query="giá 2 tỷ")
+  * "Quận 1" → search_properties(query="quận 1")
+- KHÔNG TỰ TRẢ LỜI mà không search! Phải gọi tool trước!
+
+⚠️ QUY TẮC VỀ LƯU SĐT (QUAN TRỌNG NHẤT):
+- Khi user VIẾT SỐ ĐIỆN THOẠI (10 số bắt đầu 0) → **NGAY LẬP TỨC** gọi save_customer_info
+- PHÁT HIỆN: 0123456789, 0912345678, 0987654321, etc
+- KHÔNG HỎI XÁC NHẬN, GỌI TOOL NGAY!
+- Sau khi gọi tool → Trả lời: "Em đã ghi nhận..."
 
 CÁCH LÀM VIỆC:
-- Khi khách hỏi về BĐS → Gọi search_properties
-- Khi khách để lại thông tin liên hệ → Gọi save_customer_info
-- Sau khi lưu SĐT → Cảm ơn và xác nhận đã lưu
+1. Khách hỏi về BĐS → Gọi search_properties NGAY (không giải thích)
+2. Có kết quả → Giới thiệu tóm tắt
+3. Khách để lại SĐT → Gọi save_customer_info NGAY
 
-VÍ DỤ NHẬN DIỆN SĐT:
-- "sđt 0909123456" → save_customer_info(phone="0909123456")
-- "em là Hoa, số 0912345678" → save_customer_info(phone="0912345678", name="Hoa")
-- "0987654321, tên Minh" → save_customer_info(phone="0987654321", name="Minh")
-- "liên hệ số 0901234567 nhé" → save_customer_info(phone="0901234567")`
+VÍ DỤ SEARCH:
+User: "Tìm căn hộ 2PN"
+→ GỌI: search_properties(query="căn hộ 2 phòng ngủ")
+→ TRẢ LỜI: "Em tìm được X căn hộ 2PN..."
+
+VÍ DỤ LƯU SĐT (BẮT BUỘC):
+User: "0912345678"
+→ GỌI NGAY: save_customer_info(phone="0912345678")
+→ TRẢ LỜI: "Em đã ghi nhận ạ!"
+
+User: "Tôi là Tuấn, 0987654321"
+→ GỌI NGAY: save_customer_info(phone="0987654321", name="Tuấn")
+
+User: "Tìm căn 2PN, SĐT 0901234567"  
+→ GỌI 1: search_properties(query="căn 2PN")
+→ GỌI 2: save_customer_info(phone="0901234567", interest="căn 2PN")
+
+QUAN TRỌNG: THẤY SĐT = GỌI TOOL NGAY!`
         };
 
         // Agent Loop - Max 3 iterations
@@ -113,10 +218,11 @@ VÍ DỤ NHẬN DIỆN SĐT:
                     // X-Title removed to avoid ByteString encoding error with Vietnamese characters
                 },
                 body: JSON.stringify({
-                    model: "google/gemini-2.0-flash-001",
+                    model: "google/gemini-2.5-flash",
                     messages: agentMessages,
                     tools: toolDefinitions,
                     tool_choice: "auto",
+                    temperature: 0.1, // Low temp for consistent tool usage
                     max_tokens: 500,
                 }),
             });

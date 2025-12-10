@@ -19,7 +19,8 @@ REM Copy .next (QUAN TRONG!)
 echo [2/8] Copy Next.js build...
 xcopy /s /e /i /q ".next\server" "directadmin-deploy\.next\server\" >nul
 xcopy /s /e /i /q ".next\static" "directadmin-deploy\.next\static\" >nul
-copy /y ".next\*.json" "directadmin-deploy\.next\" >nul 2>nul
+copy /y ".next\*.*" "directadmin-deploy\.next\" >nul 2>nul
+if exist ".next\BUILD_ID" copy /y ".next\BUILD_ID" "directadmin-deploy\.next\" >nul
 
 REM Copy public
 echo [3/8] Copy public files...

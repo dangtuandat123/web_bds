@@ -28,22 +28,22 @@ function simpleEmbedding(text: string): number[] {
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
-        const openai = await getOpenAIClient()
+        const openai = await getOpenAIClient();
         const response = await openai.embeddings.create({
-            model: 'google/gemini-embedding-001',
+            model: 'google/gemini-embedding-001', // 3072 dimensions via OpenRouter
             input: text,
-        })
+        });
 
         if (response.data && response.data[0] && response.data[0].embedding) {
-            return response.data[0].embedding
+            return response.data[0].embedding;
         }
 
         // Fallback to simple embedding if API returns unexpected format
-        console.warn('Embedding API returned unexpected format, using fallback')
-        return simpleEmbedding(text)
+        console.warn('Embedding API returned unexpected format, using fallback');
+        return simpleEmbedding(text);
     } catch (error) {
-        console.error('Error generating embedding, using fallback:', error)
+        console.error('Error generating embedding, using fallback:', error);
         // Fallback to simple embedding on error
-        return simpleEmbedding(text)
+        return simpleEmbedding(text);
     }
 }
