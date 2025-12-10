@@ -110,7 +110,7 @@ VÍ DỤ NHẬN DIỆN SĐT:
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json",
                     "HTTP-Referer": `https://${host}`,
-                    "X-Title": `${siteName} AI Agent`,
+                    // X-Title removed to avoid ByteString encoding error with Vietnamese characters
                 },
                 body: JSON.stringify({
                     model: "google/gemini-2.0-flash-001",
