@@ -7,13 +7,13 @@ async function main() {
 
     // Clean existing data
     console.log('🧹 Cleaning existing data...')
-    await prisma.projectAmenity.deleteMany()
-    await prisma.listingAmenity.deleteMany()
+    await prisma.projectamenity.deleteMany()
+    await prisma.listingamenity.deleteMany()
     await prisma.listing.deleteMany()
     await prisma.project.deleteMany()
     await prisma.amenity.deleteMany()
     await prisma.lead.deleteMany()
-    await prisma.chatSession.deleteMany()
+    await prisma.chatsession.deleteMany()
     await prisma.user.deleteMany()
 
     // Create Admin User
@@ -24,6 +24,7 @@ async function main() {
             password: '$2b$10$XC4SJaUeGTGR6VWW5vOABeZoca0yXXPffF49kswAuNuymf60rOAQS', // admin123
             name: 'Admin Happy Land',
             role: 'ADMIN',
+            updatedAt: new Date(),
         },
     })
     console.log(`✅ Created admin: ${admin.email}`)
@@ -60,7 +61,8 @@ async function main() {
                 'https://images.unsplash.com/photo-1600596542815-2a4d9f10927c?auto=format&fit=crop&q=80&w=1000',
                 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1000'
             ],
-            amenities: {
+            updatedAt: new Date(),
+            projectamenity: {
                 create: [
                     { amenityId: amenities[0].id }, // Hồ bơi
                     { amenityId: amenities[1].id }, // Gym & Spa
@@ -88,7 +90,8 @@ async function main() {
                 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000',
                 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&q=80&w=1000'
             ],
-            amenities: {
+            updatedAt: new Date(),
+            projectamenity: {
                 create: [
                     { amenityId: amenities[0].id }, // Hồ bơi
                     { amenityId: amenities[2].id }, // Công viên
@@ -126,7 +129,8 @@ async function main() {
             tags: ['Tặng nội thất', 'View sông', 'Block Hybrid'],
             isFeatured: true,
             projectId: project1.id,
-            amenities: {
+            updatedAt: new Date(),
+            listingamenity: {
                 create: [
                     { amenityId: amenities[0].id },
                     { amenityId: amenities[1].id },
@@ -158,7 +162,8 @@ async function main() {
             tags: ['Giá tốt', 'Sổ hồng có sẵn'],
             isFeatured: false,
             projectId: project1.id,
-            amenities: {
+            updatedAt: new Date(),
+            listingamenity: {
                 create: [
                     { amenityId: amenities[0].id },
                     { amenityId: amenities[2].id },
@@ -187,7 +192,8 @@ async function main() {
             ],
             tags: ['Sổ đỏ', 'Xây tự do', 'Gần sông'],
             isFeatured: false,
-            amenities: {
+            updatedAt: new Date(),
+            listingamenity: {
                 create: []
             }
         },
@@ -214,7 +220,8 @@ async function main() {
             ],
             tags: ['Full nội thất', 'Dọn vào ngay'],
             isFeatured: false,
-            amenities: {
+            updatedAt: new Date(),
+            listingamenity: {
                 create: [
                     { amenityId: amenities[1].id },
                 ]
@@ -235,6 +242,7 @@ async function main() {
                 message: 'Tôi quan tâm đến dự án MT Eastmark City',
                 source: 'FORM',
                 status: 'NEW',
+                updatedAt: new Date(),
             },
             {
                 name: 'Trần Thị B',
@@ -243,6 +251,7 @@ async function main() {
                 message: 'Muốn xem căn hộ 2PN view sông',
                 source: 'CHATBOT',
                 status: 'CONTACTED',
+                updatedAt: new Date(),
             },
         ],
     })

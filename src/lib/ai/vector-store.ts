@@ -40,29 +40,19 @@ function loadFromFile() {
     }
 }
 
-// Save to JSON file - MERGE with existing data
+// Save to JSON file - OVERWRITE with current memoryStore
 function saveToFile() {
     try {
         const jsonFile = DB_FILE + '.json'
-        let existingData: Record<string, any> = {}
 
-        // Read existing file first to preserve old entries
-        if (fs.existsSync(jsonFile)) {
-            try {
-                existingData = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'))
-            } catch (e) {
-                console.warn('[VectorStore] Could not read existing file, will overwrite')
-            }
-        }
-
-        // Merge memoryStore with existing data
-        const mergedData: Record<string, any> = { ...existingData }
+        // Convert memoryStore to object and save directly
+        const dataToSave: Record<string, any> = {}
         for (const [id, doc] of memoryStore.entries()) {
-            mergedData[id] = doc
+            dataToSave[id] = doc
         }
 
-        fs.writeFileSync(jsonFile, JSON.stringify(mergedData, null, 2))
-        console.log(`[VectorStore] Saved ${Object.keys(mergedData).length} total documents`)
+        fs.writeFileSync(jsonFile, JSON.stringify(dataToSave, null, 2))
+        console.log(`[VectorStore] Saved ${Object.keys(dataToSave).length} documents`)
     } catch (error) {
         console.error('[VectorStore] Failed to save:', error)
     }

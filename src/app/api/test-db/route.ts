@@ -1,7 +1,30 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
 import prisma from '@/lib/prisma'
 
+// SECURITY: Only allow in development or with admin auth
+const JWT_SECRET = process.env.JWT_SECRET
+    ? new TextEncoder().encode(process.env.JWT_SECRET)
+    : null
+
 export async function GET() {
+    // Block in production unless authenticated as admin
+    if (process.env.NODE_ENV === 'production') {
+        const cookieStore = await cookies()
+        const token = cookieStore.get('admin_session')?.value
+
+        if (!token || !JWT_SECRET) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        try {
+            await jwtVerify(token, JWT_SECRET)
+        } catch {
+            return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+        }
+    }
+
     try {
         // Test database connection by counting records
         const stats = {

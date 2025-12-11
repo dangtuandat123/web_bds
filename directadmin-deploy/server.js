@@ -66,7 +66,17 @@ app.prepare()
 
                 // Handle /uploads/* requests with proper MIME types
                 if (pathname.startsWith('/uploads/')) {
-                    const filePath = path.join(__dirname, 'public', pathname);
+                    // SECURITY: Prevent path traversal attacks
+                    const uploadsDir = path.join(__dirname, 'public', 'uploads');
+                    const filePath = path.resolve(__dirname, 'public', pathname);
+
+                    // Ensure the resolved path is within the uploads directory
+                    if (!filePath.startsWith(uploadsDir)) {
+                        res.statusCode = 403;
+                        res.end('Forbidden');
+                        return;
+                    }
+
                     if (fs.existsSync(filePath)) {
                         return serveStaticFile(req, res, filePath);
                     }
