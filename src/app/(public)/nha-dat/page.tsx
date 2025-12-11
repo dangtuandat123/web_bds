@@ -29,6 +29,7 @@ interface SearchParams {
     direction?: string
     location?: string
     page?: string
+    sort?: string
 }
 
 async function getListings(params: SearchParams) {
@@ -68,12 +69,17 @@ async function getListings(params: SearchParams) {
     const page = parseInt(params.page || '1')
     const perPage = 8
 
+    // Dynamic sorting
+    let orderBy: any = { createdAt: 'desc' }
+    if (params.sort === 'price_asc') orderBy = { price: 'asc' }
+    if (params.sort === 'price_desc') orderBy = { price: 'desc' }
+
     const [listings, total] = await Promise.all([
         prisma.listing.findMany({
             where,
             take: perPage,
             skip: (page - 1) * perPage,
-            orderBy: { createdAt: 'desc' },
+            orderBy,
             select: {
                 id: true,
                 title: true,
@@ -111,6 +117,21 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
     if (resolvedParams.location) paginationParams.location = resolvedParams.location
     if (resolvedParams.beds) paginationParams.beds = resolvedParams.beds
     if (resolvedParams.direction) paginationParams.direction = resolvedParams.direction
+    if (resolvedParams.sort) paginationParams.sort = resolvedParams.sort
+
+    // Build URL for sort links (preserve all current filters)
+    const buildSortUrl = (sortValue: string) => {
+        const params = new URLSearchParams()
+        if (resolvedParams.keyword) params.set('keyword', resolvedParams.keyword)
+        if (resolvedParams.type) params.set('type', resolvedParams.type)
+        if (resolvedParams.location) params.set('location', resolvedParams.location)
+        if (resolvedParams.beds) params.set('beds', resolvedParams.beds)
+        if (resolvedParams.direction) params.set('direction', resolvedParams.direction)
+        if (sortValue) params.set('sort', sortValue)
+        return `/nha-dat?${params.toString()}`
+    }
+
+    const currentSort = resolvedParams.sort || 'newest'
 
     const getListingTags = (type: string) => {
         const tags: string[] = []
@@ -141,20 +162,44 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
                 <AdvancedSearch locations={locations} />
 
                 {/* Results Header with Count + Sort */}
-                <div className="flex justify-between items-center mt-12 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-12 mb-8">
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center">
                         Kết quả tìm kiếm
                         <span className="ml-3 bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full">
                             {total}
                         </span>
                     </h2>
-                    <div className="flex items-center text-sm text-slate-500">
-                        <span className="mr-2">Sắp xếp:</span>
-                        <select className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer">
-                            <option>Mới nhất</option>
-                            <option>Giá tăng dần</option>
-                            <option>Giá giảm dần</option>
-                        </select>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-500 font-medium">Sắp xếp:</span>
+                        <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+                            <a
+                                href={buildSortUrl('newest')}
+                                className={`px-3 py-2 font-medium transition-colors ${currentSort === 'newest' || !currentSort
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                                    }`}
+                            >
+                                Mới nhất
+                            </a>
+                            <a
+                                href={buildSortUrl('price_asc')}
+                                className={`px-3 py-2 font-medium border-l border-slate-200 transition-colors ${currentSort === 'price_asc'
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                                    }`}
+                            >
+                                Giá ↑
+                            </a>
+                            <a
+                                href={buildSortUrl('price_desc')}
+                                className={`px-3 py-2 font-medium border-l border-slate-200 transition-colors ${currentSort === 'price_desc'
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                                    }`}
+                            >
+                                Giá ↓
+                            </a>
+                        </div>
                     </div>
                 </div>
 

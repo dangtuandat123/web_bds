@@ -74,20 +74,26 @@ export default function Header({ settings }: HeaderProps) {
                         {/* Logo */}
                         <Link href="/" className="group flex items-center cursor-pointer">
                             {settings.siteLogo ? (
-                                <img src={settings.siteLogo}
-                                    alt={settings.siteName}
-                                    width={160}
-                                    height={50}
-                                    className="h-10 w-auto object-contain"
-                                />
+                                <>
+                                    <img src={settings.siteLogo}
+                                        alt={settings.siteName}
+                                        width={50}
+                                        height={50}
+                                        className="h-10 w-auto object-contain mr-3"
+                                    />
+                                    <div className="flex flex-col leading-none">
+                                        <span className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight">{settings.siteName.toUpperCase()}</span>
+                                        <span className="text-[9px] sm:text-[10px] font-bold text-amber-600 tracking-[0.2em] uppercase mt-0.5">Real Estate</span>
+                                    </div>
+                                </>
                             ) : (
                                 <>
                                     <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center mr-3 shadow-lg group-hover:scale-105 transition-transform">
                                         <Building className="text-white" size={20} />
                                     </div>
                                     <div className="flex flex-col leading-none">
-                                        <span className="text-xl font-extrabold text-slate-800 tracking-tight">{settings.siteName.toUpperCase()}</span>
-                                        <span className="text-[10px] font-bold text-amber-600 tracking-[0.3em] uppercase mt-1">Real Estate</span>
+                                        <span className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight">{settings.siteName.toUpperCase()}</span>
+                                        <span className="text-[9px] sm:text-[10px] font-bold text-amber-600 tracking-[0.2em] uppercase mt-0.5">Real Estate</span>
                                     </div>
                                 </>
                             )}

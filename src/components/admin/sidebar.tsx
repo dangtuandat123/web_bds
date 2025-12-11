@@ -58,9 +58,12 @@ export default function AdminSidebar({ siteName = 'Admin Panel' }: AdminSidebarP
             {/* Navigation */}
             <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                 {navigation.map((item) => {
-                    const isActive = item.href === '/admin'
-                        ? pathname === '/admin'
-                        : pathname.startsWith(item.href)
+                    // Normalize pathname by removing trailing slash
+                    const normalizedPath = pathname?.replace(/\/$/, '') || ''
+                    const itemPath = item.href.replace(/\/$/, '')
+                    const isActive = itemPath === '/admin'
+                        ? normalizedPath === '/admin' || normalizedPath === ''
+                        : normalizedPath.startsWith(itemPath)
                     return (
                         <Link
                             key={item.name}

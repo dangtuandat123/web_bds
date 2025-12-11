@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
-import { MessageCircle, X } from 'lucide-react'
+import { Bot, X } from 'lucide-react'
 import ChatMessage from './chat-message'
 import ChatInput from './chat-input'
 import ChatSuggestionChips from './chat-suggestion-chips'
@@ -88,7 +88,7 @@ export default function ChatWidget({ siteName = 'Bất Động Sản' }: ChatWid
                     }`}
                 aria-label="Mở chat"
             >
-                <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <Bot className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 {/* Notification Badge */}
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center animate-pulse">
                     1
@@ -102,7 +102,7 @@ export default function ChatWidget({ siteName = 'Bất Động Sản' }: ChatWid
                     <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-t-2xl p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                <MessageCircle className="w-6 h-6 text-white" />
+                                <Bot className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <h3 className="text-white font-bold text-lg">{siteName} AI</h3>
@@ -134,7 +134,7 @@ export default function ChatWidget({ siteName = 'Bất Động Sản' }: ChatWid
                             {isLoading && (
                                 <div className="flex gap-3">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-700 to-slate-800 flex items-center justify-center flex-shrink-0">
-                                        <MessageCircle className="w-5 h-5 text-white" />
+                                        <Bot className="w-5 h-5 text-white" />
                                     </div>
                                     <div className="bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3">
                                         <div className="flex gap-1">
