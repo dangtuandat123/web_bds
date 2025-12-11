@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    // Standalone output mode - minimal production build
-    output: 'standalone',
-
     // Trailing slash to avoid redirect issues on shared hosting
     trailingSlash: true,
 

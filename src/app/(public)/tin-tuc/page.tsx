@@ -94,7 +94,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
             {/* Content */}
             <div className="container mx-auto px-4 py-12">
                 {/* Search & Filter Section */}
-                <div className="bg-white/90 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl border border-white/50 -mt-24 mb-12 relative z-20 max-w-6xl mx-auto">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-200 -mt-24 mb-12 relative z-20 max-w-6xl mx-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                         <h3 className="text-slate-800 font-bold flex items-center uppercase text-sm tracking-wide">
