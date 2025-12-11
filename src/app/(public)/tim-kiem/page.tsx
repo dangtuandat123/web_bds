@@ -3,6 +3,9 @@ import ProjectCard from '@/components/modules/project-card'
 import ListingCard from '@/components/modules/listing-card'
 import { Search as SearchIcon } from 'lucide-react'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 interface SearchParams {
     keyword?: string
 }

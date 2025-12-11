@@ -8,10 +8,15 @@ import AmenityList from '@/components/modules/detail/amenity-list'
 import ListingCard from '@/components/modules/listing-card'
 import { MapPin, Building2, TrendingUp, Home } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { getSiteSettings } from '@/lib/settings'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 // Generate Metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
+    const settings = await getSiteSettings()
 
     const project = await prisma.project.findUnique({
         where: { slug },
@@ -23,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${project.name} | Dự Án Bất Động Sản`,
+        title: `${project.name} | ${settings.siteName}`,
         description: project.description,
         openGraph: {
             title: project.name,

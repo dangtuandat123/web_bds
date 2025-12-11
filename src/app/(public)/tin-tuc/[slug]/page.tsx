@@ -3,6 +3,10 @@ import { Metadata } from 'next'
 import { Calendar, User, Eye } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { incrementNewsViews } from '@/app/actions/news'
+import { getSiteSettings } from '@/lib/settings'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
     params: Promise<{ slug: string }>
@@ -10,6 +14,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params
+    const settings = await getSiteSettings()
 
     const news = await prisma.news.findUnique({
         where: { slug },
@@ -20,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     return {
-        title: `${news.title} | Tin tức`,
+        title: `${news.title} | ${settings.siteName}`,
         description: news.summary,
     }
 }
@@ -62,8 +67,8 @@ export default async function NewsDetailPage({ params }: PageProps) {
             <div className="relative h-[50vh] w-full">
                 <img src={news.thumbnailUrl}
                     alt={news.title}
-                    
-                    className="absolute inset-0 w-full h-full object-cover"/>
+
+                    className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             </div>
 
@@ -139,7 +144,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                                                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                                     <img src={item.thumbnailUrl}
                                                         alt={item.title}
-                                                        
+
                                                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
                                                     />
                                                 </div>

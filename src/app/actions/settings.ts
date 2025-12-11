@@ -101,10 +101,14 @@ export async function updateSettings(settings: Array<{ key: string; value: strin
             )
         )
 
+        // Revalidate ALL pages that use settings
         revalidatePath('/admin/settings')
-        revalidatePath('/')
-        revalidatePath('/du-an')
-        revalidatePath('/nha-dat')
+        revalidatePath('/', 'layout')  // Force layout re-render
+        revalidatePath('/du-an', 'layout')
+        revalidatePath('/nha-dat', 'layout')
+        revalidatePath('/tin-tuc', 'layout')
+        revalidatePath('/lien-he', 'layout')
+        revalidatePath('/tim-kiem', 'layout')
 
         return { success: true, message: 'Đã lưu tất cả cài đặt' }
     } catch (error) {

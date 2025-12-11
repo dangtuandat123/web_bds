@@ -1,12 +1,19 @@
 import prisma from '@/lib/prisma'
-import { Metadata } from 'next'
 import { Search, X } from 'lucide-react'
 import NewsCard from '@/components/modules/news-card'
 import PagePagination from '@/components/modules/page-pagination'
+import { getSiteSettings } from '@/lib/settings'
 
-export const metadata: Metadata = {
-    title: 'Tin tức & Pháp lý | Bất Động Sản',
-    description: 'Cập nhật tin tức thị trường, phong thủy, và pháp lý bất động sản',
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export async function generateMetadata() {
+    const settings = await getSiteSettings()
+    return {
+        title: `Tin tức & Pháp lý | ${settings.siteName}`,
+        description: 'Cập nhật tin tức thị trường, phong thủy, và pháp lý bất động sản',
+    }
 }
 
 interface PageProps {

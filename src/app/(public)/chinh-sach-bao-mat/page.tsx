@@ -1,10 +1,16 @@
-import { Metadata } from 'next'
 import { getSiteSettings } from '@/lib/settings'
 import { Shield, Lock, Eye, Database, UserCheck, AlertCircle } from 'lucide-react'
 
-export const metadata: Metadata = {
-    title: 'Chính sách bảo mật | Bất Động Sản',
-    description: 'Chính sách bảo mật và quyền riêng tư',
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export async function generateMetadata() {
+    const settings = await getSiteSettings()
+    return {
+        title: `Chính sách bảo mật | ${settings.siteName}`,
+        description: 'Chính sách bảo mật và quyền riêng tư',
+    }
 }
 
 export default async function PrivacyPolicyPage() {

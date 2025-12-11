@@ -1,10 +1,29 @@
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
+const path = require('path');
+const fs = require('fs');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
+
+// MIME types for static files
+const MIME_TYPES = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+    '.json': 'application/json',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+};
 
 const app = next({
     dev,
@@ -20,11 +39,39 @@ console.log(`   Environment: ${dev ? 'development' : 'production'}`);
 console.log(`   Port: ${port}`);
 console.log(`   Hostname: ${hostname}`);
 
+// Serve static files from /uploads with proper MIME types
+function serveStaticFile(req, res, filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
+
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            res.statusCode = 404;
+            res.end('Not found');
+            return;
+        }
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
+        res.statusCode = 200;
+        res.end(data);
+    });
+}
+
 app.prepare()
     .then(() => {
         createServer(async (req, res) => {
             try {
                 const parsedUrl = parse(req.url, true);
+                const pathname = parsedUrl.pathname || '';
+
+                // Handle /uploads/* requests with proper MIME types
+                if (pathname.startsWith('/uploads/')) {
+                    const filePath = path.join(__dirname, 'public', pathname);
+                    if (fs.existsSync(filePath)) {
+                        return serveStaticFile(req, res, filePath);
+                    }
+                }
+
                 await handle(req, res, parsedUrl);
             } catch (err) {
                 console.error('❌ Error occurred handling request:', req.url, err);

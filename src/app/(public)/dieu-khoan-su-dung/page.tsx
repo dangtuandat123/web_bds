@@ -1,10 +1,16 @@
-import { Metadata } from 'next'
 import { getSiteSettings } from '@/lib/settings'
 import { FileText, Shield, Scale, AlertCircle } from 'lucide-react'
 
-export const metadata: Metadata = {
-    title: 'Điều khoản sử dụng | Bất Động Sản',
-    description: 'Điều khoản và điều kiện sử dụng website',
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export async function generateMetadata() {
+    const settings = await getSiteSettings()
+    return {
+        title: `Điều khoản sử dụng | ${settings.siteName}`,
+        description: 'Điều khoản và điều kiện sử dụng website',
+    }
 }
 
 export default async function TermsOfUsePage() {

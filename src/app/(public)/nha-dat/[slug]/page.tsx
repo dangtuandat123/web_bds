@@ -9,10 +9,15 @@ import ListingCard from '@/components/modules/listing-card'
 import { MapPin, Home, Bed, Maximize2, Compass, TrendingUp } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatArea } from '@/lib/utils/format'
+import { getSiteSettings } from '@/lib/settings'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 // Generate Metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
+    const settings = await getSiteSettings()
 
     const listing = await prisma.listing.findUnique({
         where: { slug },
@@ -24,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${listing.title} | Bất Động Sản`,
+        title: `${listing.title} | ${settings.siteName}`,
         description: `${listing.description} - Giá: ${formatPrice(listing.price)}, Diện tích: ${formatArea(listing.area)}`,
         openGraph: {
             title: listing.title,

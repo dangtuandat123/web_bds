@@ -5,6 +5,10 @@ import ListingCard from '@/components/modules/listing-card'
 import PagePagination from '@/components/modules/page-pagination'
 import { Search } from 'lucide-react'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getLocations() {
     const locations = await prisma.location.findMany({
         where: { isActive: true },
