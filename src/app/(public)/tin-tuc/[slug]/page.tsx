@@ -4,6 +4,7 @@ import { Calendar, User, Eye } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { incrementNewsViews } from '@/app/actions/news'
 import { getSiteSettings } from '@/lib/settings'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -119,7 +120,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                             {/* Content */}
                             <div
                                 className="prose prose-slate max-w-none"
-                                dangerouslySetInnerHTML={{ __html: news.content }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(news.content) }}
                             ></div>
                         </div>
                     </div>

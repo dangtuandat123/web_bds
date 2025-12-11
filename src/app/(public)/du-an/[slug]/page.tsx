@@ -85,6 +85,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     const { slug } = await params
 
     const project = await getProject(slug)
+    const settings = await getSiteSettings()
 
     // Parse images from JSON string
     let images: string[] = []
@@ -241,7 +242,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
                     {/* Right Column - Contact Form */}
                     <div className="lg:col-span-1">
-                        <ContactForm title={project.name} price={project.priceRange} referenceUrl={`/du-an/${project.slug}`} />
+                        <ContactForm title={project.name} price={project.priceRange} referenceUrl={`/du-an/${project.slug}`} contactPhone={settings.contactPhone} />
                     </div>
                 </div>
             </div>

@@ -10,6 +10,7 @@ import { MapPin, Home, Bed, Maximize2, Compass, TrendingUp } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatArea } from '@/lib/utils/format'
 import { getSiteSettings } from '@/lib/settings'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -119,6 +120,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
     const listing = await getListing(slug)
     const relatedListings = await getRelatedListings(listing)
+    const settings = await getSiteSettings()
 
     // Parse images from JSON string
     let images: string[] = []
@@ -268,7 +270,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                                 </p>
                                 {listing.content && (
                                     <div
-                                        dangerouslySetInnerHTML={{ __html: listing.content }}
+                                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(listing.content) }}
                                         className="mt-4"
                                     />
                                 )}
@@ -310,7 +312,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
                     {/* Right Column - Contact Form */}
                     <div className="lg:col-span-1">
-                        <ContactForm title={listing.title} price={formatPrice(listing.price)} referenceUrl={`/nha-dat/${listing.slug}`} />
+                        <ContactForm title={listing.title} price={formatPrice(listing.price)} referenceUrl={`/nha-dat/${listing.slug}`} contactPhone={settings.contactPhone} />
                     </div>
                 </div>
             </div>

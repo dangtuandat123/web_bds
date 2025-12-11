@@ -4,6 +4,7 @@ import { existsSync } from 'fs'
 import path from 'path'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import sharp from 'sharp'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = new Set([
@@ -83,17 +84,34 @@ export async function POST(request: NextRequest) {
             await mkdir(uploadsDir, { recursive: true })
         }
 
-        // Generate unique filename
+        // Generate unique filename - ALWAYS use .webp extension
         const timestamp = Date.now()
         const randomStr = Math.random().toString(36).substring(2, 8)
-        const extName = file.name.split('.').pop() || 'jpg'
-        const filename = `${timestamp}-${randomStr}.${extName}`
+        const filename = `${timestamp}-${randomStr}.webp`
 
-        // Write file
+        // Convert to WebP for better compatibility and performance
         const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
+        const inputBuffer = Buffer.from(bytes)
+
+        let webpBuffer: Buffer
+        try {
+            // Convert to WebP with good quality
+            webpBuffer = await sharp(inputBuffer)
+                .webp({ quality: 85 })
+                .toBuffer()
+            console.log(`[Upload] Converted ${ext} to WebP: ${file.name} -> ${filename}`)
+        } catch (sharpError) {
+            console.error('[Upload] Sharp conversion failed, saving original:', sharpError)
+            // Fallback: save original if conversion fails
+            const fallbackFilename = `${timestamp}-${randomStr}.${ext}`
+            const fallbackPath = path.join(uploadsDir, fallbackFilename)
+            await writeFile(fallbackPath, inputBuffer)
+            return NextResponse.json({ url: `/uploads/${fallbackFilename}`, filename: fallbackFilename })
+        }
+
+        // Write WebP file
         const filePath = path.join(uploadsDir, filename)
-        await writeFile(filePath, buffer)
+        await writeFile(filePath, webpBuffer)
 
         // Return public URL
         const url = `/uploads/${filename}`

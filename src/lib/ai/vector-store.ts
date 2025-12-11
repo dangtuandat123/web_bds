@@ -24,19 +24,20 @@ function loadFromFile() {
     dbLoaded = true
 
     try {
-        if (fs.existsSync(DB_FILE)) {
-            // Try to read as JSON backup
-            const jsonFile = DB_FILE + '.json'
-            if (fs.existsSync(jsonFile)) {
-                const data = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'))
-                for (const [id, doc] of Object.entries(data)) {
-                    memoryStore.set(id, doc as any)
-                }
-                console.log(`[VectorStore] Loaded ${memoryStore.size} documents from JSON backup`)
+        const jsonFile = DB_FILE + '.json'  // embeddings.db.json
+        console.error(`[VectorStore] Looking for: ${jsonFile}`)
+
+        if (fs.existsSync(jsonFile)) {
+            const data = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'))
+            for (const [id, doc] of Object.entries(data)) {
+                memoryStore.set(id, doc as any)
             }
+            console.error(`[VectorStore] Loaded ${memoryStore.size} documents from JSON`)
+        } else {
+            console.error(`[VectorStore] JSON file NOT found: ${jsonFile}`)
         }
     } catch (error) {
-        console.warn('[VectorStore] Could not load existing data:', error)
+        console.error('[VectorStore] Could not load existing data:', error)
     }
 }
 
@@ -91,13 +92,30 @@ export class VectorStore {
         try {
             loadFromFile()
 
+            console.error(`[VectorStore] Search query: "${query}", Store size: ${memoryStore.size}`)
+
+            if (memoryStore.size === 0) {
+                console.warn('[VectorStore] Store is EMPTY! Need to run re-embed.')
+                return []
+            }
+
             const queryEmbedding = await generateEmbedding(query)
+            const queryDim = queryEmbedding.length
+            console.error(`[VectorStore] Query embedding dimension: ${queryDim}`)
 
             const results: Document[] = []
+            let skippedDimMismatch = 0
 
             for (const [id, doc] of memoryStore.entries()) {
                 try {
                     const embedding = JSON.parse(doc.embedding)
+
+                    // Check dimension match
+                    if (embedding.length !== queryDim) {
+                        skippedDimMismatch++
+                        continue // Skip mismatched dimensions
+                    }
+
                     const similarity = this.cosineSimilarity(queryEmbedding, embedding)
                     results.push({
                         id,
@@ -111,7 +129,18 @@ export class VectorStore {
                 }
             }
 
+            if (skippedDimMismatch > 0) {
+                console.warn(`[VectorStore] Skipped ${skippedDimMismatch} docs due to dimension mismatch (need ${queryDim})`)
+            }
+
+            console.error(`[VectorStore] Found ${results.length} matching documents`)
+
             results.sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0))
+
+            if (results.length > 0) {
+                console.error(`[VectorStore] Top result: similarity=${results[0].similarity?.toFixed(4)}, title=${results[0].metadata?.name || results[0].metadata?.title}`)
+            }
+
             return results.slice(0, limit)
         } catch (error) {
             console.error('Similarity search failed:', error)

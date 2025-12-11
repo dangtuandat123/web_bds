@@ -32,17 +32,22 @@ function formatProperty(r: Document) {
  * AI calls this when user asks about real estate
  */
 export async function searchProperties(query: string, limit: number = 5): Promise<string> {
+    console.error(`[searchProperties] ===== TOOL CALLED =====`)
+    console.error(`[searchProperties] Query: "${query}", Limit: ${limit}`)
+
     try {
         const results = await vectorStore.similaritySearch(query, limit)
+        console.error(`[searchProperties] Raw results count: ${results.length}`)
 
         // Lower threshold to 0.3 to get more results
         const SIMILARITY_THRESHOLD = 0.3
         const relevantResults = results.filter(r => (r.similarity || 0) >= SIMILARITY_THRESHOLD)
+        console.error(`[searchProperties] After threshold filter (>=${SIMILARITY_THRESHOLD}): ${relevantResults.length}`)
 
         if (relevantResults.length === 0) {
             // If no results meet threshold, return top results anyway if they exist
             if (results.length > 0) {
-                console.log('[searchProperties] No results above threshold, returning top results')
+                console.error('[searchProperties] No results above threshold, returning top results')
                 return JSON.stringify({
                     success: true,
                     found: true,

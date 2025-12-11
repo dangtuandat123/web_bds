@@ -194,7 +194,7 @@ export default async function HomePage() {
                             </p>
                         </div>
                         <Link
-                            href="/listings"
+                            href="/nha-dat"
                             className="hidden md:flex items-center text-amber-600 font-bold hover:text-amber-700 transition-colors"
                         >
                             Xem tất cả <ArrowRight size={20} className="ml-2" />
@@ -226,7 +226,7 @@ export default async function HomePage() {
                     </div>
 
                     <div className="text-center mt-12 md:hidden">
-                        <Link href="/listings">
+                        <Link href="/nha-dat">
                             <button className="bg-slate-100 text-slate-800 px-8 py-3 rounded-full font-bold text-sm">
                                 Xem tất cả
                             </button>

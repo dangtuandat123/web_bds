@@ -9,9 +9,10 @@ interface ContactFormProps {
     title?: string
     price?: string
     referenceUrl?: string
+    contactPhone?: string  // Add phone from settings
 }
 
-export default function ContactForm({ title, price, referenceUrl }: ContactFormProps) {
+export default function ContactForm({ title, price, referenceUrl, contactPhone = '' }: ContactFormProps) {
     const [isPending, startTransition] = useTransition()
     const [formData, setFormData] = useState({
         name: '',
@@ -41,6 +42,10 @@ export default function ContactForm({ title, price, referenceUrl }: ContactFormP
             }
         })
     }
+
+    // Format phone for display
+    const displayPhone = contactPhone || 'Liên hệ'
+    const phoneHref = contactPhone ? `tel:${contactPhone.replace(/\s/g, '')}` : '#'
 
     return (
         <div className="bg-white rounded-2xl shadow-xl p-6 border border-slate-100 sticky top-24">
@@ -112,14 +117,13 @@ export default function ContactForm({ title, price, referenceUrl }: ContactFormP
                     {isPending ? 'Đang gửi...' : 'Gửi yêu cầu tư vấn'}
                 </button>
 
-                {/* Call Button */}
-                <button
-                    type="button"
-                    disabled={isPending}
-                    className="w-full bg-white border-2 border-slate-100 text-slate-700 py-3.5 rounded-xl font-bold hover:border-amber-500 hover:text-amber-600 transition-all flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                {/* Call Button - Use dynamic phone */}
+                <a
+                    href={phoneHref}
+                    className="w-full bg-white border-2 border-slate-100 text-slate-700 py-3.5 rounded-xl font-bold hover:border-amber-500 hover:text-amber-600 transition-all flex items-center justify-center text-sm"
                 >
-                    <Phone size={18} className="mr-2" /> 0912 345 678
-                </button>
+                    <Phone size={18} className="mr-2" /> {displayPhone}
+                </a>
             </form>
 
             {/* Help Text */}

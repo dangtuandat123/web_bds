@@ -1,4 +1,5 @@
 import { getSiteSettings } from '@/lib/settings'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 import { FileText, Shield, Scale, AlertCircle } from 'lucide-react'
 
 // Force dynamic rendering
@@ -27,7 +28,7 @@ export default async function TermsOfUsePage() {
                 </div>
                 <div className="container mx-auto px-4 py-12">
                     <div className="bg-white rounded-xl shadow-sm p-8 prose prose-slate max-w-none"
-                        dangerouslySetInnerHTML={{ __html: settings.termsOfUse }} />
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(settings.termsOfUse) }} />
                 </div>
             </div>
         )
