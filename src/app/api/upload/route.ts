@@ -6,7 +6,18 @@ import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ALLOWED_TYPES = new Set([
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/webp',
+    'image/gif',
+    'image/x-citrix-pjpeg',
+    'image/x-citrix-png',
+])
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
 
 // SECURITY: JWT_SECRET must be set
 const JWT_SECRET = process.env.JWT_SECRET
@@ -45,8 +56,13 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Validate file type
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        // Validate file type (allow common browser variants)
+        const mimeType = (file.type || '').toLowerCase()
+        const ext = (file.name.split('.').pop() || '').toLowerCase()
+        const isAllowedMime = ALLOWED_TYPES.has(mimeType) || (mimeType.startsWith('image/') && ALLOWED_EXTENSIONS.includes(ext))
+        const isAllowedExt = ALLOWED_EXTENSIONS.includes(ext)
+
+        if (!isAllowedMime && !isAllowedExt) {
             return NextResponse.json(
                 { error: 'Định dạng file không hợp lệ. Chỉ chấp nhận: JPG, PNG, WebP, GIF' },
                 { status: 400 }
@@ -70,8 +86,8 @@ export async function POST(request: NextRequest) {
         // Generate unique filename
         const timestamp = Date.now()
         const randomStr = Math.random().toString(36).substring(2, 8)
-        const ext = file.name.split('.').pop() || 'jpg'
-        const filename = `${timestamp}-${randomStr}.${ext}`
+        const extName = file.name.split('.').pop() || 'jpg'
+        const filename = `${timestamp}-${randomStr}.${extName}`
 
         // Write file
         const bytes = await file.arrayBuffer()

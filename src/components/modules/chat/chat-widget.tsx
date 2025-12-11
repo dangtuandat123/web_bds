@@ -16,7 +16,7 @@ export default function ChatWidget({ siteName = 'Bất Động Sản' }: ChatWid
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     const { messages, status, sendMessage } = useChat({
-        messages: [
+        initialMessages: [
             {
                 id: 'welcome',
                 role: 'assistant',

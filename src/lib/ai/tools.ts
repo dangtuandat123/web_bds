@@ -1,7 +1,31 @@
 import prisma from '@/lib/prisma'
-import { vectorStore } from './vector-store'
+import { vectorStore, Document } from './vector-store'
 
 // ============ Tool Handlers for AI Agent ============
+
+// Helper to format property result
+function formatProperty(r: Document) {
+    const meta = r.metadata || {}
+    const type = (meta.type as string | undefined) || ''
+    const slug = meta.slug as string | undefined
+    const path = type === 'PROJECT'
+        ? slug ? `/du-an/${slug}` : undefined
+        : type === 'LISTING'
+            ? slug ? `/nha-dat/${slug}` : undefined
+            : undefined
+
+    return {
+        id: r.id,
+        title: meta.name || meta.title || 'Bất động sản',
+        price: meta.price ?? meta.priceRange ?? 'Liên hệ',
+        area: meta.area,
+        location: meta.fullLocation || meta.location || '',
+        url: path,
+        thumbnailUrl: meta.thumbnailUrl,
+        type: type === 'PROJECT' ? 'Dự án' : (type === 'LISTING' ? 'Tin đăng' : type),
+        slug: slug,
+    }
+}
 
 /**
  * Search properties in vector database
@@ -11,10 +35,21 @@ export async function searchProperties(query: string, limit: number = 5): Promis
     try {
         const results = await vectorStore.similaritySearch(query, limit)
 
-        const SIMILARITY_THRESHOLD = 0.5
+        // Lower threshold to 0.3 to get more results
+        const SIMILARITY_THRESHOLD = 0.3
         const relevantResults = results.filter(r => (r.similarity || 0) >= SIMILARITY_THRESHOLD)
 
         if (relevantResults.length === 0) {
+            // If no results meet threshold, return top results anyway if they exist
+            if (results.length > 0) {
+                console.log('[searchProperties] No results above threshold, returning top results')
+                return JSON.stringify({
+                    success: true,
+                    found: true,
+                    message: `Tìm thấy ${Math.min(results.length, limit)} bất động sản có thể phù hợp.`,
+                    properties: results.slice(0, limit).map(r => formatProperty(r))
+                })
+            }
             return JSON.stringify({
                 success: true,
                 found: false,
@@ -23,28 +58,7 @@ export async function searchProperties(query: string, limit: number = 5): Promis
             })
         }
 
-        const properties = relevantResults.map((r) => {
-            const meta = r.metadata || {}
-            const type = (meta.type as string | undefined) || ''
-            const slug = meta.slug as string | undefined
-            const path = type === 'PROJECT'
-                ? slug ? `/du-an/${slug}` : undefined
-                : type === 'LISTING'
-                    ? slug ? `/nha-dat/${slug}` : undefined
-                    : undefined
-
-            return {
-                id: r.id,
-                title: meta.name || meta.title || 'Bất động sản',
-                price: meta.price ?? meta.priceRange ?? 'Liên hệ',
-                area: meta.area,
-                location: meta.fullLocation || meta.location || '',
-                url: path,
-                thumbnailUrl: meta.thumbnailUrl,
-                type: type === 'PROJECT' ? 'Dự án' : (type === 'LISTING' ? 'Tin đăng' : type),
-                slug: slug,
-            }
-        })
+        const properties = relevantResults.map(r => formatProperty(r))
 
         return JSON.stringify({
             success: true,

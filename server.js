@@ -68,7 +68,8 @@ app.prepare()
                 if (pathname.startsWith('/uploads/')) {
                     // SECURITY: Prevent path traversal attacks
                     const uploadsDir = path.join(__dirname, 'public', 'uploads');
-                    const filePath = path.resolve(__dirname, 'public', pathname);
+                    const relativePath = pathname.replace(/^\/uploads\//, '');
+                    const filePath = path.resolve(uploadsDir, relativePath);
 
                     // Ensure the resolved path is within the uploads directory
                     if (!filePath.startsWith(uploadsDir)) {

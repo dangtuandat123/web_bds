@@ -11,13 +11,15 @@ async function getOpenAIClient(): Promise<OpenAI> {
 }
 
 // Simple text-based embedding fallback using character codes
+// MUST match OpenRouter embedding dimensions (3072)
 function simpleEmbedding(text: string): number[] {
-    const normalized = text.toLowerCase().slice(0, 512)
-    const embedding = new Array(384).fill(0)
+    const EMBEDDING_DIM = 3072 // Match google/gemini-embedding-001 dimensions
+    const normalized = text.toLowerCase().slice(0, 1024)
+    const embedding = new Array(EMBEDDING_DIM).fill(0)
 
     for (let i = 0; i < normalized.length; i++) {
         const charCode = normalized.charCodeAt(i)
-        const idx = i % 384
+        const idx = i % EMBEDDING_DIM
         embedding[idx] = (embedding[idx] + charCode / 127) / 2
     }
 

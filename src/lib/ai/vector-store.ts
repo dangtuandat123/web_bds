@@ -65,6 +65,11 @@ export class VectorStore {
 
     async addDocument(content: string, metadata: Record<string, any> = {}) {
         try {
+            // UPSERT: Delete existing document with same type+id to prevent duplicates
+            if (metadata.type && metadata.id) {
+                await this.deleteByMetadata(metadata.type, metadata.id)
+            }
+
             const embedding = await generateEmbedding(content)
             const id = uuidv4()
 

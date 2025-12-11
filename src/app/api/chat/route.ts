@@ -269,15 +269,36 @@ QUAN TRỌNG: THẤY SĐT = GỌI TOOL NGAY!`
                         try {
                             const parsed = JSON.parse(toolResult);
                             if (parsed.success && parsed.properties && parsed.properties.length > 0) {
-                                properties = parsed.properties.map((p: any) => ({
-                                    title: p.title || 'Bất động sản',
-                                    price: p.price || 'Liên hệ',
-                                    area: p.area,
-                                    location: p.location,
-                                    url: p.url || '/',
-                                    thumbnailUrl: p.thumbnailUrl,
-                                    type: p.type,
-                                }));
+                                properties = parsed.properties.map((p: any) => {
+                                    const type = p.type;
+                                    const slug = p.slug;
+                                    const typeKey = (type || '')
+                                        .toString()
+                                        .toLowerCase()
+                                        .normalize('NFD')
+                                        .replace(/[\u0300-\u036f]/g, '');
+
+                                    const url = p.url || (
+                                        slug
+                                            ? (typeKey.includes('du an') || typeKey.includes('project')
+                                                ? `/du-an/${slug}`
+                                                : (typeKey.includes('tin dang') || typeKey.includes('listing') || typeKey.includes('nha'))
+                                                    ? `/nha-dat/${slug}`
+                                                    : '/')
+                                            : '/'
+                                    );
+
+                                    return {
+                                        title: p.title || 'Bat dong san',
+                                        price: p.price || 'Lien he',
+                                        area: p.area,
+                                        location: p.location,
+                                        url,
+                                        thumbnailUrl: p.thumbnailUrl,
+                                        type,
+                                        slug,
+                                    };
+                                });
                                 console.log(`[Agent] Extracted ${properties.length} properties for cards`);
                             }
                         } catch (e) {
@@ -301,16 +322,24 @@ QUAN TRỌNG: THẤY SĐT = GỌI TOOL NGAY!`
             break;
         }
 
+        // Fallback if model returned empty content
+        if (!finalResponse.trim()) {
+            finalResponse = 'Em dang gap loi khi tra loi. Anh/chi cho em xin nhu cau va so dien thoai de em ho tro nhanh nhe.';
+        }
+
         // Prepare CTA message
         const ctaMessages = [
-            "Anh/chị quan tâm đến căn nào để em tư vấn chi tiết hơn ạ?",
-            "Anh/chị để lại SĐT để em liên hệ tư vấn trực tiếp nhé!",
-            "Anh/chị cho em xin SĐT để được hỗ trợ tốt nhất ạ!"
+            "Anh/chi dang quan tam can nao de em tu van chi tiet hon nhe?",
+            "Anh/chi de lai so dien thoai de em lien he tu van ngay!",
+            "Anh/chi cho em xin so dien thoai de ho tro tot nhat a!",
         ];
 
-        const hasPhoneRequest = finalResponse.toLowerCase().includes('sđt') ||
-            finalResponse.toLowerCase().includes('số điện thoại') ||
-            finalResponse.toLowerCase().includes('liên hệ');
+        const normalizedResponse = finalResponse
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[̀-ͯ]/g, '');
+
+        const hasPhoneRequest = /so\s*(dt|dien thoai)|sdt|lien he|lien lac/.test(normalizedResponse);
 
         // CTA will be added AFTER the property cards
         const ctaText = (properties.length > 0 && !hasPhoneRequest)
