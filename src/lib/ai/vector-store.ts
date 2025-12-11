@@ -28,11 +28,15 @@ function loadFromFile() {
         console.error(`[VectorStore] Looking for: ${jsonFile}`)
 
         if (fs.existsSync(jsonFile)) {
-            const data = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'))
-            for (const [id, doc] of Object.entries(data)) {
+            const rawData = fs.readFileSync(jsonFile, 'utf-8')
+            const data = JSON.parse(rawData)
+            const entries = Object.entries(data)
+            console.error(`[VectorStore] File contains ${entries.length} entries`)
+
+            for (const [id, doc] of entries) {
                 memoryStore.set(id, doc as any)
             }
-            console.error(`[VectorStore] Loaded ${memoryStore.size} documents from JSON`)
+            console.error(`[VectorStore] Loaded ${memoryStore.size} documents into store`)
         } else {
             console.error(`[VectorStore] JSON file NOT found: ${jsonFile}`)
         }

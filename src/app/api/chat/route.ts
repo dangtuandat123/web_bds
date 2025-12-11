@@ -324,14 +324,14 @@ QUAN TRỌNG: THẤY SĐT = GỌI TOOL NGAY!`
 
         // Fallback if model returned empty content
         if (!finalResponse.trim()) {
-            finalResponse = 'Em dang gap loi khi tra loi. Anh/chi cho em xin nhu cau va so dien thoai de em ho tro nhanh nhe.';
+            finalResponse = 'Em đang gặp lỗi khi trả lời. Anh/chị cho em xin nhu cầu và số điện thoại để em hỗ trợ nhanh nhé.';
         }
 
         // Prepare CTA message
         const ctaMessages = [
-            "Anh/chi dang quan tam can nao de em tu van chi tiet hon nhe?",
-            "Anh/chi de lai so dien thoai de em lien he tu van ngay!",
-            "Anh/chi cho em xin so dien thoai de ho tro tot nhat a!",
+            "Anh/chị đang quan tâm căn nào để em tư vấn chi tiết hơn nhé?",
+            "Anh/chị để lại số điện thoại để em liên hệ tư vấn ngay!",
+            "Anh/chị cho em xin số điện thoại để hỗ trợ tốt nhất ạ!",
         ];
 
         const normalizedResponse = finalResponse
