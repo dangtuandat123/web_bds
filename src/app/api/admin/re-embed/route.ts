@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import prisma from '@/lib/prisma'
 import { embedProject, embedListing } from '@/lib/ai/auto-embed'
+import { vectorStore } from '@/lib/ai/vector-store'
 
 // SECURITY: Only admin can trigger re-embed
 const JWT_SECRET = process.env.JWT_SECRET
@@ -14,17 +15,21 @@ const JWT_SECRET = process.env.JWT_SECRET
  * Call this when embedding data is missing or corrupted
  */
 export async function POST() {
+    console.error('[Re-embed] API called')
+
     // Auth check
     const cookieStore = await cookies()
     const token = cookieStore.get('admin_session')?.value
 
     if (!token || !JWT_SECRET) {
+        console.error('[Re-embed] Unauthorized - no token or secret')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     try {
         await jwtVerify(token, JWT_SECRET)
     } catch {
+        console.error('[Re-embed] Invalid session')
         return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
@@ -33,6 +38,10 @@ export async function POST() {
             projects: { total: 0, success: 0, failed: 0 },
             listings: { total: 0, success: 0, failed: 0 }
         }
+
+        // Clear existing embeddings first
+        console.error('[Re-embed] Clearing existing embeddings...')
+        vectorStore.clearAll()
 
         // Re-embed all projects
         const projects = await prisma.project.findMany({
@@ -43,7 +52,9 @@ export async function POST() {
             }
         })
 
+        console.error(`[Re-embed] Found ${projects.length} projects to embed`)
         results.projects.total = projects.length
+
         for (const project of projects) {
             try {
                 await embedProject({
@@ -61,7 +72,7 @@ export async function POST() {
                 })
                 results.projects.success++
             } catch (err) {
-                console.error(`Failed to embed project ${project.id}:`, err)
+                console.error(`[Re-embed] Failed project ${project.id}:`, err)
                 results.projects.failed++
             }
         }
@@ -75,7 +86,9 @@ export async function POST() {
             }
         })
 
+        console.error(`[Re-embed] Found ${listings.length} listings to embed`)
         results.listings.total = listings.length
+
         for (const listing of listings) {
             try {
                 await embedListing({
@@ -96,10 +109,12 @@ export async function POST() {
                 })
                 results.listings.success++
             } catch (err) {
-                console.error(`Failed to embed listing ${listing.id}:`, err)
+                console.error(`[Re-embed] Failed listing ${listing.id}:`, err)
                 results.listings.failed++
             }
         }
+
+        console.error(`[Re-embed] Completed! Projects: ${results.projects.success}/${results.projects.total}, Listings: ${results.listings.success}/${results.listings.total}`)
 
         return NextResponse.json({
             success: true,
@@ -107,7 +122,7 @@ export async function POST() {
             results
         })
     } catch (error) {
-        console.error('Re-embed error:', error)
+        console.error('[Re-embed] Error:', error)
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Re-embed failed'

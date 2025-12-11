@@ -14,32 +14,41 @@ export interface Document {
     similarity?: number
 }
 
-// In-memory storage as fallback when sql.js fails
+// In-memory storage
 let memoryStore: Map<string, { content: string; metadata: string; embedding: string }> = new Map()
-let dbLoaded = false
+let lastLoadTime = 0
 
-// Try to load existing data from file
+// Load data from file - checks if file changed
 function loadFromFile() {
-    if (dbLoaded) return
-    dbLoaded = true
-
     try {
         const jsonFile = DB_FILE + '.json'  // embeddings.db.json
-        console.error(`[VectorStore] Looking for: ${jsonFile}`)
 
-        if (fs.existsSync(jsonFile)) {
-            const rawData = fs.readFileSync(jsonFile, 'utf-8')
-            const data = JSON.parse(rawData)
-            const entries = Object.entries(data)
-            console.error(`[VectorStore] File contains ${entries.length} entries`)
-
-            for (const [id, doc] of entries) {
-                memoryStore.set(id, doc as any)
-            }
-            console.error(`[VectorStore] Loaded ${memoryStore.size} documents into store`)
-        } else {
+        if (!fs.existsSync(jsonFile)) {
             console.error(`[VectorStore] JSON file NOT found: ${jsonFile}`)
+            return
         }
+
+        // Check file modification time
+        const stat = fs.statSync(jsonFile)
+        const mtime = stat.mtimeMs
+
+        // Only reload if file changed or never loaded
+        if (mtime <= lastLoadTime && memoryStore.size > 0) {
+            return  // No change, use cached data
+        }
+
+        console.error(`[VectorStore] Loading/reloading: ${jsonFile}`)
+        const rawData = fs.readFileSync(jsonFile, 'utf-8')
+        const data = JSON.parse(rawData)
+        const entries = Object.entries(data)
+        console.error(`[VectorStore] File contains ${entries.length} entries`)
+
+        memoryStore.clear()
+        for (const [id, doc] of entries) {
+            memoryStore.set(id, doc as any)
+        }
+        lastLoadTime = mtime
+        console.error(`[VectorStore] Loaded ${memoryStore.size} documents into store`)
     } catch (error) {
         console.error('[VectorStore] Could not load existing data:', error)
     }
@@ -57,7 +66,7 @@ function saveToFile() {
         }
 
         fs.writeFileSync(jsonFile, JSON.stringify(dataToSave, null, 2))
-        console.log(`[VectorStore] Saved ${Object.keys(dataToSave).length} documents`)
+        console.error(`[VectorStore] Saved ${Object.keys(dataToSave).length} documents`)
     } catch (error) {
         console.error('[VectorStore] Failed to save:', error)
     }
@@ -187,12 +196,20 @@ export class VectorStore {
             }
 
             saveToFile()
-            console.log(`[Embedding] Deleted ${idsToDelete.length} documents for ${type} id=${id}`)
+            console.error(`[VectorStore] Deleted ${idsToDelete.length} documents for ${type} id=${id}`)
             return true
         } catch (error) {
             console.error('Failed to delete documents by metadata:', error)
             return false
         }
+    }
+
+    // Clear all embeddings - useful for re-embed
+    clearAll() {
+        memoryStore.clear()
+        lastLoadTime = 0
+        saveToFile()
+        console.error('[VectorStore] All embeddings cleared')
     }
 }
 

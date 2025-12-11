@@ -37,7 +37,7 @@ Mô tả: ${project.description}`
             fullLocation: project.fullLocation,
             thumbnailUrl: project.thumbnailUrl
         })
-        console.log(`[Embedding] Project embedded: ${project.name}`)
+        console.error(`[Embedding] Project embedded: ${project.name} (ID: ${project.id})`)
         return true
     } catch (error) {
         console.error(`[Embedding] Failed to embed project ${project.name}:`, error)
@@ -89,7 +89,7 @@ Mô tả: ${listing.description}`
             fullLocation: listing.fullLocation,
             thumbnailUrl: listing.thumbnailUrl
         })
-        console.log(`[Embedding] Listing embedded: ${listing.title}`)
+        console.error(`[Embedding] Listing embedded: ${listing.title} (ID: ${listing.id})`)
         return true
     } catch (error) {
         console.error(`[Embedding] Failed to embed listing ${listing.title}:`, error)
@@ -103,7 +103,7 @@ Mô tả: ${listing.description}`
 export async function deleteProjectEmbedding(projectId: number) {
     try {
         await vectorStore.deleteByMetadata('PROJECT', projectId)
-        console.log(`[Embedding] Project embedding deleted: ${projectId}`)
+        console.error(`[Embedding] Project embedding deleted: ${projectId}`)
         return true
     } catch (error) {
         console.error(`[Embedding] Failed to delete project embedding ${projectId}:`, error)
@@ -117,7 +117,7 @@ export async function deleteProjectEmbedding(projectId: number) {
 export async function deleteListingEmbedding(listingId: number) {
     try {
         await vectorStore.deleteByMetadata('LISTING', listingId)
-        console.log(`[Embedding] Listing embedding deleted: ${listingId}`)
+        console.error(`[Embedding] Listing embedding deleted: ${listingId}`)
         return true
     } catch (error) {
         console.error(`[Embedding] Failed to delete listing embedding ${listingId}:`, error)
